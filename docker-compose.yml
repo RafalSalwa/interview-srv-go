@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  web:
+    build:
+      dockerfile: Dockerfile-go
+      context: .
+    volumes:
+      - $PWD:/app
+    ports:
+      - "8000:5000"
+  redis:
+    image: "redis:alpine"
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+# Names our volume
+volumes:
+  my-db:
