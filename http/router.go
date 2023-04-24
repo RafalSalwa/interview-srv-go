@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/RafalSalwa/interview/swagger"
-	"github.com/RafalSalwa/interview/tools/logger"
+	"github.com/RafalSalwa/interview/util/logger"
 	"github.com/gorilla/mux"
 )
 

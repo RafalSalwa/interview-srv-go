@@ -7,10 +7,8 @@ import (
 	unoHttp "github.com/RafalSalwa/interview/http"
 	"github.com/RafalSalwa/interview/service"
 	"github.com/RafalSalwa/interview/sql"
-	"github.com/RafalSalwa/interview/tools/logger"
+	"github.com/RafalSalwa/interview/util/logger"
 	"github.com/gorilla/mux"
-	_ "github.com/joho/godotenv/autoload"
-	log "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -19,15 +17,6 @@ type App struct {
 }
 
 func main() {
-
-	log.SetFormatter(&log.JSONFormatter{})
-	log.WithFields(
-		log.Fields{
-			"field1": "foo",
-			"field2": "bar",
-		},
-	).Info("Log message here!!!")
-
 	env := os.Getenv("APP_ENV")
 
 	usersDb := sql.NewUsersDB()
