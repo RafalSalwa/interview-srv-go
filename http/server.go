@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/RafalSalwa/interview/utils/logger"
+	"github.com/RafalSalwa/interview/tools/logger"
 )
 
 func NewServer(handler http.Handler) *http.Server {

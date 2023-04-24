@@ -7,9 +7,10 @@ import (
 	unoHttp "github.com/RafalSalwa/interview/http"
 	"github.com/RafalSalwa/interview/service"
 	"github.com/RafalSalwa/interview/sql"
-	"github.com/RafalSalwa/interview/utils/logger"
+	"github.com/RafalSalwa/interview/tools/logger"
 	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
+	log "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -19,17 +20,23 @@ type App struct {
 
 func main() {
 
+	log.SetFormatter(&log.JSONFormatter{})
+	log.WithFields(
+		log.Fields{
+			"field1": "foo",
+			"field2": "bar",
+		},
+	).Info("Log message here!!!")
+
 	env := os.Getenv("APP_ENV")
 
-	db := sql.NewDB()
 	usersDb := sql.NewUsersDB()
 
-	s := service.NewMySqlService(db)
 	us := service.NewMySqlService(usersDb)
 
 	r := mux.NewRouter()
 
-	handler := unoHttp.NewHandler(r, s, us)
+	handler := unoHttp.NewHandler(r, us)
 	router := unoHttp.NewRouter(handler)
 	server := unoHttp.NewServer(router)
 
