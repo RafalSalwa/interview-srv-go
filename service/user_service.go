@@ -1,8 +1,13 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	mySql "github.com/RafalSalwa/interview/sql"
+	"github.com/RafalSalwa/interview/tools"
+	"strconv"
+	"time"
 
 	"github.com/RafalSalwa/interview/model"
 	phpserialize "github.com/kovetskiy/go-php-serialize"
@@ -19,6 +24,14 @@ type UserSqlService interface {
 	CreateUserDevice(userDevice *model.UserDevice) (id int64, err error)
 	GetDevicesByUserId(id int64) (userDevice *model.UserDevices, err error)
 	GetLatestDevice(id int64) (userDevice *model.UserDevice, err error)
+}
+
+type SqlServiceImpl struct {
+	db mySql.DB
+}
+
+func NewMySqlService(db mySql.DB) *SqlServiceImpl {
+	return &SqlServiceImpl{db}
 }
 
 func (s *SqlServiceImpl) GetUserById(id int64) (user *model.User, err error) {
@@ -276,4 +289,13 @@ func (s *SqlServiceImpl) GetLatestDevice(id int64) (device *model.UserDevice, er
 	}
 
 	return device, nil
+}
+
+func getContext() context.Context {
+	ctx := context.Background()
+	var timeout, err = strconv.Atoi(tools.Env("SQL_REQUEST_TIMEOUT_SECONDS", "60"))
+	if err == nil {
+		ctx, _ = context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	}
+	return ctx
 }

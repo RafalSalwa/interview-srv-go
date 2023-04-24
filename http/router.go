@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/RafalSalwa/interview/swagger"
-	"github.com/RafalSalwa/interview/utils/logger"
+	"github.com/RafalSalwa/interview/tools/logger"
 	"github.com/gorilla/mux"
 )
 
@@ -22,7 +22,7 @@ func NewRouter(handler Handler) http.Handler {
 	setupHealthCheck(router)
 	setupSwagger(router)
 	setupIndexPageRoutesInfo(router)
-
+	setupUserRoutes(router, handler)
 	getRoutesList(router)
 	return router
 }
@@ -50,6 +50,15 @@ func setupIndexPageRoutesInfo(router *mux.Router) {
 func setupSwagger(r *mux.Router) {
 	h := http.FileServer(http.FS(swagger.GetStaticFiles()))
 	r.PathPrefix("/swagger").Handler(h).Methods(http.MethodGet)
+}
+
+func setupUserRoutes(r *mux.Router, h Handler) {
+	r.Methods(http.MethodGet).Path("/users/{id}").HandlerFunc(BasicAuth(h.getUserById()))
+	r.Methods(http.MethodPost).Path("/users/{id}").HandlerFunc(BasicAuth(h.postUsersIdEdit()))
+	r.Methods(http.MethodPost).Path("/users/change_password").HandlerFunc(BasicAuth(h.postUsersIdChangePassword()))
+	r.Methods(http.MethodPost).Path("/users/auth").HandlerFunc(h.postUsersLogin())
+	r.Methods(http.MethodPost).Path("/users/registration").HandlerFunc(BasicAuth(h.postUsersRegistration()))
+	r.Methods(http.MethodPost).Path("/users/exist").HandlerFunc(BasicAuth(h.postUsersExist()))
 }
 
 func getRoutesList(router *mux.Router) []AppRoute {
