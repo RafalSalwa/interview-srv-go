@@ -1,4 +1,4 @@
-package util
+package responses
 
 import "net/http"
 
@@ -14,6 +14,7 @@ type ErrorResponse struct {
 	Reason  string `json:"reason"`
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
+	Data    Data   `json:"data"`
 }
 
 type NotFoundResponse struct {
@@ -65,6 +66,14 @@ func NewUnauthorizedErrorResponse(msg string) *ErrorResponse {
 	return NewErrorResponse(
 		http.StatusUnauthorized,
 		"Unauthorized",
+		msg,
+	)
+}
+
+func NewConflictResponse(msg string) *ErrorResponse {
+	return NewErrorResponse(
+		http.StatusConflict,
+		"Conflict",
 		msg,
 	)
 }
