@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	mySql "github.com/RafalSalwa/interview/sql"
-	"github.com/RafalSalwa/interview/tools"
+	"github.com/RafalSalwa/interview/util"
 	"strconv"
 	"time"
 
@@ -293,7 +293,7 @@ func (s *SqlServiceImpl) GetLatestDevice(id int64) (device *model.UserDevice, er
 
 func getContext() context.Context {
 	ctx := context.Background()
-	var timeout, err = strconv.Atoi(tools.Env("SQL_REQUEST_TIMEOUT_SECONDS", "60"))
+	var timeout, err = strconv.Atoi(util.Env("SQL_REQUEST_TIMEOUT_SECONDS", "60"))
 	if err == nil {
 		ctx, _ = context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	}

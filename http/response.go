@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/RafalSalwa/interview/model"
-	"github.com/RafalSalwa/interview/tools"
-	"github.com/RafalSalwa/interview/tools/logger"
+	"github.com/RafalSalwa/interview/util"
+	"github.com/RafalSalwa/interview/util/logger"
 )
 
 type Data struct {
@@ -102,25 +102,25 @@ func authenticationResponse(a model.Authentication, w http.ResponseWriter) {
 }
 
 func respondInternalServerError(w http.ResponseWriter) {
-	errorResponse := tools.NewInternalServerErrorErrorResponse()
+	errorResponse := util.NewInternalServerErrorErrorResponse()
 	responseBody := marshalErrorResponse(errorResponse)
 	respond(w, http.StatusInternalServerError, responseBody)
 }
 
 func respondNotFound(w http.ResponseWriter) {
-	response := tools.NewNotFoundResponse()
+	response := util.NewNotFoundResponse()
 	responseBody := marshalErrorResponse(response)
 	respond(w, http.StatusNotFound, responseBody)
 }
 
 func respondNotAuthorized(w http.ResponseWriter, msg string) {
-	errorResponse := tools.NewUnauthorizedErrorResponse(msg)
+	errorResponse := util.NewUnauthorizedErrorResponse(msg)
 	responseBody := marshalErrorResponse(errorResponse)
 	respond(w, http.StatusUnauthorized, responseBody)
 }
 
 func respondBadRequest(w http.ResponseWriter, msg string) {
-	errorResponse := tools.NewBadRequestErrorResponse(msg)
+	errorResponse := util.NewBadRequestErrorResponse(msg)
 	responseBody := marshalErrorResponse(errorResponse)
 	respond(w, http.StatusBadRequest, responseBody)
 }

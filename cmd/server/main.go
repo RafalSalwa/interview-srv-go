@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 
 	unoHttp "github.com/RafalSalwa/interview/http"
 	"github.com/RafalSalwa/interview/service"
 	"github.com/RafalSalwa/interview/sql"
-	"github.com/RafalSalwa/interview/tools/logger"
+	"github.com/RafalSalwa/interview/util/logger"
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/gorilla/mux"
-	_ "github.com/joho/godotenv/autoload"
-	log "github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -19,15 +19,17 @@ type App struct {
 }
 
 func main() {
+	log := logrus.New()
+	log.SetFormatter(&nested.Formatter{
+		HideKeys:    true,
+		FieldsOrder: []string{"component", "category"},
+	})
 
-	log.SetFormatter(&log.JSONFormatter{})
-	log.WithFields(
-		log.Fields{
-			"field1": "foo",
-			"field2": "bar",
-		},
-	).Info("Log message here!!!")
+	log.Info("just info message")
+	// Output: Jan _2 15:04:05.000 [INFO] just info message
 
+	log.WithField("component", "rest").Warn("warn message")
+	// Output: Jan _2 15:04:05.000 [WARN] [rest] warn message
 	env := os.Getenv("APP_ENV")
 
 	usersDb := sql.NewUsersDB()
