@@ -4,26 +4,26 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	mySql "github.com/RafalSalwa/interview/sql"
-	"github.com/RafalSalwa/interview/util"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	mySql "github.com/RafalSalwa/interview-app-srv/sql"
+	"github.com/RafalSalwa/interview-app-srv/util"
 	"strconv"
 	"time"
 
-	"github.com/RafalSalwa/interview/model"
 	phpserialize "github.com/kovetskiy/go-php-serialize"
 )
 
 type UserSqlService interface {
-	GetUserById(id int64) (user *model.User, err error)
-	GetUserByUsername(username string) (user *model.User, err error)
-	UpdateUser(user *model.User) (err error)
-	UpdateUserFirebaseToken(user *model.User) (err error)
-	LoginUser(username string) (*model.User, error)
-	UpdateUserPassword(user *model.User) (err error)
-	CreateUser(user *model.User) (id int64, err error)
-	CreateUserDevice(userDevice *model.UserDevice) (id int64, err error)
-	GetDevicesByUserId(id int64) (userDevice *model.UserDevices, err error)
-	GetLatestDevice(id int64) (userDevice *model.UserDevice, err error)
+	GetUserById(id int64) (user *models.User, err error)
+	GetUserByUsername(username string) (user *models.User, err error)
+	UpdateUser(user *models.User) (err error)
+	UpdateUserFirebaseToken(user *models.User) (err error)
+	LoginUser(username string) (*models.User, error)
+	UpdateUserPassword(user *models.User) (err error)
+	CreateUser(user *models.User) (id int64, err error)
+	CreateUserDevice(userDevice *models.UserDevice) (id int64, err error)
+	GetDevicesByUserId(id int64) (userDevice *models.UserDevices, err error)
+	GetLatestDevice(id int64) (userDevice *models.UserDevice, err error)
 }
 
 type SqlServiceImpl struct {
@@ -34,8 +34,8 @@ func NewMySqlService(db mySql.DB) *SqlServiceImpl {
 	return &SqlServiceImpl{db}
 }
 
-func (s *SqlServiceImpl) GetUserById(id int64) (user *model.User, err error) {
-	user = &model.User{}
+func (s *SqlServiceImpl) GetUserById(id int64) (user *models.User, err error) {
+	user = &models.User{}
 	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json,firebase_token FROM `user` WHERE deleted_at IS NULL AND id=?", id)
 	err = row.Scan(&user.Id,
 		&user.Username,
@@ -68,8 +68,8 @@ func (s *SqlServiceImpl) GetUserById(id int64) (user *model.User, err error) {
 	return user, nil
 }
 
-func (s *SqlServiceImpl) GetUserByUsername(username string) (user *model.User, err error) {
-	user = &model.User{}
+func (s *SqlServiceImpl) GetUserByUsername(username string) (user *models.User, err error) {
+	user = &models.User{}
 	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json,firebase_token FROM `user` WHERE deleted_at IS NULL AND username=?", username)
 	err = row.Scan(&user.Id,
 		&user.Username,
@@ -102,7 +102,7 @@ func (s *SqlServiceImpl) GetUserByUsername(username string) (user *model.User, e
 	return user, nil
 }
 
-func (s *SqlServiceImpl) UpdateUser(user *model.User) (err error) {
+func (s *SqlServiceImpl) UpdateUser(user *models.User) (err error) {
 	sqlStatement := "UPDATE user SET first_name=?, last_name=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, &user.Firstname, &user.Lastname, user.Id)
 
@@ -113,7 +113,7 @@ func (s *SqlServiceImpl) UpdateUser(user *model.User) (err error) {
 	return nil
 }
 
-func (s *SqlServiceImpl) UpdateUserFirebaseToken(user *model.User) (err error) {
+func (s *SqlServiceImpl) UpdateUserFirebaseToken(user *models.User) (err error) {
 	sqlStatement := "UPDATE `user` SET firebase_token=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, user.FirebaseToken, user.Id)
 
@@ -124,8 +124,8 @@ func (s *SqlServiceImpl) UpdateUserFirebaseToken(user *model.User) (err error) {
 	return nil
 }
 
-func (s *SqlServiceImpl) LoginUser(username string) (*model.User, error) {
-	user := model.User{}
+func (s *SqlServiceImpl) LoginUser(username string) (*models.User, error) {
+	user := models.User{}
 
 	row := s.db.QueryRow("SELECT id,username,password,first_name,last_name,roles as roles_json,firebase_token FROM `user` WHERE (username=? OR email=?)", username, username)
 	err := row.Scan(&user.Id,
@@ -160,7 +160,7 @@ func (s *SqlServiceImpl) LoginUser(username string) (*model.User, error) {
 	return &user, nil
 }
 
-func (s *SqlServiceImpl) UpdateUserPassword(user *model.User) (err error) {
+func (s *SqlServiceImpl) UpdateUserPassword(user *models.User) (err error) {
 	sqlStatement := "UPDATE `user` SET password=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, user.Password, user.Id)
 
@@ -171,7 +171,7 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *model.User) (err error) {
 	return nil
 }
 
-func (s *SqlServiceImpl) CreateUser(user *model.User) (id int64, err error) {
+func (s *SqlServiceImpl) CreateUser(user *models.User) (id int64, err error) {
 	sqlStatement := "INSERT INTO `user` (`username`, `password`, `enabled`, `roles`) VALUES (?,?,?,?);"
 	rows, err := s.db.ExecContext(getContext(),
 		sqlStatement,
@@ -191,7 +191,7 @@ func (s *SqlServiceImpl) CreateUser(user *model.User) (id int64, err error) {
 	return id, nil
 }
 
-func (s *SqlServiceImpl) CreateUserDevice(userDevice *model.UserDevice) (id int64, err error) {
+func (s *SqlServiceImpl) CreateUserDevice(userDevice *models.UserDevice) (id int64, err error) {
 	sqlStatement :=
 		"INSERT INTO `user_device` " +
 			"(`user_id`,`firebase_token`,`os_type`,`sdk_version`,`model`,`brand`,`last_login`,`created_at`,`deleted_at`) " +
@@ -225,8 +225,8 @@ func (s *SqlServiceImpl) CreateUserDevice(userDevice *model.UserDevice) (id int6
 	return id, nil
 }
 
-func (s *SqlServiceImpl) GetDevicesByUserId(id int64) (devices *model.UserDevices, err error) {
-	devices = &model.UserDevices{}
+func (s *SqlServiceImpl) GetDevicesByUserId(id int64) (devices *models.UserDevices, err error) {
+	devices = &models.UserDevices{}
 
 	rows, err := s.db.QueryContext(getContext(), "SELECT `id`,`user_id`,`firebase_token`,`os_type`,`sdk_version`,`model`,`brand`,`last_login`,`created_at`,`deleted_at` "+
 		"FROM `user_device` WHERE `user_id`=?", id)
@@ -238,7 +238,7 @@ func (s *SqlServiceImpl) GetDevicesByUserId(id int64) (devices *model.UserDevice
 	defer rows.Close()
 
 	for rows.Next() {
-		var device model.UserDevice
+		var device models.UserDevice
 		err := rows.Scan(
 			&device.Id,
 			&device.UserId,
@@ -262,8 +262,8 @@ func (s *SqlServiceImpl) GetDevicesByUserId(id int64) (devices *model.UserDevice
 	return devices, nil
 }
 
-func (s *SqlServiceImpl) GetLatestDevice(id int64) (device *model.UserDevice, err error) {
-	device = &model.UserDevice{}
+func (s *SqlServiceImpl) GetLatestDevice(id int64) (device *models.UserDevice, err error) {
+	device = &models.UserDevice{}
 
 	row := s.db.QueryRowContext(getContext(), "SELECT `id`,`user_id`,`firebase_token`,`os_type`,`sdk_version`,`model`,`brand`,`last_login`,`created_at`,`deleted_at` "+
 		"FROM `user_device` WHERE `user_id`=? ORDER BY created_at DESC limit 1", id)

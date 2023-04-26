@@ -10,6 +10,15 @@ import (
 	"strconv"
 )
 
+// swagger:route GET /user getUser
+// Get user details
+//
+// security:
+// - apiKey: []
+// responses:
+//
+//	401: NotFoundError
+//	200: User
 func (h handler) GetUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userId := mux.Vars(r)["id"]
@@ -38,6 +47,15 @@ func (h handler) GetUser() HandlerFunc {
 
 }
 
+// swagger:route POST /user getUser
+// Edit use data
+//
+// security:
+// - apiKey: []
+// responses:
+//
+//	401: NotFoundError
+//	200: User
 func (h handler) PostUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
@@ -149,7 +167,16 @@ func (h handler) PasswordChange() HandlerFunc {
 
 }
 
-func (h handler) UserRegistration() HandlerFunc {
+// swagger:route PUT /user getUser
+// Edit use data
+//
+// security:
+// - apiKey: []
+// responses:
+//
+//	401: NotFoundError
+//	200: User
+func (h handler) Create() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {

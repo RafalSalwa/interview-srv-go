@@ -14,7 +14,7 @@ type Handler interface {
 	GetUser() HandlerFunc
 	PostUser() HandlerFunc
 	PasswordChange() HandlerFunc
-	UserRegistration() HandlerFunc
+	Create() HandlerFunc
 	UserExist() HandlerFunc
 	LogIn() HandlerFunc
 }

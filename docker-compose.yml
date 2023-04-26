@@ -5,21 +5,29 @@ services:
     env_file: .env
     ports:
       - "8081:8081"
-    command: [ "sh", "-c", "/interview/bin/api" ]
-    restart: always
+#    command: [ "sh", "-c", "/interview/bin/migrate && /interview/bin/api" ]
+    volumes:
+      - ./:/interview
+    depends_on:
+      mysql:
+        condition: service_healthy
 
-  db:
+  mysql:
     image: mysql
-    restart: always
     env_file: .env
+    volumes:
+      - ./build/init_db.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       MYSQL_DATABASE: "${MYSQL_NAME}"
-      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_USER: "interview"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
       MYSQL_ROOT_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_TCP_PORT: "${MYSQL_PORT}"
     ports:
-      - "3306:3306"
-    volumes:
-      - mysqldb:/var/lib/mysql
-volumes:
-  mysqldb:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    expose:
+      - "${MYSQL_PORT}"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 10
