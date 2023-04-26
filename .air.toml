@@ -1,33 +1,35 @@
 # Config file for [Air](https://github.com/cosmtrek/air) in TOML format
-
-# Working directory
-# . or absolute path, please note that the directories following must be under root
 root = "."
 tmp_dir = "tmp"
 
 [build]
-# Just plain old shell command. You could use `make` as well.
-cmd = "go build -o ./tmp/app/engine app/main.go"
-# Binary file yields from `cmd`.
-bin = "tmp/app"
+cmd = "go build -o server ./cmd/server/main.go"
+bin = "./server"
 
-# Customize binary.
-# This is how you start to run your application. Since my application will works like CLI, so to run it, like to make a CLI call.
-full_bin = "./tmp/app/engine http"
-# This log file places in your tmp_dir.
-log = "air_errors.log"
-# Watch these filename extensions.
-include_ext = ["go", "yaml"]
-# Ignore these filename extensions or directories.
-exclude_dir = ["tmp"]
-# It's not necessary to trigger build each time file changes if it's too frequent.
+log = "./tmp/air_errors.log"
+
+include_ext = ["go", "yaml", "tpl", "tmpl", "html"]
+exclude_dir = ["assets", "tmp", "vendor", "swagger"]
+follow_symlink = true
+exclude_regex = ["_test\\.go"]
+
 delay = 1000 # ms
+kill_delay = 0 # ms
+stop_on_error = true
+send_interrupt = true
+rerun = true
+rerun_delay = 500
 
 [log]
-# Show log time
 time = true
+main_only = false
+
+[color]
+# Customize each part's color. If no color found, use the raw app log.
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
 
 [misc]
-# Delete tmp directory on exit
 clean_on_exit = true
-view raw

@@ -17,6 +17,7 @@ type ErrorResponse struct {
 	Data    Data   `json:"data"`
 }
 
+// swagger:model NotFoundError
 type NotFoundResponse struct {
 	Code    int32  `json:"code"`
 	Message string `json:"message,omitempty"`

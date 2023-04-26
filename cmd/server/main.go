@@ -1,14 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"os"
-
-	unoHttp "github.com/RafalSalwa/interview/http"
-	"github.com/RafalSalwa/interview/service"
-	"github.com/RafalSalwa/interview/sql"
-	"github.com/RafalSalwa/interview/util/logger"
+	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
+	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
+	"github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/service"
+	"github.com/RafalSalwa/interview-app-srv/sql"
+	"github.com/RafalSalwa/interview-app-srv/util/logger"
+	"github.com/RafalSalwa/interview-app-srv/util/validator"
 	"github.com/gorilla/mux"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type App struct {
@@ -17,18 +23,47 @@ type App struct {
 }
 
 func main() {
-	env := os.Getenv("APP_ENV")
+	c := config.New()
+	l := logger.NewConsole(c.App.Debug)
+	v := validator.New()
 
-	usersDb := sql.NewUsersDB()
-
-	us := service.NewMySqlService(usersDb)
+	db := sql.NewUsersDB(c.DB)
+	us := service.NewMySqlService(db)
 
 	r := mux.NewRouter()
+	h := apiHandler.NewHandler(r, us, l)
+	router := apiRouter.NewRouter(h, v)
 
-	handler := unoHttp.NewHandler(r, us)
-	router := unoHttp.NewRouter(handler)
-	server := unoHttp.NewServer(router)
+	s := &http.Server{
+		Addr:         fmt.Sprintf(":%d", c.Server.Port),
+		Handler:      router,
+		ReadTimeout:  c.Server.TimeoutRead,
+		WriteTimeout: c.Server.TimeoutWrite,
+		IdleTimeout:  c.Server.TimeoutIdle,
+	}
+	closed := make(chan struct{})
+	go func() {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
+		<-sigint
 
-	logger.Log(fmt.Sprintf("Server started - listen on address %s \n", server.Addr), logger.Info)
-	unoHttp.SetupServer(server, env)
+		l.Info().Msgf("Shutting down server %v", s.Addr)
+
+		ctx, cancel := context.WithTimeout(context.Background(), c.Server.TimeoutIdle)
+		defer cancel()
+
+		if err := s.Shutdown(ctx); err != nil {
+			l.Error().Err(err).Msg("Server shutdown failure")
+		}
+
+		if err := db.Close(); err != nil {
+			l.Error().Err(err).Msg("DB connection closing failure")
+		}
+		close(closed)
+	}()
+
+	l.Info().Msgf("Starting server %v", s.Addr)
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		l.Fatal().Err(err).Msg("Server startup failure")
+	}
 }
