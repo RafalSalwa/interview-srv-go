@@ -12,6 +12,12 @@ type Conf struct {
 	App    ConfApp
 	Server ConfServer
 	DB     ConfDB
+	GRPC   ConfGRPC
+}
+
+type ConfGRPC struct {
+	Host string `env:"GRPC_HOSTS"`
+	Port int    `env:"GRPC_PORT"`
 }
 
 type ConfApp struct {

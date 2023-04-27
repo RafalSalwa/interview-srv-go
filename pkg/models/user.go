@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // swagger:model User
 type User struct {
 	Id            int64        `json:"id"`
@@ -17,4 +19,41 @@ type User struct {
 // swagger:model Users
 type Users struct {
 	Items []User `json:"items"`
+}
+
+type SignUpInput struct {
+	Name            string    `json:"name"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	PasswordConfirm string    `json:"passwordConfirm"`
+	Role            string    `json:"role"`
+	Verified        bool      `json:"verified"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+type SignInInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UserDBResponse struct {
+	Id              int64     `json:"id"`
+	Name            string    `json:"name"`
+	Email           string    `json:"email"`
+	Password        string    `json:"password"`
+	PasswordConfirm string    `json:"passwordConfirm,omitempty"`
+	Role            string    `json:"role"`
+	Verified        bool      `json:"verified"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+type UserResponse struct {
+	Id        int64     `json:"id,omitempty"`
+	Name      string    `json:"name,omitempty"`
+	Email     string    `json:"email,omitempty"`
+	Role      string    `json:"role,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

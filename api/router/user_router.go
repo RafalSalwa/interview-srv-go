@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewRouter(handler handler.Handler, validator *validator.Validate) http.Handler {
+func NewUserRouter(handler handler.UserHandler, validator *validator.Validate) http.Handler {
 	router := mux.NewRouter()
 
 	health.SetupHealthCheck(router)
@@ -24,7 +24,7 @@ func NewRouter(handler handler.Handler, validator *validator.Validate) http.Hand
 	return router
 }
 
-func setupUserRoutes(r *mux.Router, h handler.Handler) {
+func setupUserRoutes(r *mux.Router, h handler.UserHandler) {
 	r.Methods(http.MethodGet).Path("/users/{id}").HandlerFunc(auth.BasicAuth(h.GetUser()))
 	r.Methods(http.MethodPost).Path("/users/{id}").HandlerFunc(auth.BasicAuth(h.PostUser()))
 	r.Methods(http.MethodPost).Path("/users/change_password").HandlerFunc(auth.BasicAuth(h.PasswordChange()))

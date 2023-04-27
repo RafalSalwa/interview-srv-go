@@ -2,68 +2,64 @@ package main
 
 import (
 	"context"
-	"fmt"
+	apiGrpc "github.com/RafalSalwa/interview-app-srv/api/grpc"
 	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
+	apiServer "github.com/RafalSalwa/interview-app-srv/api/server"
 	"github.com/RafalSalwa/interview-app-srv/config"
-	"github.com/RafalSalwa/interview-app-srv/service"
+	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/RafalSalwa/interview-app-srv/sql"
 	"github.com/RafalSalwa/interview-app-srv/util/logger"
 	"github.com/RafalSalwa/interview-app-srv/util/validator"
 	"github.com/gorilla/mux"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
-type App struct {
-	Router *mux.Router
-	DB     *sql.DB
-}
+var (
+	conf   *config.Conf
+	server *http.Server
+	ctx    context.Context
+	//redisclient *redis.Client
+
+	userHandler apiHandler.UserHandler
+
+	userService services.UserSqlService
+
+	authService services.AuthService
+)
 
 func main() {
-	c := config.New()
-	l := logger.NewConsole(c.App.Debug)
+	ctx = context.TODO()
+
+	conf = config.New()
+	l := logger.NewConsole(conf.App.Debug)
 	v := validator.New()
-
-	db := sql.NewUsersDB(c.DB)
-	us := service.NewMySqlService(db)
-
 	r := mux.NewRouter()
-	h := apiHandler.NewHandler(r, us, l)
-	router := apiRouter.NewRouter(h, v)
 
-	s := &http.Server{
-		Addr:         fmt.Sprintf(":%d", c.Server.Port),
-		Handler:      router,
-		ReadTimeout:  c.Server.TimeoutRead,
-		WriteTimeout: c.Server.TimeoutWrite,
-		IdleTimeout:  c.Server.TimeoutIdle,
+	db := sql.NewUsersDB(conf.DB)
+	userService = services.NewMySqlService(db)
+	authService = services.NewAuthService(ctx)
+
+	userHandler = apiHandler.NewUserHandler(r, userService, l)
+	authHandler = apiHandler.NewAuthHandler(r, authService, l)
+	router := apiRouter.NewUserRouter(userHandler, v)
+	server = apiServer.NewServer(c, router)
+	apiServer.Run(server)
+	l.Info().Msgf("Starting REST server %v", server.Addr)
+
+	lis, err := net.Listen("tcp", ":9000")
+	if err != nil {
+		l.Error().Err(err).Msgf("failed to listen: %v", err)
 	}
-	closed := make(chan struct{})
+	grpcServer, _ := apiGrpc.NewGrpcServer(c)
+	l.Info().Msgf("Starting gRPC server %v", s.Addr)
 	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
-		<-sigint
-
-		l.Info().Msgf("Shutting down server %v", s.Addr)
-
-		ctx, cancel := context.WithTimeout(context.Background(), c.Server.TimeoutIdle)
-		defer cancel()
-
-		if err := s.Shutdown(ctx); err != nil {
-			l.Error().Err(err).Msg("Server shutdown failure")
+		err := grpcServer.Serve(lis)
+		if err != nil {
+			return
 		}
 
-		if err := db.Close(); err != nil {
-			l.Error().Err(err).Msg("DB connection closing failure")
-		}
-		close(closed)
 	}()
 
-	l.Info().Msgf("Starting server %v", s.Addr)
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		l.Fatal().Err(err).Msg("Server startup failure")
-	}
 }
