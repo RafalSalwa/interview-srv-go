@@ -20,7 +20,7 @@ func NewAuthService(ctx context.Context) AuthService {
 }
 
 func (uc *AuthServiceImpl) Token() {
-	APIKey := uc.Request.Header.Get("X-API-Key")
+
 }
 
 func (uc *AuthServiceImpl) SignUpUser(user *models.SignUpInput) (*models.UserDBResponse, error) {

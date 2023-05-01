@@ -11,11 +11,6 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func Token() {
-
-	return true
-}
-
 func BasicAuth(handler handler.UserHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, p, ok := r.BasicAuth()

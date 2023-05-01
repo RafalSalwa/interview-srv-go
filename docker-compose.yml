@@ -6,6 +6,7 @@ services:
     env_file: .env
     ports:
       - "8081:8081"
+      - "8082:8082"
 #    command: [ "sh", "-c", "/interview/bin/migrate && /interview/bin/api" ]
     volumes:
       - ./:/interview

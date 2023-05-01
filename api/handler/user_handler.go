@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
 	"net/http"
 	"strconv"
+
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/util/logger"
 
 	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/gorilla/mux"
@@ -12,7 +13,7 @@ import (
 
 type UserHandlerFunc func(http.ResponseWriter, *http.Request)
 
-type IUserHandler interface {
+type UserHandler interface {
 	GetUserById() UserHandlerFunc
 	PostUser() UserHandlerFunc
 	PasswordChange() UserHandlerFunc
@@ -21,17 +22,17 @@ type IUserHandler interface {
 	LogIn() UserHandlerFunc
 }
 
-type UserHandler struct {
+type userHandler struct {
 	Router         *mux.Router
 	userSqlService services.UserSqlService
 	logger         *logger.Logger
 }
 
-func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger) IUserHandler {
-	return UserHandler{r, us, l}
+func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger) UserHandler {
+	return userHandler{r, us, l}
 }
 
-func (uh UserHandler) GetUserById() UserHandlerFunc {
+func (uh userHandler) GetUserById() UserHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userId := mux.Vars(r)["id"]
 		uh.logger.Info().Msgf("Fetching user id %s", userId)
@@ -58,31 +59,37 @@ func (uh UserHandler) GetUserById() UserHandlerFunc {
 	}
 }
 
-func (uh UserHandler) PostUser() UserHandlerFunc {
+func (uh userHandler) PostUser() UserHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func (uh UserHandler) PasswordChange() UserHandlerFunc {
+func (uh userHandler) PasswordChange() UserHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func (uh UserHandler) Create() UserHandlerFunc {
+func (uh userHandler) Create() UserHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func (uh UserHandler) UserExist() UserHandlerFunc {
+func (uh userHandler) UserExist() UserHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func (uh UserHandler) LogIn() UserHandlerFunc {
+func (uh userHandler) LogIn() UserHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
+func (u userHandler) Token() UserHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}

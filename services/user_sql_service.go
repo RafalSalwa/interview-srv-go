@@ -4,14 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	mySql "github.com/RafalSalwa/interview-app-srv/sql"
-	"github.com/RafalSalwa/interview-app-srv/util"
 	"strconv"
 	"time"
 
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	mySql "github.com/RafalSalwa/interview-app-srv/sql"
+	"github.com/RafalSalwa/interview-app-srv/util"
+
 	phpserialize "github.com/kovetskiy/go-php-serialize"
 )
+
+type SqlServiceImpl struct {
+	db mySql.DB
+}
 
 type UserSqlService interface {
 	GetUserById(id int64) (user *models.User, err error)
@@ -24,10 +29,6 @@ type UserSqlService interface {
 	CreateUserDevice(userDevice *models.UserDevice) (id int64, err error)
 	GetDevicesByUserId(id int64) (userDevice *models.UserDevices, err error)
 	GetLatestDevice(id int64) (userDevice *models.UserDevice, err error)
-}
-
-type SqlServiceImpl struct {
-	db mySql.DB
 }
 
 func NewMySqlService(db mySql.DB) *SqlServiceImpl {

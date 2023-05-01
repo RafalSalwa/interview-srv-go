@@ -13,4 +13,4 @@ RUN go build -ldflags '-w -s' -a -o ./bin/api ./cmd/server \
     && go build -ldflags '-w -s' -a -o ./bin/migrate ./cmd/migration
 
 CMD ["air", "-c", ".air.toml"]
-EXPOSE 8081
+EXPOSE 8081 8082

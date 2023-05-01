@@ -3,7 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
+
+	"github.com/gorilla/mux"
+
 	apiConfig "github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/util/logger"
 
 	"net/http"
 	"os"
@@ -11,14 +15,15 @@ import (
 	"syscall"
 )
 
-type HttpServer struct {
-	app app.Application
+type Handler struct {
+	handler http.Handler
+	logger  *logger.Logger
 }
 
-func NewServer(c *apiConfig.Conf, handler http.Handler) *http.Server {
+func NewServer(c *apiConfig.Conf, r *mux.Router) *http.Server {
 	s := &http.Server{
-		Addr:         fmt.Sprintf(":%d", c.Server.Port),
-		Handler:      handler,
+		Addr:         fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port),
+		Handler:      r,
 		ReadTimeout:  c.Server.TimeoutRead,
 		WriteTimeout: c.Server.TimeoutWrite,
 		IdleTimeout:  c.Server.TimeoutIdle,
@@ -27,9 +32,7 @@ func NewServer(c *apiConfig.Conf, handler http.Handler) *http.Server {
 }
 
 func Run(s *http.Server, conf *apiConfig.Conf) {
-
-	_ = s.ListenAndServe()
-
+	fmt.Println(s.Handler)
 	closed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
@@ -44,4 +47,5 @@ func Run(s *http.Server, conf *apiConfig.Conf) {
 		}
 		close(closed)
 	}()
+	_ = s.ListenAndServe()
 }

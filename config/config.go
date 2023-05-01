@@ -1,11 +1,12 @@
 package config
 
 import (
+	"log"
+	"time"
+
 	"github.com/joeshaw/envdecode"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv"
-	"log"
-	"time"
 )
 
 type Conf struct {
@@ -26,6 +27,7 @@ type ConfApp struct {
 }
 
 type ConfServer struct {
+	Host         string        `env:"SERVER_HOST,required"`
 	Port         int           `env:"SERVER_PORT,required"`
 	TimeoutRead  time.Duration `env:"SERVER_TIMEOUT_READ,required"`
 	TimeoutWrite time.Duration `env:"SERVER_TIMEOUT_WRITE,required"`
