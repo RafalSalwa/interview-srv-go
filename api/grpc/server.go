@@ -13,40 +13,29 @@ type Server struct {
 	pb.UnimplementedAuthServiceServer
 	config      config.ConfGRPC
 	authService services.AuthService
-	userService services.UserService
+	userService services.UserSqlService
 }
 
 func NewGrpcServer(config config.ConfGRPC, authService services.AuthService,
-	userService services.UserService, userCollection *mongo.Collection) (*Server, error) {
+	userService services.UserSqlService) (*Server, error) {
 
 	server := &Server{
-		config:         config,
-		authService:    authService,
-		userService:    userService,
-		userCollection: userCollection,
+		config:      config,
+		authService: authService,
+		userService: userService,
 	}
 
 	return server, nil
 }
 
-func startGrpcServer(config config.Config) {
-	server, err := gapi.NewGrpcServer(config, authService, userService, authCollection)
-	if err != nil {
-		log.Fatal("cannot create grpc server: ", err)
-	}
+func (server Server) Run() {
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterAuthServiceServer(grpcServer, server)
 	reflection.Register(grpcServer)
 
-	listener, err := net.Listen("tcp", config.GrpcServerAddress)
-	if err != nil {
-		log.Fatal("cannot create grpc server: ", err)
-	}
+	listener, _ := net.Listen("tcp", server.config.GrpcServerAddress)
 
-	log.Printf("start gRPC server on %s", listener.Addr().String())
-	err = grpcServer.Serve(listener)
-	if err != nil {
-		log.Fatal("cannot create grpc server: ", err)
-	}
+	_ = grpcServer.Serve(listener)
+
 }

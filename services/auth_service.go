@@ -12,10 +12,15 @@ type AuthServiceImpl struct {
 type AuthService interface {
 	SignUpUser(*models.SignUpInput) (*models.UserDBResponse, error)
 	SignInUser(*models.SignInInput) (*models.UserDBResponse, error)
+	Token()
 }
 
 func NewAuthService(ctx context.Context) AuthService {
 	return &AuthServiceImpl{ctx}
+}
+
+func (uc *AuthServiceImpl) Token() {
+	APIKey := uc.Request.Header.Get("X-API-Key")
 }
 
 func (uc *AuthServiceImpl) SignUpUser(user *models.SignUpInput) (*models.UserDBResponse, error) {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/RafalSalwa/interview-app-srv/util/logger"
 	"net/http"
 
@@ -10,21 +11,19 @@ import (
 
 type AuthHandlerFunc func(http.ResponseWriter, *http.Request)
 
-type AuthHandler interface {
-	GetUser() HandlerFunc
-	PostUser() HandlerFunc
-	PasswordChange() HandlerFunc
-	Create() HandlerFunc
-	UserExist() HandlerFunc
-	LogIn() HandlerFunc
+type IAuthHandler interface {
+	SignUpUser(*models.SignUpInput) (*models.UserDBResponse, error)
+	SignInUser(*models.SignInInput) (*models.UserDBResponse, error)
+	Login() AuthHandlerFunc
+	Logout() AuthHandlerFunc
 }
 
 type AuthHandler struct {
 	Router         *mux.Router
-	userSqlService services.UserSqlService
+	userSqlService services.AuthService
 	logger         *logger.Logger
 }
 
-func NewAuthHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger) UserHandler {
+func NewAuthHandler(r *mux.Router, us services.AuthService, l *logger.Logger) AuthHandler {
 	return AuthHandler{r, us, l}
 }

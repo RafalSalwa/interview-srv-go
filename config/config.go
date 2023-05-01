@@ -16,13 +16,13 @@ type Conf struct {
 }
 
 type ConfGRPC struct {
-	Host string `env:"GRPC_HOSTS"`
-	Port int    `env:"GRPC_PORT"`
+	GrpcServerAddress string `env:"GRPC_SERVER_ADDRESS"`
 }
 
 type ConfApp struct {
-	Env   string `env:"APP_ENV, default=dev"`
-	Debug bool   `env:"APP_DEBUG, default=false"`
+	Env          string `env:"APP_ENV, default=dev"`
+	Debug        bool   `env:"APP_DEBUG, default=false"`
+	JwtSecretKey string `env:"JWT_SECRET_KEY, required"`
 }
 
 type ConfServer struct {

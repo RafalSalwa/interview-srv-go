@@ -7,14 +7,19 @@ import (
 	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
 	apiServer "github.com/RafalSalwa/interview-app-srv/api/server"
 	"github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/RafalSalwa/interview-app-srv/sql"
 	"github.com/RafalSalwa/interview-app-srv/util/logger"
 	"github.com/RafalSalwa/interview-app-srv/util/validator"
 	"github.com/gorilla/mux"
-	"net"
 	"net/http"
 )
+
+type Application struct {
+	Commands cqrs.Commands
+	Queries  cqrs.Queries
+}
 
 var (
 	conf   *config.Conf
@@ -22,7 +27,8 @@ var (
 	ctx    context.Context
 	//redisclient *redis.Client
 
-	userHandler apiHandler.UserHandler
+	userHandler apiHandler.IUserHandler
+	authHandler apiHandler.AuthHandler
 
 	userService services.UserSqlService
 
@@ -44,22 +50,13 @@ func main() {
 	userHandler = apiHandler.NewUserHandler(r, userService, l)
 	authHandler = apiHandler.NewAuthHandler(r, authService, l)
 	router := apiRouter.NewUserRouter(userHandler, v)
-	server = apiServer.NewServer(c, router)
-	apiServer.Run(server)
+	server = apiServer.NewServer(conf, router)
+
 	l.Info().Msgf("Starting REST server %v", server.Addr)
+	apiServer.Run(server, conf)
 
-	lis, err := net.Listen("tcp", ":9000")
-	if err != nil {
-		l.Error().Err(err).Msgf("failed to listen: %v", err)
-	}
-	grpcServer, _ := apiGrpc.NewGrpcServer(c)
-	l.Info().Msgf("Starting gRPC server %v", s.Addr)
-	go func() {
-		err := grpcServer.Serve(lis)
-		if err != nil {
-			return
-		}
-
-	}()
+	grpcServer, _ := apiGrpc.NewGrpcServer(conf.GRPC, authService, userService)
+	l.Info().Msgf("Starting gRPC server %v", server.Addr)
+	grpcServer.Run()
 
 }
