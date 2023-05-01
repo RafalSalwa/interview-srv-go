@@ -11,7 +11,12 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func BasicAuth(handler handler.HandlerFunc) http.HandlerFunc {
+func Token() {
+
+	return true
+}
+
+func BasicAuth(handler handler.UserHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, p, ok := r.BasicAuth()
 		if !ok || len(strings.TrimSpace(u)) < 1 || len(strings.TrimSpace(p)) < 1 {
@@ -32,7 +37,7 @@ func unauthorised(rw http.ResponseWriter) {
 	rw.WriteHeader(http.StatusUnauthorized)
 }
 
-func isAuthorized(h handler.HandlerFunc) http.HandlerFunc {
+func isAuthorized(h handler.AuthHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accessToken := r.Header["X-Access-Token"]
 		if accessToken == nil {
