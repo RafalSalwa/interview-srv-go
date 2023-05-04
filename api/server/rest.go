@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 
 	apiConfig "github.com/RafalSalwa/interview-app-srv/config"
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
 	"net/http"
 	"os"
@@ -32,7 +32,7 @@ func NewServer(c *apiConfig.Conf, r *mux.Router) *http.Server {
 }
 
 func Run(s *http.Server, conf *apiConfig.Conf) {
-	fmt.Println(s.Handler)
+
 	closed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)

@@ -4,15 +4,13 @@ import (
 	"context"
 	"net/http"
 
-	apiGrpc "github.com/RafalSalwa/interview-app-srv/api/grpc"
-
 	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
 	apiServer "github.com/RafalSalwa/interview-app-srv/api/server"
 	"github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/RafalSalwa/interview-app-srv/sql"
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
 )
 
 var (
@@ -44,9 +42,9 @@ func main() {
 	apiRouter.RegisterUserRouter(r, userHandler)
 	apiRouter.RegisterAuthRouter(r, authHandler)
 
-	grpcServer, _ := apiGrpc.NewGrpcServer(conf.GRPC, authService, userService)
-	l.Info().Msg("Starting gRPC server.")
-	grpcServer.Run()
+	//grpcServer, _ := apiGrpc.NewGrpcServer(conf.GRPC, authService, userService)
+	//l.Info().Msg("Starting gRPC server.")
+	//grpcServer.Run()
 
 	server = apiServer.NewServer(conf, r)
 	l.Info().Msgf("Starting REST server %v", server.Addr)

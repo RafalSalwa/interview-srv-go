@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"net/http"
 	"strconv"
-
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
 
 	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/gorilla/mux"
@@ -45,6 +46,7 @@ func (uh userHandler) GetUserById() UserHandlerFunc {
 
 		user, err := uh.userSqlService.GetUserById(intId)
 		if err != nil {
+			fmt.Println(err)
 			uh.logger.Err(err)
 			responses.RespondInternalServerError(w)
 			return
@@ -54,8 +56,17 @@ func (uh userHandler) GetUserById() UserHandlerFunc {
 			responses.RespondNotFound(w)
 			return
 		}
-
-		responses.NewUserResponse(user, w, r)
+		ur := &models.UserResponse{
+			Id:        user.Id,
+			Username:  user.Username,
+			Firstname: user.Firstname,
+			RolesJson: user.RolesJson,
+			Roles:     user.Roles,
+			Verified:  user.Verified,
+			Active:    user.Active,
+			CreatedAt: user.CreatedAt,
+		}
+		responses.NewUserResponse(ur, w, r)
 	}
 }
 

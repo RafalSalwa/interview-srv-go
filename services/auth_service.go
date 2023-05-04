@@ -10,8 +10,8 @@ type AuthServiceImpl struct {
 }
 
 type AuthService interface {
-	SignUpUser(*models.SignUpInput) (*models.UserDBResponse, error)
-	SignInUser(*models.SignInInput) (*models.UserDBResponse, error)
+	SignUpUser(request *models.CreateUserRequest) (*models.UserDBResponse, error)
+	SignInUser(request *models.LoginUserRequest) (*models.UserDBResponse, error)
 	Token()
 }
 
@@ -23,10 +23,10 @@ func (uc *AuthServiceImpl) Token() {
 
 }
 
-func (uc *AuthServiceImpl) SignUpUser(user *models.SignUpInput) (*models.UserDBResponse, error) {
+func (uc *AuthServiceImpl) SignUpUser(user *models.CreateUserRequest) (*models.UserDBResponse, error) {
 	return nil, nil
 }
 
-func (uc *AuthServiceImpl) SignInUser(*models.SignInInput) (*models.UserDBResponse, error) {
+func (uc *AuthServiceImpl) SignInUser(*models.LoginUserRequest) (*models.UserDBResponse, error) {
 	return nil, nil
 }

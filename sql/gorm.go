@@ -3,7 +3,7 @@ package sql
 import (
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/config"
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
