@@ -20,6 +20,7 @@ const (
 
 func NewUsersDB(c config.ConfDB) DB {
 	con := fmt.Sprintf(dbString, c.Username, c.Password, c.Host, c.Port, c.DBName, dbParams)
+	fmt.Println(con)
 	db, err := sql.Open(driver, con)
 	if err != nil {
 		log.Fatalln("unable to connect to mySQL", err)

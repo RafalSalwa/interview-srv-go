@@ -18,6 +18,7 @@ func BasicAuth(handler handler.UserHandlerFunc) http.HandlerFunc {
 			unauthorised(w)
 			return
 		}
+
 		if u != os.Getenv("AUTH_USERNAME") || p != os.Getenv("AUTH_PASSWORD") {
 			unauthorised(w)
 			return

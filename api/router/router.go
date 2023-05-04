@@ -3,9 +3,10 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
 	"net/http"
 
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/gorilla/mux"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
@@ -26,6 +27,10 @@ var appRoutes []AppRoute
 
 func NewApiRouter(l *logger.Logger) *mux.Router {
 	router := mux.NewRouter()
+
+	router.Use(middlewares.ContentTypeJson())
+	router.Use(middlewares.CorrelationIDMiddleware())
+	router.Use(middlewares.RequestLogMiddleware(l))
 
 	setupIndexPageRoutesInfo(router)
 	setupHealthCheck(router)

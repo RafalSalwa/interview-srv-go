@@ -5,16 +5,16 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/RafalSalwa/interview-app-srv/services"
-	"github.com/RafalSalwa/interview-app-srv/util/logger"
 )
 
 type AuthHandlerFunc func(http.ResponseWriter, *http.Request)
 
 type IAuthHandler interface {
-	SignUpUser(*models.SignUpInput) AuthHandlerFunc
-	SignInUser(*models.SignInInput) AuthHandlerFunc
+	SignUpUser(request *models.CreateUserRequest) AuthHandlerFunc
+	SignInUser(request *models.LoginUserRequest) AuthHandlerFunc
 	Login() AuthHandlerFunc
 	Logout() AuthHandlerFunc
 	Token() AuthHandlerFunc
@@ -30,13 +30,13 @@ func NewAuthHandler(r *mux.Router, us services.AuthService, l *logger.Logger) IA
 	return AuthHandler{r, us, l}
 }
 
-func (a AuthHandler) SignUpUser(input *models.SignUpInput) AuthHandlerFunc {
+func (a AuthHandler) SignUpUser(input *models.CreateUserRequest) AuthHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func (a AuthHandler) SignInUser(input *models.SignInInput) AuthHandlerFunc {
+func (a AuthHandler) SignInUser(input *models.LoginUserRequest) AuthHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
