@@ -2,11 +2,15 @@ package services
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 
 type AuthServiceImpl struct {
-	ctx context.Context
+	ctx        context.Context
+	repository repository.UserRepository
+	logger     *logger.Logger
 }
 
 type AuthService interface {
@@ -15,8 +19,8 @@ type AuthService interface {
 	Token()
 }
 
-func NewAuthService(ctx context.Context) AuthService {
-	return &AuthServiceImpl{ctx}
+func NewAuthService(ctx context.Context, r repository.UserRepository, l *logger.Logger) AuthService {
+	return &AuthServiceImpl{ctx, r, l}
 }
 
 func (uc *AuthServiceImpl) Token() {

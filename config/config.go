@@ -24,6 +24,7 @@ type ConfApp struct {
 	Env          string `env:"APP_ENV, default=dev"`
 	Debug        bool   `env:"APP_DEBUG, default=false"`
 	JwtSecretKey string `env:"JWT_SECRET_KEY, required"`
+	APIKey       string `env:"X_API_KEY, required"`
 }
 
 type ConfServer struct {

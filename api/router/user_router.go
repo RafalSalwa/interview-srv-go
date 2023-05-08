@@ -10,13 +10,10 @@ import (
 )
 
 func RegisterUserRouter(r *mux.Router, h handler.UserHandler) {
+	s := r.PathPrefix("/user").Subrouter()
 
-	s := r.PathPrefix("/user/").Subrouter()
 	s.Methods(http.MethodGet).Path("/{id}").HandlerFunc(auth.BasicAuth(h.GetUserById()))
-	s.Methods(http.MethodPost).Path("/{id}").HandlerFunc(auth.BasicAuth(h.PostUser()))
+	s.Methods(http.MethodPost).Path("").HandlerFunc(auth.BasicAuth(h.PostUser()))
 	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(auth.BasicAuth(h.PasswordChange()))
-	s.Methods(http.MethodPost).Path("/auth").HandlerFunc(h.LogIn())
-	s.Methods(http.MethodPut).Path("/registration").HandlerFunc(auth.BasicAuth(h.Create()))
-	s.Methods(http.MethodPost).Path("/exist").HandlerFunc(auth.BasicAuth(h.UserExist()))
 
 }

@@ -115,7 +115,7 @@ func RespondNotAuthorized(w http.ResponseWriter, msg string) {
 func RespondConflict(w http.ResponseWriter, msg string) {
 	resp := NewConflictResponse(msg)
 	responseBody := marshalErrorResponse(resp)
-	Respond(w, http.StatusBadRequest, responseBody)
+	Respond(w, http.StatusConflict, responseBody)
 }
 
 func RespondBadRequest(w http.ResponseWriter, msg string) {
@@ -127,6 +127,15 @@ func RespondBadRequest(w http.ResponseWriter, msg string) {
 func Respond(w http.ResponseWriter, statusCode int, responseBody []byte) {
 	setHttpHeaders(w, statusCode)
 	_, err := w.Write(responseBody)
+
+	if err != nil {
+		//logger.LogErr(err)
+	}
+}
+
+func RespondOk(w http.ResponseWriter) {
+	setHttpHeaders(w, http.StatusOK)
+	_, err := w.Write([]byte("{\"status\":\"ok\"}"))
 
 	if err != nil {
 		//logger.LogErr(err)

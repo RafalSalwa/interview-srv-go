@@ -1,10 +1,12 @@
 package handler
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/util/password"
 	"net/http"
 	"strconv"
 
@@ -12,15 +14,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type UserHandlerFunc func(http.ResponseWriter, *http.Request)
-
 type UserHandler interface {
-	GetUserById() UserHandlerFunc
-	PostUser() UserHandlerFunc
-	PasswordChange() UserHandlerFunc
-	Create() UserHandlerFunc
-	UserExist() UserHandlerFunc
-	LogIn() UserHandlerFunc
+	GetUserById() HandlerFunc
+	PostUser() HandlerFunc
+	PasswordChange() HandlerFunc
 }
 
 type userHandler struct {
@@ -33,7 +30,7 @@ func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger)
 	return userHandler{r, us, l}
 }
 
-func (uh userHandler) GetUserById() UserHandlerFunc {
+func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userId := mux.Vars(r)["id"]
 		uh.logger.Info().Msgf("Fetching user id %s", userId)
@@ -44,9 +41,8 @@ func (uh userHandler) GetUserById() UserHandlerFunc {
 			return
 		}
 
-		user, err := uh.userSqlService.GetUserById(intId)
+		user, err := uh.userSqlService.GetById(intId)
 		if err != nil {
-			fmt.Println(err)
 			uh.logger.Err(err)
 			responses.RespondInternalServerError(w)
 			return
@@ -56,52 +52,88 @@ func (uh userHandler) GetUserById() UserHandlerFunc {
 			responses.RespondNotFound(w)
 			return
 		}
-		ur := &models.UserResponse{
-			Id:        user.Id,
-			Username:  user.Username,
-			Firstname: user.Firstname,
-			RolesJson: user.RolesJson,
-			Roles:     user.Roles,
-			Verified:  user.Verified,
-			Active:    user.Active,
-			CreatedAt: user.CreatedAt,
-		}
+		ur := mapper.MapUserDBResponseToUserResponse(user)
+
 		responses.NewUserResponse(ur, w, r)
 	}
 }
 
-func (uh userHandler) PostUser() UserHandlerFunc {
+func (uh userHandler) PostUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		newUserRequest := &models.CreateUserRequest{}
+		err := json.NewDecoder(r.Body).Decode(newUserRequest)
+		if err != nil {
+			uh.logger.Error().Err(err)
+			responses.RespondBadRequest(w, "")
+			return
+		}
+
+		err = password.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm)
+		if err != nil {
+			uh.logger.Error().Err(err)
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+
+		if uh.userSqlService.Exists(newUserRequest) {
+			responses.RespondConflict(w, "username or email already exists")
+			return
+		}
+		u, err := uh.userSqlService.CreateUser(newUserRequest)
+		if err != nil {
+			uh.logger.Error().Err(err)
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.NewUserResponse(u, w, r)
 	}
 }
 
-func (uh userHandler) PasswordChange() UserHandlerFunc {
+func (uh userHandler) PasswordChange() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		passChange := &models.ChangePasswordRequest{}
+		err := json.NewDecoder(r.Body).Decode(passChange)
+		if err != nil {
+			uh.logger.Error().Err(err).Msg("Decode")
+			responses.RespondBadRequest(w, "")
+			return
+		}
+		err = password.Validate(passChange.Password, passChange.PasswordConfirm)
+		if err != nil {
+			uh.logger.Error().Err(err).Msg("Validate")
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
 
-	}
-}
+		user, err := uh.userSqlService.GetById(passChange.Id)
+		if err != nil {
+			uh.logger.Err(err)
+			responses.RespondInternalServerError(w)
+			return
+		}
 
-func (uh userHandler) Create() UserHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+		if user == nil {
+			responses.RespondNotFound(w)
+			return
+		}
+		if !password.CheckPasswordHash(passChange.Password, user.Password) {
+			uh.logger.Error().Msg("Password cannot be the same as old one")
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+		passHash, _ := password.HashPassword(passChange.Password)
 
-	}
-}
-
-func (uh userHandler) UserExist() UserHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-	}
-}
-
-func (uh userHandler) LogIn() UserHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-	}
-}
-
-func (u userHandler) Token() UserHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
+		updateUser := &models.UpdateUserRequest{
+			Id:       passChange.Id,
+			Password: &passHash,
+		}
+		err = uh.userSqlService.UpdateUserPassword(updateUser)
+		if err != nil {
+			uh.logger.Err(err)
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.RespondOk(w)
 	}
 }

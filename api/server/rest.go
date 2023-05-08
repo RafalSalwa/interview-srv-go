@@ -45,7 +45,12 @@ func Run(s *http.Server, conf *apiConfig.Conf) {
 		if err := s.Shutdown(ctx); err != nil {
 
 		}
+
 		close(closed)
 	}()
-	_ = s.ListenAndServe()
+	if conf.App.Env == "production" {
+		s.ListenAndServeTLS("/etc/ssl/private/unohouse.com.pl.crt", "/etc/ssl/private/unohouse.com.pl.key")
+	} else {
+		s.ListenAndServe()
+	}
 }

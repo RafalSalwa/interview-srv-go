@@ -3,7 +3,11 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/util/password"
 	"strconv"
 	"time"
 
@@ -15,32 +19,35 @@ import (
 )
 
 type SqlServiceImpl struct {
-	db mySql.DB
+	db     mySql.DB
+	logger *logger.Logger
 }
 
 type UserSqlService interface {
-	GetUserById(id int64) (user *models.UserDBResponse, err error)
-	GetUserByUsername(username string) (user *models.UserResponse, err error)
+	GetById(id int64) (user *models.UserDBResponse, err error)
+	Exists(user *models.CreateUserRequest) bool
 	UpdateUser(user *models.UpdateUserRequest) (err error)
 	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(user *models.UpdateUserRequest) (err error)
-	CreateUser(user *models.CreateUserRequest) (id int64, err error)
+	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
 }
 
-func NewMySqlService(db mySql.DB) *SqlServiceImpl {
-	return &SqlServiceImpl{db}
+func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {
+	return &SqlServiceImpl{db, l}
 }
 
-func (s *SqlServiceImpl) GetUserById(id int64) (user *models.UserDBResponse, err error) {
+func (s *SqlServiceImpl) GetById(id int64) (user *models.UserDBResponse, err error) {
 	user = &models.UserDBResponse{}
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json,is_verified, 1 FROM `user` WHERE is_active = 1 AND id=?", id)
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password, roles as roles_json,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
 	err = row.Scan(&user.Id,
 		&user.Username,
 		&user.Firstname,
 		&user.Lastname,
+		&user.Password,
 		&user.RolesJson,
 		&user.Verified,
-		&user.Active)
+		&user.Active,
+		&user.CreatedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -48,53 +55,25 @@ func (s *SqlServiceImpl) GetUserById(id int64) (user *models.UserDBResponse, err
 
 	if err != nil {
 		return nil, err
-	}
-
-	roles, err := phpserialize.Decode(user.RolesJson)
-
-	if err != nil {
-		return nil, err
-	}
-
-	v, ok := roles.(map[interface{}]interface{})
-	if ok {
-		for _, s := range v {
-			user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
-		}
 	}
 
 	return user, nil
 }
 
-func (s *SqlServiceImpl) GetUserByUsername(username string) (user *models.UserResponse, err error) {
-	user = &models.UserResponse{}
-	row := s.db.QueryRow("SELECT id,username,roles as roles_json FROM `user` WHERE is_active = 1 AND username=?", username)
-	err = row.Scan(&user.Id,
-		&user.Username,
-		&user.RolesJson)
+func (s *SqlServiceImpl) Exists(user *models.CreateUserRequest) bool {
+	dbuser := &models.UserDBResponse{}
+	row := s.db.QueryRow("SELECT id FROM `user` WHERE username=? OR email = ?", user.Username, user.Email)
+	err := row.Scan(&dbuser.Id)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return false
 	}
 
 	if err != nil {
-		return nil, err
+		return false
 	}
 
-	roles, err := phpserialize.Decode(user.RolesJson)
-
-	if err != nil {
-		return nil, err
-	}
-
-	v, ok := roles.(map[interface{}]interface{})
-	if ok {
-		for _, s := range v {
-			user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
-		}
-	}
-
-	return user, nil
+	return true
 }
 
 func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {
@@ -152,23 +131,45 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 	return nil
 }
 
-func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (id int64, err error) {
-	sqlStatement := "INSERT INTO `user` (`username`, `email`,`password`, `is_active`, `roles`) VALUES (?,?,?,1,{\"roles\": \"ROLE_USER\"});"
+func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error) {
+	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
+	vcode := generator.VerificationCode(6)
+	user.Password, _ = password.HashPassword(user.Password)
+	dbUser := &models.UserDBModel{
+		Username:         user.Username,
+		Password:         user.Password,
+		Email:            user.Email,
+		Roles:            roles,
+		VerificationCode: vcode,
+	}
+
+	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `roles`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,?,0,1);"
 	rows, err := s.db.ExecContext(getContext(),
 		sqlStatement,
-		user.Username,
-		user.Password,
-		1)
+		dbUser.Username,
+		dbUser.Password,
+		dbUser.Email,
+		dbUser.Roles,
+		dbUser.VerificationCode)
+
 	if err != nil {
-		return 0, err
+		fmt.Println(err)
+		s.logger.Error().Err(err).Msg("")
+		return nil, err
 	}
 
-	id, err = rows.LastInsertId()
+	id, err := rows.LastInsertId()
+	ur := &models.UserResponse{
+		Id:        id,
+		Username:  dbUser.Username,
+		CreatedAt: nil,
+	}
 	if err != nil {
-		return 0, err
+		s.logger.Error().Err(err).Msg("")
+		return nil, err
 	}
 
-	return id, nil
+	return ur, nil
 }
 
 func getContext() context.Context {

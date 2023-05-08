@@ -30,7 +30,8 @@ func NewApiRouter(l *logger.Logger) *mux.Router {
 
 	router.Use(middlewares.ContentTypeJson())
 	router.Use(middlewares.CorrelationIDMiddleware())
-	router.Use(middlewares.RequestLogMiddleware(l))
+	//router.Use(middlewares.RequestLogMiddleware(l))
+	router.Use(middlewares.CorsMiddleware())
 
 	setupIndexPageRoutesInfo(router)
 	setupHealthCheck(router)

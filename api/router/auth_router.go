@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/util/auth"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,5 +12,5 @@ import (
 
 func RegisterAuthRouter(r *mux.Router, h handler.IAuthHandler) {
 	s := r.PathPrefix("/auth/").Subrouter()
-	s.Methods(http.MethodGet).Path("/login").HandlerFunc(h.Login())
+	s.Methods(http.MethodGet).Path("/login").HandlerFunc(auth.Authorization(h.Login()))
 }
