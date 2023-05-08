@@ -21,3 +21,14 @@ message GenericResponse {
   string status = 1;
   string message = 2;
 }
+
+// The request containing the user ID.
+message GetUserRequest {
+  string user_id = 1;
+}
+
+// The response containing the user's details.
+message GetUserResponse {
+  string name = 1;
+  string email = 2;
+}

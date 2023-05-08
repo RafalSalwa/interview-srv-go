@@ -2,31 +2,35 @@ package services
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 
 type AuthServiceImpl struct {
-	ctx context.Context
+	ctx        context.Context
+	repository repository.UserRepository
+	logger     *logger.Logger
 }
 
 type AuthService interface {
-	SignUpUser(*models.SignUpInput) (*models.UserDBResponse, error)
-	SignInUser(*models.SignInInput) (*models.UserDBResponse, error)
+	SignUpUser(request *models.CreateUserRequest) (*models.UserDBResponse, error)
+	SignInUser(request *models.LoginUserRequest) (*models.UserDBResponse, error)
 	Token()
 }
 
-func NewAuthService(ctx context.Context) AuthService {
-	return &AuthServiceImpl{ctx}
+func NewAuthService(ctx context.Context, r repository.UserRepository, l *logger.Logger) AuthService {
+	return &AuthServiceImpl{ctx, r, l}
 }
 
 func (uc *AuthServiceImpl) Token() {
-	APIKey := uc.Request.Header.Get("X-API-Key")
+
 }
 
-func (uc *AuthServiceImpl) SignUpUser(user *models.SignUpInput) (*models.UserDBResponse, error) {
+func (uc *AuthServiceImpl) SignUpUser(user *models.CreateUserRequest) (*models.UserDBResponse, error) {
 	return nil, nil
 }
 
-func (uc *AuthServiceImpl) SignInUser(*models.SignInInput) (*models.UserDBResponse, error) {
+func (uc *AuthServiceImpl) SignInUser(*models.LoginUserRequest) (*models.UserDBResponse, error) {
 	return nil, nil
 }

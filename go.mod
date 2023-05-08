@@ -7,17 +7,19 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/protobuf v1.5.3
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/joeshaw/envdecode v0.0.0-20200121155833-099f1fc765bd
 	github.com/joho/godotenv v1.5.1
 	github.com/kovetskiy/go-php-serialize v0.0.0-20141101074437-71ef41a548d8
 	github.com/pressly/goose/v3 v3.10.0
 	github.com/rs/zerolog v1.29.1
+	github.com/wagslane/go-password-validator v0.3.0
 	golang.org/x/crypto v0.8.0
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 	gorm.io/driver/mysql v1.5.0
-	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
+	gorm.io/gorm v1.25.1
 )
 
 require (

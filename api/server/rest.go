@@ -3,7 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
+
+	"github.com/gorilla/mux"
+
 	apiConfig "github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
 	"net/http"
 	"os"
@@ -11,14 +15,15 @@ import (
 	"syscall"
 )
 
-type HttpServer struct {
-	app app.Application
+type Handler struct {
+	handler http.Handler
+	logger  *logger.Logger
 }
 
-func NewServer(c *apiConfig.Conf, handler http.Handler) *http.Server {
+func NewServer(c *apiConfig.Conf, r *mux.Router) *http.Server {
 	s := &http.Server{
-		Addr:         fmt.Sprintf(":%d", c.Server.Port),
-		Handler:      handler,
+		Addr:         fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port),
+		Handler:      r,
 		ReadTimeout:  c.Server.TimeoutRead,
 		WriteTimeout: c.Server.TimeoutWrite,
 		IdleTimeout:  c.Server.TimeoutIdle,
@@ -27,8 +32,6 @@ func NewServer(c *apiConfig.Conf, handler http.Handler) *http.Server {
 }
 
 func Run(s *http.Server, conf *apiConfig.Conf) {
-
-	_ = s.ListenAndServe()
 
 	closed := make(chan struct{})
 	go func() {
@@ -42,6 +45,12 @@ func Run(s *http.Server, conf *apiConfig.Conf) {
 		if err := s.Shutdown(ctx); err != nil {
 
 		}
+
 		close(closed)
 	}()
+	if conf.App.Env == "production" {
+		s.ListenAndServeTLS("/etc/ssl/private/unohouse.com.pl.crt", "/etc/ssl/private/unohouse.com.pl.key")
+	} else {
+		s.ListenAndServe()
+	}
 }

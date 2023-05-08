@@ -1,4 +1,4 @@
-package requestlog
+package middlewares
 
 import (
 	"errors"

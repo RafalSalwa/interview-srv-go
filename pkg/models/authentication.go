@@ -7,8 +7,8 @@ import (
 )
 
 type Authentication struct {
-	User  *User     `json:"user"`
-	Token jwt.Token `json:"token"`
+	User  *LoginUserRequest `json:"user"`
+	Token jwt.Token         `json:"token"`
 }
 
 type UserDevice struct {
@@ -23,6 +23,7 @@ type UserDevice struct {
 	LastLogin     time.Time  `json:"lastLogin"`
 	DeletedAt     *time.Time `json:"deletedAt"`
 }
+
 type UserDevices struct {
 	Items []UserDevice `json:"items"`
 }

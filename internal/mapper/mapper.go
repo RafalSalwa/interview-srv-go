@@ -1,34 +1,55 @@
 package mapper
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"net/http"
-	"strconv"
+	phpserialize "github.com/kovetskiy/go-php-serialize"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
-func MapUserDeviceFormToUserDevice(r *http.Request, device models.UserDevice) (*models.UserDevice, error) {
-	userId, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
-	if err != nil {
-		return nil, err
+func MapUserDBResponseToUserResponse(user *models.UserDBResponse) *models.UserResponse {
+	userResponse := &models.UserResponse{}
+
+	userResponse.Id = user.Id
+	userResponse.Username = user.Username
+	userResponse.Firstname = user.Firstname
+	userResponse.RolesJson = user.RolesJson
+	userResponse.Roles = getRolesList(user.RolesJson)
+	userResponse.CreatedAt = &user.CreatedAt
+	userResponse.LastLogin = user.LastLogin
+
+	fmt.Println("Created at", user.CreatedAt)
+	return userResponse
+}
+
+func getRolesList(r string) []string {
+	i := strings.Index(r, "roles")
+	type RoleItem struct {
+		Roles []string
 	}
-	osType, err := strconv.ParseInt(r.PostForm.Get("osType"), 10, 64)
-	if err != nil {
-		return nil, err
-	}
-	sdkVersion, err := strconv.ParseInt(r.PostForm.Get("sdkVersion"), 10, 64)
-	if err != nil {
-		return nil, err
+	var val RoleItem
+
+	if i > -1 {
+		err := json.Unmarshal([]byte(r), &val)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return val.Roles
 	}
 
-	device.UserId = userId
-	device.FirebaseToken = strings.TrimSpace(r.PostForm.Get("firebaseToken"))
-	device.OsType = osType
-	device.SdkVersion = sdkVersion
-	device.Model = strings.TrimSpace(r.PostForm.Get("model"))
-	device.Brand = strings.TrimSpace(r.PostForm.Get("brand"))
+	roles, err := phpserialize.Decode(r)
 
-	return &device, nil
+	if err != nil {
+		return nil
+	}
+	v, ok := roles.(map[interface{}]interface{})
+	decodedRoles := make([]string, len(v))
+	if ok {
+		for _, s := range v {
+			decodedRoles = append(decodedRoles, fmt.Sprintf("%v", s))
+		}
+	}
+
+	return decodedRoles
 }

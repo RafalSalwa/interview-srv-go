@@ -2,38 +2,40 @@ package jwt
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 )
 
-func CreateToken(username string) (string, error) {
-	secretKey := os.Getenv("JWT_SECRET_KEY")
-	if secretKey == "" {
-		return "", errors.New("JWT SECRET KEY IS MISSING IN ENV FILE")
-	}
+//
+//func CreateToken(username string, uid int64) (string, error) {
+//	secretKey := os.Getenv("JWT_SECRET_KEY")
+//	if secretKey == "" {
+//		return "", errors.New("JWT SECRET KEY IS MISSING IN ENV FILE")
+//	}
+//
+//	token := jwt.New(jwt.SigningMethodHS256)
+//	claims := token.Claims.(jwt.MapClaims)
+//
+//	now := time.Now().UTC()
+//	claims["id"] = uid
+//	claims["username"] = username
+//	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+//	claims["iat"] = now.Unix()
+//	claims["nbf"] = now.Unix()
+//
+//	tokenString, err := token.SignedString([]byte(secretKey))
+//
+//	if err != nil {
+//		fmt.Errorf("generate jwt failure: %s", err.Error())
+//		return "", err
+//	}
+//
+//	return tokenString, nil
+//}
 
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-
-	claims["authorized"] = true
-	claims["username"] = username
-	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
-
-	tokenString, err := token.SignedString([]byte(secretKey))
-
-	if err != nil {
-		fmt.Errorf("generate jwt failure: %s", err.Error())
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-func CreateToken2(ttl time.Duration, payload interface{}, privateKey string) (string, error) {
+func CreateToken(ttl time.Duration, payload interface{}, privateKey string) (string, error) {
 	decodedPrivateKey, err := base64.StdEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", fmt.Errorf("could not decode key: %w", err)

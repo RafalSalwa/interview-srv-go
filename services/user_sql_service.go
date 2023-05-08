@@ -3,46 +3,51 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/util/password"
+	"strconv"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	mySql "github.com/RafalSalwa/interview-app-srv/sql"
 	"github.com/RafalSalwa/interview-app-srv/util"
-	"strconv"
-	"time"
 
 	phpserialize "github.com/kovetskiy/go-php-serialize"
 )
 
-type UserSqlService interface {
-	GetUserById(id int64) (user *models.User, err error)
-	GetUserByUsername(username string) (user *models.User, err error)
-	UpdateUser(user *models.User) (err error)
-	UpdateUserFirebaseToken(user *models.User) (err error)
-	LoginUser(username string) (*models.User, error)
-	UpdateUserPassword(user *models.User) (err error)
-	CreateUser(user *models.User) (id int64, err error)
-	CreateUserDevice(userDevice *models.UserDevice) (id int64, err error)
-	GetDevicesByUserId(id int64) (userDevice *models.UserDevices, err error)
-	GetLatestDevice(id int64) (userDevice *models.UserDevice, err error)
-}
-
 type SqlServiceImpl struct {
-	db mySql.DB
+	db     mySql.DB
+	logger *logger.Logger
 }
 
-func NewMySqlService(db mySql.DB) *SqlServiceImpl {
-	return &SqlServiceImpl{db}
+type UserSqlService interface {
+	GetById(id int64) (user *models.UserDBResponse, err error)
+	Exists(user *models.CreateUserRequest) bool
+	UpdateUser(user *models.UpdateUserRequest) (err error)
+	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
+	UpdateUserPassword(user *models.UpdateUserRequest) (err error)
+	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
 }
 
-func (s *SqlServiceImpl) GetUserById(id int64) (user *models.User, err error) {
-	user = &models.User{}
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json,firebase_token FROM `user` WHERE deleted_at IS NULL AND id=?", id)
+func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {
+	return &SqlServiceImpl{db, l}
+}
+
+func (s *SqlServiceImpl) GetById(id int64) (user *models.UserDBResponse, err error) {
+	user = &models.UserDBResponse{}
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password, roles as roles_json,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
 	err = row.Scan(&user.Id,
 		&user.Username,
 		&user.Firstname,
 		&user.Lastname,
+		&user.Password,
 		&user.RolesJson,
-		&user.FirebaseToken)
+		&user.Verified,
+		&user.Active,
+		&user.CreatedAt)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -52,57 +57,26 @@ func (s *SqlServiceImpl) GetUserById(id int64) (user *models.User, err error) {
 		return nil, err
 	}
 
-	roles, err := phpserialize.Decode(user.RolesJson)
-
-	if err != nil {
-		return nil, err
-	}
-
-	v, ok := roles.(map[interface{}]interface{})
-	if ok {
-		for _, s := range v {
-			user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
-		}
-	}
-
 	return user, nil
 }
 
-func (s *SqlServiceImpl) GetUserByUsername(username string) (user *models.User, err error) {
-	user = &models.User{}
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json,firebase_token FROM `user` WHERE deleted_at IS NULL AND username=?", username)
-	err = row.Scan(&user.Id,
-		&user.Username,
-		&user.Firstname,
-		&user.Lastname,
-		&user.RolesJson,
-		&user.FirebaseToken)
+func (s *SqlServiceImpl) Exists(user *models.CreateUserRequest) bool {
+	dbuser := &models.UserDBResponse{}
+	row := s.db.QueryRow("SELECT id FROM `user` WHERE username=? OR email = ?", user.Username, user.Email)
+	err := row.Scan(&dbuser.Id)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return false
 	}
 
 	if err != nil {
-		return nil, err
+		return false
 	}
 
-	roles, err := phpserialize.Decode(user.RolesJson)
-
-	if err != nil {
-		return nil, err
-	}
-
-	v, ok := roles.(map[interface{}]interface{})
-	if ok {
-		for _, s := range v {
-			user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
-		}
-	}
-
-	return user, nil
+	return true
 }
 
-func (s *SqlServiceImpl) UpdateUser(user *models.User) (err error) {
+func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {
 	sqlStatement := "UPDATE user SET first_name=?, last_name=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, &user.Firstname, &user.Lastname, user.Id)
 
@@ -113,28 +87,14 @@ func (s *SqlServiceImpl) UpdateUser(user *models.User) (err error) {
 	return nil
 }
 
-func (s *SqlServiceImpl) UpdateUserFirebaseToken(user *models.User) (err error) {
-	sqlStatement := "UPDATE `user` SET firebase_token=? WHERE id=?;"
-	_, err = s.db.ExecContext(getContext(), sqlStatement, user.FirebaseToken, user.Id)
+func (s *SqlServiceImpl) LoginUser(u *models.LoginUserRequest) (*models.UserResponse, error) {
+	user := models.UserResponse{}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *SqlServiceImpl) LoginUser(username string) (*models.User, error) {
-	user := models.User{}
-
-	row := s.db.QueryRow("SELECT id,username,password,first_name,last_name,roles as roles_json,firebase_token FROM `user` WHERE (username=? OR email=?)", username, username)
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json FROM `user` WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
 	err := row.Scan(&user.Id,
 		&user.Username,
-		&user.Password,
 		&user.Firstname,
-		&user.Lastname,
-		&user.RolesJson,
-		&user.FirebaseToken)
+		&user.RolesJson)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -160,7 +120,7 @@ func (s *SqlServiceImpl) LoginUser(username string) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *SqlServiceImpl) UpdateUserPassword(user *models.User) (err error) {
+func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err error) {
 	sqlStatement := "UPDATE `user` SET password=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, user.Password, user.Id)
 
@@ -171,124 +131,45 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.User) (err error) {
 	return nil
 }
 
-func (s *SqlServiceImpl) CreateUser(user *models.User) (id int64, err error) {
-	sqlStatement := "INSERT INTO `user` (`username`, `password`, `enabled`, `roles`) VALUES (?,?,?,?);"
+func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error) {
+	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
+	vcode := generator.VerificationCode(6)
+	user.Password, _ = password.HashPassword(user.Password)
+	dbUser := &models.UserDBModel{
+		Username:         user.Username,
+		Password:         user.Password,
+		Email:            user.Email,
+		Roles:            roles,
+		VerificationCode: vcode,
+	}
+
+	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `roles`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,?,0,1);"
 	rows, err := s.db.ExecContext(getContext(),
 		sqlStatement,
-		user.Username,
-		user.Password,
-		1,
-		user.RolesJson)
-	if err != nil {
-		return 0, err
-	}
-
-	id, err = rows.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
-}
-
-func (s *SqlServiceImpl) CreateUserDevice(userDevice *models.UserDevice) (id int64, err error) {
-	sqlStatement :=
-		"INSERT INTO `user_device` " +
-			"(`user_id`,`firebase_token`,`os_type`,`sdk_version`,`model`,`brand`,`last_login`,`created_at`,`deleted_at`) " +
-			"VALUES (?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE last_login=NOW(),sdk_version=?, model=?, brand=?"
-	rows, err := s.db.ExecContext(
-		getContext(),
-		sqlStatement,
-		&userDevice.UserId,
-		&userDevice.FirebaseToken,
-		&userDevice.OsType,
-		&userDevice.SdkVersion,
-		&userDevice.Model,
-		&userDevice.Brand,
-		&userDevice.LastLogin,
-		&userDevice.CreatedAt,
-		&userDevice.DeletedAt,
-		&userDevice.SdkVersion,
-		&userDevice.Model,
-		&userDevice.Brand,
-	)
+		dbUser.Username,
+		dbUser.Password,
+		dbUser.Email,
+		dbUser.Roles,
+		dbUser.VerificationCode)
 
 	if err != nil {
-		return 0, err
-	}
-
-	id, err = rows.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
-}
-
-func (s *SqlServiceImpl) GetDevicesByUserId(id int64) (devices *models.UserDevices, err error) {
-	devices = &models.UserDevices{}
-
-	rows, err := s.db.QueryContext(getContext(), "SELECT `id`,`user_id`,`firebase_token`,`os_type`,`sdk_version`,`model`,`brand`,`last_login`,`created_at`,`deleted_at` "+
-		"FROM `user_device` WHERE `user_id`=?", id)
-
-	if err != nil {
+		fmt.Println(err)
+		s.logger.Error().Err(err).Msg("")
 		return nil, err
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-		var device models.UserDevice
-		err := rows.Scan(
-			&device.Id,
-			&device.UserId,
-			&device.FirebaseToken,
-			&device.OsType,
-			&device.SdkVersion,
-			&device.Model,
-			&device.Brand,
-			&device.LastLogin,
-			&device.CreatedAt,
-			&device.DeletedAt,
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		devices.Items = append(devices.Items, device)
-
+	id, err := rows.LastInsertId()
+	ur := &models.UserResponse{
+		Id:        id,
+		Username:  dbUser.Username,
+		CreatedAt: nil,
 	}
-	return devices, nil
-}
-
-func (s *SqlServiceImpl) GetLatestDevice(id int64) (device *models.UserDevice, err error) {
-	device = &models.UserDevice{}
-
-	row := s.db.QueryRowContext(getContext(), "SELECT `id`,`user_id`,`firebase_token`,`os_type`,`sdk_version`,`model`,`brand`,`last_login`,`created_at`,`deleted_at` "+
-		"FROM `user_device` WHERE `user_id`=? ORDER BY created_at DESC limit 1", id)
 	if err != nil {
+		s.logger.Error().Err(err).Msg("")
 		return nil, err
 	}
 
-	err = row.Scan(
-		&device.Id,
-		&device.UserId,
-		&device.FirebaseToken,
-		&device.OsType,
-		&device.SdkVersion,
-		&device.Model,
-		&device.Brand,
-		&device.LastLogin,
-		&device.CreatedAt,
-		&device.DeletedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return device, nil
+	return ur, nil
 }
 
 func getContext() context.Context {
