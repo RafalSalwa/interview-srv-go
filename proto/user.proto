@@ -1,21 +1,23 @@
 syntax="proto3";
 
-package pb;
-option go_package = "github.com/RafalSalwa/interview-app-srv/pb";
+package intrvproto;
+option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
 
 import "google/protobuf/timestamp.proto";
 
 message User {
   string id = 1;
-  string name = 2;
+  string username = 2;
   string email = 3;
   enum role {
     user = 0;
     admin = 1;
   }
   google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp last_login = 5;
 }
+
+message UserResponse { User user = 1; }
 
 message GenericResponse {
   string status = 1;
@@ -29,6 +31,6 @@ message GetUserRequest {
 
 // The response containing the user's details.
 message GetUserResponse {
-  string name = 1;
+  string username = 1;
   string email = 2;
 }

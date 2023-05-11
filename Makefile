@@ -14,7 +14,7 @@ proto:
 		echo "error: protoc not installed" >&2; \
 		exit 1; \
 	fi
-		protoc --proto_path=proto --go_out=proto/grpc --go_opt=paths=source_relative   --go-grpc_out=grpc --go-grpc_opt=paths=source_relative   proto/*.proto; \
+		protoc --proto_path=proto --go_out=proto/grpc --go_opt=paths=source_relative   --go-grpc_out=proto/grpc --go-grpc_opt=paths=source_relative   proto/*.proto; \
 
 clean:
 	go clean -i google.golang.org/grpc/...

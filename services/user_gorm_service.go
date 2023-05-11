@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"strconv"
+
 	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
@@ -19,7 +21,8 @@ type userService struct {
 }
 
 func (s *userService) Load(ctx context.Context, id string) (*models.UserDBModel, error) {
-	res, err := s.repository.ById(ctx, id)
+	uid, err := strconv.ParseInt(id, 10, 64)
+	res, err := s.repository.ById(ctx, uid)
 	if err != nil {
 		return nil, err
 	}

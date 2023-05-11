@@ -22,7 +22,7 @@ type IAuthHandler interface {
 
 type AuthHandler struct {
 	Router         *mux.Router
-	userSqlService services.AuthService
+	userORMService services.AuthService
 	logger         *logger.Logger
 }
 
@@ -52,12 +52,13 @@ func (ah AuthHandler) Login() HandlerFunc {
 			responses.RespondBadRequest(w, "")
 			return
 		}
-		//user, err := ah.userSqlService.Authorize(LoginReq)
-		//if err != nil {
-		//	uh.logger.Err(err)
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
+		user, err := ah.userORMService.Load(LoginReq)
+		if err != nil {
+			ah.logger.Err(err)
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.NewUserResponse(user, w, r)
 	}
 }
 

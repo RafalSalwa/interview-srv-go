@@ -33,6 +33,14 @@ func NewServer(c *apiConfig.Conf, r *mux.Router) *http.Server {
 
 func Run(s *http.Server, conf *apiConfig.Conf) {
 
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		}
+	}()
+
 	closed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)
@@ -48,9 +56,9 @@ func Run(s *http.Server, conf *apiConfig.Conf) {
 
 		close(closed)
 	}()
-	if conf.App.Env == "production" {
-		s.ListenAndServeTLS("/etc/ssl/private/unohouse.com.pl.crt", "/etc/ssl/private/unohouse.com.pl.key")
-	} else {
-		s.ListenAndServe()
-	}
+	//if conf.App.Env == "production" {
+	//	s.ListenAndServeTLS("/etc/ssl/private/unohouse.com.pl.crt", "/etc/ssl/private/unohouse.com.pl.key")
+	//} else {
+	//	s.ListenAndServe()
+	//}
 }

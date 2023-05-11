@@ -14,6 +14,7 @@ type Conf struct {
 	Server ConfServer
 	DB     ConfDB
 	GRPC   ConfGRPC
+	Token  ConfToken
 }
 
 type ConfGRPC struct {
@@ -43,6 +44,17 @@ type ConfDB struct {
 	Password string `env:"MYSQL_PASSWORD,required"`
 	DBName   string `env:"MYSQL_NAME,required"`
 	Debug    bool   `env:"MYSQL_DEBUG,required"`
+}
+
+type ConfToken struct {
+	AccessTokenPrivateKey  string        `env:"ACCESS_TOKEN_PRIVATE_KEY"`
+	AccessTokenPublicKey   string        `env:"ACCESS_TOKEN_PUBLIC_KEY"`
+	RefreshTokenPrivateKey string        `env:"REFRESH_TOKEN_PRIVATE_KEY"`
+	RefreshTokenPublicKey  string        `env:"REFRESH_TOKEN_PUBLIC_KEY"`
+	AccessTokenExpiresIn   time.Duration `env:"ACCESS_TOKEN_EXPIRED_IN"`
+	RefreshTokenExpiresIn  time.Duration `env:"REFRESH_TOKEN_EXPIRED_IN"`
+	AccessTokenMaxAge      int           `env:"ACCESS_TOKEN_MAXAGE"`
+	RefreshTokenMaxAge     int           `env:"REFRESH_TOKEN_MAXAGE"`
 }
 
 func New() *Conf {

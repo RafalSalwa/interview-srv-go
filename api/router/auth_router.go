@@ -1,8 +1,9 @@
 package router
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/util/auth"
 	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/util/auth"
 
 	"github.com/gorilla/mux"
 

@@ -2,13 +2,15 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/RafalSalwa/interview-app-srv/util/password"
-	"net/http"
-	"strconv"
 
 	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/gorilla/mux"
@@ -32,6 +34,7 @@ func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger)
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("GET USER")
 		userId := mux.Vars(r)["id"]
 		uh.logger.Info().Msgf("Fetching user id %s", userId)
 		intId, err := strconv.ParseInt(userId, 10, 64)

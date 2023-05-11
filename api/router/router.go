@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
+	"github.com/RafalSalwa/interview-app-srv/config"
 	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -25,14 +26,14 @@ type AppRoute struct {
 
 var appRoutes []AppRoute
 
-func NewApiRouter(l *logger.Logger) *mux.Router {
+func NewApiRouter(l *logger.Logger, c config.ConfToken) *mux.Router {
 	router := mux.NewRouter()
 
 	router.Use(middlewares.ContentTypeJson())
 	router.Use(middlewares.CorrelationIDMiddleware())
 	//router.Use(middlewares.RequestLogMiddleware(l))
 	router.Use(middlewares.CorsMiddleware())
-
+	//router.Use(middlewares.DeserializeUser(c))
 	setupIndexPageRoutesInfo(router)
 	setupHealthCheck(router)
 
