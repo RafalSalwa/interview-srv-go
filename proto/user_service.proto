@@ -1,11 +1,10 @@
 syntax = "proto3";
 
 package intrvproto;
+option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
 
 import "user.proto";
 
-option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
-
 service UserService {
-rpc GetMe(GetUserRequest) returns (UserResponse) {}
+  rpc GetUserById(GetUserRequest) returns (UserResponse) {}
 }

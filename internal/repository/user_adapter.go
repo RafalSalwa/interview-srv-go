@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/util/password"
-	"gorm.io/gorm"
 	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"gorm.io/gorm"
 )
 
 type UserAdapter struct {

@@ -2,14 +2,15 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 
 	"github.com/gorilla/mux"
 
+	"github.com/RafalSalwa/interview-app-srv/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/services"
 )
 
 type IAuthHandler interface {
