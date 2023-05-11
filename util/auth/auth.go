@@ -32,8 +32,8 @@ func unauthorised(rw http.ResponseWriter) {
 
 func Authorization(h handler.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accessToken := r.Header["X-API-KEY"]
-		if accessToken == nil {
+		accessToken := r.Header.Get("x-api-key")
+		if accessToken == "" {
 			responses.RespondNotAuthorized(w, "")
 			return
 		}

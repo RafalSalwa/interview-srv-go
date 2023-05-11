@@ -6,7 +6,7 @@ import (
 
 // swagger:model User
 type UserDBModel struct {
-	Id               int64   `gorm:"primaryKey; autoIncrement"`
+	Id               int64   `gorm:"id;primaryKey;autoIncrement"`
 	Username         string  `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
 	Password         string  `gorm:"type:varchar(255);not null"`
 	Firstname        *string `gorm:"type:varchar(255)"`
@@ -14,15 +14,19 @@ type UserDBModel struct {
 	Email            string  `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
 	Phone            *string `gorm:"type:varchar(11)"`
 	RolesJson        string
-	Roles            []byte
+	Roles            []byte `gorm:"column:roles"`
 	VerificationCode string `gorm:"type:varchar(6)"`
 	Verified         bool   `gorm:"default:false"`
 	Active           bool   `gorm:"default:false"`
 	JwtToken         *string
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	LastLogin        time.Time `json:"last_login"`
-	DeletedAt        time.Time `json:"deleted_at"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
+	UpdatedAt        time.Time `gorm:"column:updated_at"`
+	LastLogin        time.Time `gorm:"column:last_login"`
+	DeletedAt        time.Time `gorm:"column:deleted_at"`
+}
+
+func (UserDBModel) TableName() string {
+	return "user"
 }
 
 // swagger:model Users
@@ -66,17 +70,19 @@ type UserDBResponse struct {
 }
 
 type UserResponse struct {
-	Id        int64      `json:"id,omitempty"`
-	Username  string     `json:"username"`
-	Firstname *string    `json:"firstname,omitempty"`
-	RolesJson string     `json:"rolesJson,omitempty"`
-	Roles     []string   `json:"roles,omitempty"`
-	Verified  bool       `json:"is_verified,omitempty"`
-	Active    bool       `json:"is_active,omitempty"`
-	CreatedAt *time.Time `json:"created_at,omitempty"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
-	LastLogin *time.Time `json:"last_login,omitempty"`
-	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	Id           int64      `json:"id,omitempty"`
+	Username     string     `json:"username"`
+	Firstname    *string    `json:"firstname,omitempty"`
+	RolesJson    string     `json:"rolesJson,omitempty"`
+	Roles        []string   `json:"roles,omitempty"`
+	Verified     bool       `json:"is_verified,omitempty"`
+	Active       bool       `json:"is_active,omitempty"`
+	Token        string     `json:"token,omitempty"`
+	RefreshToken string     `json:"refresh_token,omitempty"`
+	CreatedAt    *time.Time `json:"created_at,omitempty"`
+	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
+	LastLogin    *time.Time `json:"last_login,omitempty"`
+	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
 }
 
 type UpdateUserRequest struct {

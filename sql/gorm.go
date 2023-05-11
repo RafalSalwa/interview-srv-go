@@ -16,7 +16,6 @@ type GormDB struct {
 func NewUsersDBGorm(c config.ConfDB, l *logger.Logger) *gorm.DB {
 	conString := fmt.Sprintf(dbString, c.Username, c.Password, c.Host, c.Port, c.DBName, dbParams)
 	db, err := gorm.Open(mysql.Open(conString), &gorm.Config{Logger: gormlogger.Default.LogMode(gormlogger.Info)})
-	fmt.Println(conString)
 	if err != nil {
 		l.Fatal().Err(err).Msg("DB connection start failure")
 	}

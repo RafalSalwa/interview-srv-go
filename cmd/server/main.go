@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 
 	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
@@ -30,15 +31,15 @@ func main() {
 	ctx = context.TODO()
 	conf = config.New()
 	l := logger.NewConsole(conf.App.Debug)
-	r := apiRouter.NewApiRouter(l)
 
 	db := sql.NewUsersDB(conf.DB, l)
 	ormDB := sql.NewUsersDBGorm(conf.DB, l)
 	userRepository := repository.NewUserAdapter(ormDB)
 
 	userService = services.NewMySqlService(db, l)
-	authService = services.NewAuthService(ctx, userRepository, l)
+	authService = services.NewAuthService(ctx, userRepository, l, conf.Token)
 
+	r := apiRouter.NewApiRouter(l, conf.Token)
 	userHandler = apiHandler.NewUserHandler(r, userService, l)
 	authHandler = apiHandler.NewAuthHandler(r, authService, l)
 
@@ -51,7 +52,7 @@ func main() {
 	apiRouter.GetRoutesList(r)
 	apiServer.Run(server, conf)
 
-	//grpcServer, _ := apiServer.NewGrpcServer(conf.GRPC, authService, userService)
-	//l.Info().Msg("Starting gRPC server.")
-	//grpcServer.Run()
+	grpcServer, _ := apiServer.NewGrpcServer(conf.GRPC, authService, userService)
+	l.Info().Msg("Starting gRPC server.")
+	grpcServer.Run()
 }

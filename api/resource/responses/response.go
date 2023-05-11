@@ -40,7 +40,7 @@ type Response struct {
 }
 
 type UserResponse struct {
-	Data *models.UserResponse `json:"data"`
+	Data *models.UserResponse `json:"user"`
 }
 
 func successResponse(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +138,7 @@ func RespondOk(w http.ResponseWriter) {
 	_, err := w.Write([]byte("{\"status\":\"ok\"}"))
 
 	if err != nil {
-		//logger.LogErr(err)
+		RespondInternalServerError(w)
 	}
 }
 
@@ -146,7 +146,6 @@ func NewUserResponse(u *models.UserResponse, w http.ResponseWriter, r *http.Requ
 	response := &UserResponse{Data: u}
 	js, err := json.Marshal(response)
 	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
 		RespondInternalServerError(w)
 	}
 

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package intrvproto;
+option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
+
+message SignInUserInput {
+  string email = 1;
+  string password = 2;
+}
+
+message SignInUserResponse {
+  string status = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
