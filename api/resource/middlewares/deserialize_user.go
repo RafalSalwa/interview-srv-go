@@ -1,12 +1,13 @@
 package middlewares
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/config"
-	"github.com/RafalSalwa/interview-app-srv/util/jwt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
+	"github.com/gorilla/mux"
 )
 
 func DeserializeUser(c config.ConfToken) mux.MiddlewareFunc {

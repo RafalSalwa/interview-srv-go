@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/RafalSalwa/interview-app-srv/api/handler"
-	"github.com/RafalSalwa/interview-app-srv/util/auth"
+	"github.com/RafalSalwa/interview-app-srv/internal/auth"
 )
 
 func RegisterUserRouter(r *mux.Router, h handler.UserHandler) {

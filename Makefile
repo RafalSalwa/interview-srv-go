@@ -23,14 +23,10 @@ coverage: testdeps
 	./coverage.sh --coveralls
 
 .PHONY: \
-	all \
-	deps \
-	updatedeps \
 	testdeps \
 	updatetestdeps \
 	build \
 	proto \
 	test \
-	testrace \
 	clean \
 	coverage

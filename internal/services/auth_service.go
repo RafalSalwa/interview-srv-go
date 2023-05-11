@@ -2,12 +2,13 @@ package services
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
 	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/util/jwt"
 )
 
 type AuthServiceImpl struct {

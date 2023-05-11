@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/RafalSalwa/interview-app-srv/util/jwt"
+	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
 )
 
 type Authentication struct {

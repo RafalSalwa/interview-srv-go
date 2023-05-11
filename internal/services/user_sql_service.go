@@ -5,15 +5,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/util/password"
 	"strconv"
 	"time"
 
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+
+	"github.com/RafalSalwa/interview-app-srv/internal/util"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	mySql "github.com/RafalSalwa/interview-app-srv/sql"
-	"github.com/RafalSalwa/interview-app-srv/util"
 
 	phpserialize "github.com/kovetskiy/go-php-serialize"
 )
@@ -30,6 +31,11 @@ type UserSqlService interface {
 	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(user *models.UpdateUserRequest) (err error)
 	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
+}
+
+func (u SqlServiceImpl) Load(ctx context.Context, id string) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {

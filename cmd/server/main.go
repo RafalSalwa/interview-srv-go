@@ -10,8 +10,8 @@ import (
 	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
 	apiServer "github.com/RafalSalwa/interview-app-srv/api/server"
 	"github.com/RafalSalwa/interview-app-srv/config"
+	"github.com/RafalSalwa/interview-app-srv/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/services"
 	"github.com/RafalSalwa/interview-app-srv/sql"
 )
 

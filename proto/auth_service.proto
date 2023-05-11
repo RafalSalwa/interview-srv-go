@@ -5,8 +5,6 @@ option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
 
 import "rpc_signin.proto";
 
-
-
 service AuthService {
   rpc SignInUser(SignInUserInput) returns (SignInUserResponse) {}
 }
