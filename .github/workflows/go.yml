@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
 
   test:
-    name: runner / tests
+    name: runner / integration_tests
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go
@@ -69,4 +69,4 @@ jobs:
       run: go build -o server ./cmd/server/main.go
 
     - name: Test
-      run: make tests
+      run: make integration_tests

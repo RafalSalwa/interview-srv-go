@@ -29,12 +29,12 @@ jobs: # basic units of work in a run
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
 
       - run:
-          name: Run unit tests
+          name: Run unit integration_tests
           environment: # environment variables for the database url and path to migration files
             CONTACTS_DB_URL: "postgres://circleci-demo-go@localhost:5432/circle_test?sslmode=disable"
             CONTACTS_DB_MIGRATIONS: /home/circleci/project/db/migrations
 
-          # store the results of our tests in the $TEST_RESULTS directory
+          # store the results of our integration_tests in the $TEST_RESULTS directory
           command: |
             PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
             gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES

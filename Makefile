@@ -1,13 +1,30 @@
 all: test testrace
 
+compose-up:
+	docker-compose up --build -d postgres rabbitmq && docker-compose logs -f
+
+compose-down:
+	docker-compose down --remove-orphans
+
+build:
+	go build -o server ./cmd/server/main.go
+
+test: ### run test
+	go test -v -cover -race ./internal/... ./pkg/... ./cmd/...
+.PHONY: test
+
 testdeps:
 	go get -d -v -t google.golang.org/grpc/...
 
 updatetestdeps:
 	go get -d -v -t -u -f google.golang.org/grpc/...
 
-build:
-	go build -o server ./cmd/server/main.go
+linter-golangci: ### check by golangci linter
+	golangci-lint run
+
+mock: ### run mockgen
+	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
+.PHONY: mock
 
 proto:
 	@ if ! which protoc > /dev/null; then \

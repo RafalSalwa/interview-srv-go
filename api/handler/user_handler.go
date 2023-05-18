@@ -61,9 +61,9 @@ func (uh userHandler) GetUserById() HandlerFunc {
 
 func (uh userHandler) PostUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		newUserRequest := &models.CreateUserRequest{}
 		err := json.NewDecoder(r.Body).Decode(newUserRequest)
+
 		if err != nil {
 			uh.logger.Error().Err(err)
 			responses.RespondBadRequest(w, "")

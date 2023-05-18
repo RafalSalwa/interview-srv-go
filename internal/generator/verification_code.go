@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"errors"
 	"math/rand"
 	"unsafe"
 )
@@ -12,9 +13,11 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-func VerificationCode(n int) string {
+func VerificationCode(n int) (*string, error) {
+	if n < 6 || n > 10 {
+		return nil, errors.New("code should be between 6 and 10 letters")
+	}
 	b := make([]byte, n)
-	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
 			cache, remain = rand.Int63(), letterIdxMax
@@ -27,5 +30,5 @@ func VerificationCode(n int) string {
 		remain--
 	}
 
-	return *(*string)(unsafe.Pointer(&b))
+	return (*string)(unsafe.Pointer(&b)), nil
 }

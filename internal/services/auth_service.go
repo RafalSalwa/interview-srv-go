@@ -2,10 +2,10 @@ package services
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 
 	"github.com/RafalSalwa/interview-app-srv/config"
 	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
-	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
@@ -40,25 +40,22 @@ func (s *AuthServiceImpl) Load(user *models.LoginUserRequest) (*models.UserRespo
 	if dbUser == nil {
 		return nil, nil
 	}
-	loginTime, err := s.repository.UpdateLastLogin(s.ctx, dbUser.Id)
+	dbUser, err = s.repository.UpdateLastLogin(s.ctx, dbUser)
 	if err != nil {
 		return nil, err
 	}
-	dbUser.LastLogin = loginTime
-	ur := mapper.MapUserDBModelToUserResponse(dbUser)
 
-	accessToken, err := jwt.CreateToken(s.config.AccessTokenExpiresIn, dbUser.Id, s.config.RefreshTokenPrivateKey)
+	tp, err := jwt.GenerateTokenPair(s.config, dbUser.Id, dbUser.Username)
+	_, _ = jwt.DecodeToken(tp.AccessToken, s.config.AccessTokenPublicKey)
+	//s.logger.Info().Msgf("%v", v)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("access_token")
+		s.logger.Error().Err(err).Msg("token_pair")
 		return nil, err
 	}
-	ur.Token = accessToken
-	refreshToken, err := jwt.CreateToken(s.config.RefreshTokenExpiresIn, dbUser.Id, s.config.RefreshTokenPrivateKey)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("refresh_token")
-		return nil, err
-	}
-	ur.RefreshToken = refreshToken
+
+	ur := mapper.MapUserDBModelToUserResponse(dbUser)
+	ur.Token = tp.AccessToken
+	ur.RefreshToken = tp.RefreshToken
 
 	return ur, nil
 }

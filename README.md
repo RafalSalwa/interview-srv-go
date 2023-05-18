@@ -8,6 +8,10 @@ Interview app
 Sample app presenting app structure and usage of some libraries. This app works with REST and gRPC servers included, 
 based on docker containers. 
 
+create network for containers in other repos
+```bash
+docker network create --driver=bridge --subnet=172.28.1.0/24 --ip-range=172.28.1.0/24 --gateway=172.28.5.254 external-interview-net
+```
 ## Build
 make up
 
@@ -16,10 +20,11 @@ make up
 make test
 
 
-
 ### build
-make proto
-
+- make proto
+- make build
+## Technologies used
+ 
  - files structure according to [best practices](https://github.com/golang-standards/project-layout)
  - gorilla/mux middleware and handlers
    - [correlationid](api/resource/middlewares/correlationid.go)

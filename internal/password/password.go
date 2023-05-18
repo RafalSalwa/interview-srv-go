@@ -1,10 +1,10 @@
 package password
 
 import (
-	"fmt"
+	"regexp"
+
 	passwordvalidator "github.com/wagslane/go-password-validator"
 	"golang.org/x/crypto/bcrypt"
-	"regexp"
 )
 
 type ValidationError struct {
@@ -33,13 +33,14 @@ func Validate(password string, PasswordConfirm string) error {
 			Field:   "passwordConfirm",
 		}
 	}
-	fmt.Println("len", len(password))
+
 	if len(password) < 8 || len(password) > 16 {
 		return &ValidationError{
 			Message: "Password should be between 8 and 16 characters in length",
 			Field:   "password",
 		}
 	}
+
 	done, err := regexp.MatchString("([a-z])+", password)
 	if err != nil {
 		return err
@@ -50,6 +51,7 @@ func Validate(password string, PasswordConfirm string) error {
 			Field:   "password",
 		}
 	}
+
 	done, err = regexp.MatchString("([A-Z])+", password)
 	if err != nil {
 		return err
@@ -60,6 +62,7 @@ func Validate(password string, PasswordConfirm string) error {
 			Field:   "password",
 		}
 	}
+
 	done, err = regexp.MatchString("([0-9])+", password)
 	if err != nil {
 		return err
