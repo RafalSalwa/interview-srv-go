@@ -49,7 +49,6 @@ make test
  - [Postman collection](docs/Interview_API_Requests.postman_collection.json)
 
 # In Progress
-- migrations
 - notification hub -> api for email sendout in batches/bulks
 - tests
 
@@ -107,3 +106,14 @@ POST /user create user
 POST /user/change_password self explanatory
 
 GET /auth/login call to get tokens
+
+## Screenshots:
+![grpc_list.png](docs/grpc_list.png)
+
+---
+
+![get_user.png](docs/get_user.png)
+
+---
+
+![grpc_auth.png](docs/grpc_auth.png)
