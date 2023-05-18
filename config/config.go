@@ -68,7 +68,7 @@ func New() *Conf {
 	}
 
 	if err := envdecode.StrictDecode(&c); err != nil {
-		log.Fatalf("Failed to read env file: %s", err)
+		log.Fatalf("Failed to read env file via envdecode: %s", err)
 	}
 
 	return &c
