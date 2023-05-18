@@ -9,20 +9,14 @@ compose-down:
 build:
 	go build -o server ./cmd/server/main.go
 
-test: ### run test
+test:
 	go test -v -cover -race ./internal/... ./pkg/... ./cmd/...
 .PHONY: test
 
-testdeps:
-	go get -d -v -t google.golang.org/grpc/...
-
-updatetestdeps:
-	go get -d -v -t -u -f google.golang.org/grpc/...
-
-linter-golangci: ### check by golangci linter
+linter-golangci:
 	golangci-lint run
 
-mock: ### run mockgen
+mock:
 	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
 .PHONY: mock
 
@@ -35,15 +29,3 @@ proto:
 
 clean:
 	go clean -i google.golang.org/grpc/...
-
-coverage: testdeps
-	./coverage.sh --coveralls
-
-.PHONY: \
-	testdeps \
-	updatetestdeps \
-	build \
-	proto \
-	test \
-	clean \
-	coverage
