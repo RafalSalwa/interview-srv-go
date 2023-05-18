@@ -2,6 +2,8 @@ package config
 
 import (
 	"log"
+	"os"
+	"regexp"
 	"time"
 
 	"github.com/joeshaw/envdecode"
@@ -29,6 +31,7 @@ type ConfApp struct {
 }
 
 type ConfServer struct {
+	Addr         string        `env:"SERVER_ADDR"`
 	Host         string        `env:"SERVER_HOST,required"`
 	Port         int           `env:"SERVER_PORT,required"`
 	TimeoutRead  time.Duration `env:"SERVER_TIMEOUT_READ,required"`
@@ -72,10 +75,14 @@ func New() *Conf {
 }
 
 func readFromFile() (bool, error) {
-	err := godotenv.Load(".env")
+	re := regexp.MustCompile(`^(.*` + "interview-app-srv" + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+
 	if err != nil {
-		log.Fatalf("Some error occured. Err: %s", err)
-		return false, err
+		_ = godotenv.Load(".env")
 	}
 	return true, nil
 }

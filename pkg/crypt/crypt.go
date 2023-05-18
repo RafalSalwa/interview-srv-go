@@ -8,14 +8,10 @@ import (
 
 var bytes = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
 
-// This should be in an env file in production
-const MySecret string = "5&hL_/pMaR/h3pN2ybDtxdev;&@f6{"
-
 func Encode(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-// Encrypt method is to encrypt or hide any classified text
 func Encrypt(text, MySecret string) (string, error) {
 	block, err := aes.NewCipher([]byte(MySecret))
 	if err != nil {

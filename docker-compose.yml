@@ -16,7 +16,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      interview_net:
+      external-interview-net:
         ipv4_address: 172.28.1.2
         aliases:
           - iapi
@@ -44,7 +44,7 @@ services:
       timeout: 5s
       retries: 55
     networks:
-      interview_net:
+      external-interview-net:
         ipv4_address: 172.28.1.3
         aliases:
           - imysql
@@ -59,7 +59,7 @@ services:
     volumes:
       - cache:/data
     networks:
-      interview_net:
+      external-interview-net:
         ipv4_address: 172.28.1.5
         aliases:
           - icache
@@ -84,7 +84,7 @@ services:
       timeout: 5s
       retries: 55
     networks:
-      interview_net:
+      external-interview-net:
         ipv4_address: 172.28.1.6
         aliases:
           - ipostgress
@@ -95,8 +95,13 @@ volumes:
   pg-data:
 
 networks:
-  interview_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.28.1.0/24
+  external-interview-net:
+    external: true
+
+#networks:
+#  interview_net:
+#    external: true
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: 172.28.1.0/24

@@ -59,6 +59,11 @@ func (ah AuthHandler) Login() HandlerFunc {
 			responses.RespondInternalServerError(w)
 			return
 		}
+		if user == nil {
+			// it's better to hide notFound in unauthorized response to avoid user guessing
+			responses.RespondNotAuthorized(w, "")
+			return
+		}
 		responses.NewUserResponse(user, w, r)
 	}
 }

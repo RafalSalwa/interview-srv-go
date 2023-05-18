@@ -33,11 +33,11 @@ func (r *UserAdapter) ByLogin(ctx context.Context, user *models.LoginUserRequest
 	return nil, nil
 }
 
-func (r *UserAdapter) UpdateLastLogin(ctx context.Context, uid int64) (time.Time, error) {
+func (r *UserAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
 	now := time.Now()
-	r.DB.Model(&models.UserDBModel{Id: uid}).Update("LastLogin", now)
-
-	return now, nil
+	r.DB.Model(u).Update("LastLogin", now)
+	u.LastLogin = now
+	return u, nil
 }
 
 func (r *UserAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {

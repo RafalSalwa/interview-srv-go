@@ -2,8 +2,9 @@ package responses
 
 import (
 	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 
 type Data struct {
@@ -107,8 +108,11 @@ func RespondNotFound(w http.ResponseWriter) {
 }
 
 func RespondNotAuthorized(w http.ResponseWriter, msg string) {
+	w.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
+
 	errorResponse := NewUnauthorizedErrorResponse(msg)
 	responseBody := marshalErrorResponse(errorResponse)
+
 	Respond(w, http.StatusUnauthorized, responseBody)
 }
 
@@ -129,7 +133,7 @@ func Respond(w http.ResponseWriter, statusCode int, responseBody []byte) {
 	_, err := w.Write(responseBody)
 
 	if err != nil {
-		//logger.LogErr(err)
+
 	}
 }
 
@@ -144,6 +148,7 @@ func RespondOk(w http.ResponseWriter) {
 
 func NewUserResponse(u *models.UserResponse, w http.ResponseWriter, r *http.Request) {
 	response := &UserResponse{Data: u}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	js, err := json.Marshal(response)
 	if err != nil {
 		RespondInternalServerError(w)

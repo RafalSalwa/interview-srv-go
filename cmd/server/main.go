@@ -6,6 +6,8 @@ import (
 
 	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 
+	_ "net/http/pprof"
+
 	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/api/router"
 	apiServer "github.com/RafalSalwa/interview-app-srv/api/server"
@@ -34,8 +36,8 @@ func main() {
 
 	db := sql.NewUsersDB(conf.DB, l)
 	ormDB := sql.NewUsersDBGorm(conf.DB, l)
-	userRepository := repository.NewUserAdapter(ormDB)
 
+	userRepository := repository.NewUserAdapter(ormDB)
 	userService = services.NewMySqlService(db, l)
 	authService = services.NewAuthService(ctx, userRepository, l, conf.Token)
 

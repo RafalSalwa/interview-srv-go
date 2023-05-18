@@ -139,14 +139,14 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 
 func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error) {
 	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	vcode := generator.VerificationCode(6)
+	vcode, _ := generator.VerificationCode(6)
 	user.Password, _ = password.HashPassword(user.Password)
 	dbUser := &models.UserDBModel{
 		Username:         user.Username,
 		Password:         user.Password,
 		Email:            user.Email,
 		Roles:            roles,
-		VerificationCode: vcode,
+		VerificationCode: *vcode,
 	}
 
 	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `roles`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,?,0,1);"
