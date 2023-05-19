@@ -11,6 +11,9 @@ import (
 type DB struct {
 	*sql.DB
 }
+type Tx struct {
+	*sql.Tx
+}
 
 const (
 	driver   = "mysql"
@@ -31,4 +34,13 @@ func NewUsersDB(c config.ConfDB, l *logger.Logger) DB {
 
 	}
 	return DB{db}
+}
+
+// Begin starts an returns a new transaction.
+func (db *DB) Begin() (*Tx, error) {
+	tx, err := db.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	return &Tx{tx}, nil
 }
