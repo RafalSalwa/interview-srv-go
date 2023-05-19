@@ -27,7 +27,11 @@ type ConfApp struct {
 	Env          string `env:"APP_ENV, default=dev"`
 	Debug        bool   `env:"APP_DEBUG, default=false"`
 	JwtSecretKey string `env:"JWT_SECRET_KEY, required"`
-	APIKey       string `env:"X_API_KEY, required"`
+}
+
+type ConfBasicAuth struct {
+	Username string `env:"SERVER_AUTH_BASIC_USERNAME"`
+	Password string `env:"SERVER_AUTH_BASIC_PASSWORD"`
 }
 
 type ConfServer struct {
@@ -37,7 +41,11 @@ type ConfServer struct {
 	TimeoutRead  time.Duration `env:"SERVER_TIMEOUT_READ,required"`
 	TimeoutWrite time.Duration `env:"SERVER_TIMEOUT_WRITE,required"`
 	TimeoutIdle  time.Duration `env:"SERVER_TIMEOUT_IDLE,required"`
-	Debug        bool          `env:"APP_DEBUG,required"`
+	APIKey       string        `env:"X_API_KEY, required"`
+	AuthMethod   string        `env:"SERVER_AUTH_METHOD"`
+	BasicAuth    ConfBasicAuth
+	BearerToken  string `env:"BEARER_TOKEN"`
+	Debug        bool   `env:"APP_DEBUG,required"`
 }
 
 type ConfDB struct {

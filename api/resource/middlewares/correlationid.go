@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+type CorrId struct {
+	correlationid string
+}
+
 func CorrelationIDMiddleware() mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -17,7 +21,7 @@ func CorrelationIDMiddleware() mux.MiddlewareFunc {
 				newid := uuid.New()
 				id = newid.String()
 			}
-			ctx = context.WithValue(ctx, "correlation_id", id)
+			ctx = context.WithValue(ctx, CorrId{"correlation_id"}, id)
 			r = r.WithContext(ctx)
 			log := zerolog.Ctx(ctx)
 			log.UpdateContext(func(c zerolog.Context) zerolog.Context {

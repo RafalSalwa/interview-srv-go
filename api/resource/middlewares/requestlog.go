@@ -11,11 +11,6 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 )
 
-type Handler struct {
-	handler http.Handler
-	logger  *logger.Logger
-}
-
 func RequestLogMiddleware(logger *logger.Logger) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

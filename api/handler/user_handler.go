@@ -45,7 +45,10 @@ func (uh userHandler) GetUserById() HandlerFunc {
 		user, err := uh.userSqlService.GetById(intId)
 		if err != nil {
 			uh.logger.Err(err)
-			responses.RespondInternalServerError(w)
+			err := responses.RespondInternalServerError(w)
+			if err != nil {
+				return
+			}
 			return
 		}
 
@@ -55,7 +58,7 @@ func (uh userHandler) GetUserById() HandlerFunc {
 		}
 		ur := mapper.MapUserDBResponseToUserResponse(user)
 
-		responses.NewUserResponse(ur, w, r)
+		responses.NewUserResponse(ur, w)
 	}
 }
 
@@ -84,10 +87,13 @@ func (uh userHandler) PostUser() HandlerFunc {
 		u, err := uh.userSqlService.CreateUser(newUserRequest)
 		if err != nil {
 			uh.logger.Error().Err(err)
-			responses.RespondInternalServerError(w)
+			err := responses.RespondInternalServerError(w)
+			if err != nil {
+				return
+			}
 			return
 		}
-		responses.NewUserResponse(u, w, r)
+		responses.NewUserResponse(u, w)
 	}
 }
 
@@ -110,7 +116,10 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 		user, err := uh.userSqlService.GetById(passChange.Id)
 		if err != nil {
 			uh.logger.Err(err)
-			responses.RespondInternalServerError(w)
+			err := responses.RespondInternalServerError(w)
+			if err != nil {
+				return
+			}
 			return
 		}
 
@@ -132,7 +141,10 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 		err = uh.userSqlService.UpdateUserPassword(updateUser)
 		if err != nil {
 			uh.logger.Err(err)
-			responses.RespondInternalServerError(w)
+			err := responses.RespondInternalServerError(w)
+			if err != nil {
+				return
+			}
 			return
 		}
 		responses.RespondOk(w)
