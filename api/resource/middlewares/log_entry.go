@@ -67,7 +67,10 @@ func (wc *writeCounter) Write(p []byte) (n int, err error) {
 
 func headerSize(h http.Header) int64 {
 	var wc writeCounter
-	h.Write(&wc)
+	err := h.Write(&wc)
+	if err != nil {
+		return 0
+	}
 	return int64(wc) + 2 // for CRLF
 }
 
@@ -96,7 +99,13 @@ func (r *responseStats) Write(p []byte) (n int, err error) {
 		r.WriteHeader(http.StatusOK)
 	}
 	n, err = r.w.Write(p)
-	r.wc.Write(p[:n])
+	if err != nil {
+		return 0, err
+	}
+	_, err = r.wc.Write(p[:n])
+	if err != nil {
+		return 0, err
+	}
 	return
 }
 

@@ -36,69 +36,19 @@ type ConflictResponse struct {
 	Data Data `json:"conflict"`
 }
 
-type Response struct {
-	Data interface{} `json:"data"`
-}
-
 type UserResponse struct {
 	Data *models.UserResponse `json:"user"`
 }
 
-func successResponse(w http.ResponseWriter, r *http.Request) {
-	response := &SuccessResponse{Data: Data{
-		Success: true,
-	}}
-	js, err := json.Marshal(response)
+func RespondInternalServerError(w http.ResponseWriter) error {
+	err := NewErrorBuilder().
+		SetResponseCode(http.StatusInternalServerError).
+		SetReason("Internal server error").
+		SetWriter(w).Respond()
 	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
+		return err
 	}
-
-	Respond(w, http.StatusOK, js)
-}
-
-func errorResponse(w http.ResponseWriter, r *http.Request, message *string) {
-	response := &ErrorResponse{Data: Data{
-		Success: false,
-		Message: message,
-	}}
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
-	}
-
-	Respond(w, http.StatusOK, jsonResponse)
-}
-func conflictResponse(w http.ResponseWriter, r *http.Request, message *string) {
-	response := &ErrorResponse{Data: Data{
-		Success: false,
-		Message: message,
-	}}
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
-	}
-
-	Respond(w, http.StatusConflict, jsonResponse)
-}
-
-func AuthenticationResponse(a models.Authentication, w http.ResponseWriter) {
-	response := &Response{Data: a}
-	js, err := json.Marshal(response)
-	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
-	}
-
-	Respond(w, http.StatusOK, js)
-}
-
-func RespondInternalServerError(w http.ResponseWriter) {
-	errorResponse := NewInternalServerErrorErrorResponse()
-	responseBody := marshalErrorResponse(errorResponse)
-	Respond(w, http.StatusInternalServerError, responseBody)
+	return nil
 }
 
 func RespondNotFound(w http.ResponseWriter) {
@@ -129,78 +79,43 @@ func RespondBadRequest(w http.ResponseWriter, msg string) {
 }
 
 func Respond(w http.ResponseWriter, statusCode int, responseBody []byte) {
-	setHttpHeaders(w, statusCode)
-	_, err := w.Write(responseBody)
-
-	if err != nil {
-
-	}
+	setHTTPHeaders(w, statusCode)
+	_, _ = w.Write(responseBody)
 }
 
 func RespondOk(w http.ResponseWriter) {
-	setHttpHeaders(w, http.StatusOK)
+	setHTTPHeaders(w, http.StatusOK)
 	_, err := w.Write([]byte("{\"status\":\"ok\"}"))
 
 	if err != nil {
-		RespondInternalServerError(w)
+		err := RespondInternalServerError(w)
+		if err != nil {
+			return
+		}
 	}
 }
 
-func NewUserResponse(u *models.UserResponse, w http.ResponseWriter, r *http.Request) {
+func NewUserResponse(u *models.UserResponse, w http.ResponseWriter) {
 	response := &UserResponse{Data: u}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	js, err := json.Marshal(response)
 	if err != nil {
-		RespondInternalServerError(w)
+		err := RespondInternalServerError(w)
+		if err != nil {
+			return
+		}
 	}
 
 	Respond(w, http.StatusOK, js)
 }
 
-func userNotificationResponse(n *models.Notification, w http.ResponseWriter, r *http.Request) {
-	response := &NotificationResponse{Data: n}
-	js, err := json.Marshal(response)
-	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
-	}
-
-	Respond(w, http.StatusOK, js)
-}
-func notificationsResponse(ns *models.Notifications, w http.ResponseWriter, r *http.Request) {
-	response := &NotificationsResponse{Data: ns}
-	js, err := json.Marshal(response)
-	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
-	}
-
-	Respond(w, http.StatusOK, js)
-}
-
-func userDevicesResponse(ud *models.UserDevices, w http.ResponseWriter, r *http.Request) {
-	response := &UserDevicesResponse{Data: ud}
-	js, err := json.Marshal(response)
-	if err != nil {
-		//logger.Log(err.Error(), logger.Error)
-		RespondInternalServerError(w)
-	}
-
-	Respond(w, http.StatusOK, js)
-}
-
-func setHttpHeaders(w http.ResponseWriter, statusCode int) {
+func setHTTPHeaders(w http.ResponseWriter, statusCode int) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(statusCode)
 }
 
-func marshalErrorResponse(error interface{}) []byte {
-	body, err := json.Marshal(error)
-
-	if err != nil {
-		//logger.LogErr(err)
-		return nil
-	}
+func marshalErrorResponse(err interface{}) []byte {
+	body, _ := json.Marshal(err)
 
 	return body
 }

@@ -9,7 +9,13 @@ import (
 	"os"
 )
 
-func BasicAuth(h apiHandler.HandlerFunc) http.HandlerFunc {
+type basicAuth struct {
+	h        apiHandler.HandlerFunc
+	username string
+	password string
+}
+
+func (a *basicAuth) middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		authUsername := os.Getenv("AUTH_USERNAME")
@@ -34,7 +40,10 @@ func BasicAuth(h apiHandler.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func Authorization(h apiHandler.HandlerFunc) http.HandlerFunc {
-	at, _ := NewAuthMethod(h, "basic")
-	return at.middleware(h)
+func newBasicAuthMiddleware(h apiHandler.HandlerFunc, username string, password string) *basicAuth {
+	return &basicAuth{
+		h:        h,
+		username: username,
+		password: password,
+	}
 }

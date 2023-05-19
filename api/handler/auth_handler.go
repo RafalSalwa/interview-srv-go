@@ -56,7 +56,10 @@ func (ah AuthHandler) Login() HandlerFunc {
 		user, err := ah.userORMService.Load(LoginReq)
 		if err != nil {
 			ah.logger.Err(err)
-			responses.RespondInternalServerError(w)
+			err := responses.RespondInternalServerError(w)
+			if err != nil {
+				return
+			}
 			return
 		}
 		if user == nil {
@@ -64,7 +67,7 @@ func (ah AuthHandler) Login() HandlerFunc {
 			responses.RespondNotAuthorized(w, "")
 			return
 		}
-		responses.NewUserResponse(user, w, r)
+		responses.NewUserResponse(user, w)
 	}
 }
 
