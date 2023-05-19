@@ -2,6 +2,13 @@ package services
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+
 	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 
 	"github.com/RafalSalwa/interview-app-srv/config"
@@ -19,7 +26,7 @@ type AuthServiceImpl struct {
 }
 
 type AuthService interface {
-	SignUpUser(request *models.CreateUserRequest) (*models.UserDBResponse, error)
+	SignUpUser(request *models.CreateUserRequest) (*models.UserResponse, error)
 	Load(request *models.LoginUserRequest) (*models.UserResponse, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
 }
@@ -28,8 +35,21 @@ func NewAuthService(ctx context.Context, r repository.UserRepository, l *logger.
 	return &AuthServiceImpl{ctx, r, l, c}
 }
 
-func (s *AuthServiceImpl) SignUpUser(user *models.CreateUserRequest) (*models.UserDBResponse, error) {
-	return nil, nil
+func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.UserResponse, error) {
+	um := mapper.UserCreateRequestToDBModel(cur)
+
+	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
+	vcode, _ := generator.RandomString(6)
+	um.Password, _ = password.HashPassword(um.Password)
+
+	um.Roles = roles
+	um.VerificationCode = *vcode
+	um.CreatedAt = time.Now()
+
+	s.repository.SingUp(um)
+	fmt.Printf("%v\n", um)
+	ur := mapper.MapUserDBModelToUserResponse(um)
+	return ur, nil
 }
 
 func (s *AuthServiceImpl) Load(user *models.LoginUserRequest) (*models.UserResponse, error) {
@@ -47,7 +67,7 @@ func (s *AuthServiceImpl) Load(user *models.LoginUserRequest) (*models.UserRespo
 
 	tp, err := jwt.GenerateTokenPair(s.config, dbUser.Id, dbUser.Username)
 	_, _ = jwt.DecodeToken(tp.AccessToken, s.config.AccessTokenPublicKey)
-	//s.logger.Info().Msgf("%v", v)
+	// s.logger.Info().Msgf("%v", v)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("token_pair")
 		return nil, err

@@ -13,12 +13,12 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-func VerificationCode(n int) (*string, error) {
-	if n < 6 || n > 10 {
+func RandomString(l int) (*string, error) {
+	if l < 6 || l > 10 {
 		return nil, errors.New("code should be between 6 and 10 letters")
 	}
-	b := make([]byte, n)
-	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
+	b := make([]byte, l)
+	for i, cache, remain := l-1, rand.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
 			cache, remain = rand.Int63(), letterIdxMax
 		}

@@ -6,7 +6,6 @@ import (
 )
 
 func TestVerificationCode(t *testing.T) {
-
 	tests := []struct {
 		name string
 	}{
@@ -17,7 +16,7 @@ func TestVerificationCode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, err := VerificationCode(6)
+			code, err := RandomString(6)
 			if err != nil {
 				t.Errorf("encrypt() error = %v", err)
 				return
@@ -27,7 +26,7 @@ func TestVerificationCode(t *testing.T) {
 				t.Error("verification code can contain only letters")
 				return
 			}
-			code, err = VerificationCode(4)
+			code, err = RandomString(4)
 			if err == nil {
 				t.Errorf("cannot generate too short codes")
 				return

@@ -3,7 +3,6 @@ module github.com/RafalSalwa/interview-app-srv
 go 1.20
 
 require (
-	cloud.google.com/go/logging v1.6.1
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -25,17 +24,9 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.107.0 // indirect
-	cloud.google.com/go/compute v1.15.1 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	cloud.google.com/go/longrunning v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
-	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
@@ -43,14 +34,9 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/oauth2 v0.4.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	google.golang.org/api v0.103.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -1,10 +1,11 @@
 package mapper
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMapUserDBModelToUserResponse(t *testing.T) {

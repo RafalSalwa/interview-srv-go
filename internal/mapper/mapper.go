@@ -3,13 +3,23 @@ package mapper
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/jinzhu/copier"
 	phpserialize "github.com/kovetskiy/go-php-serialize"
-	"strings"
 )
 
 const dbTimeFormat = "2006-01-02 15:04:05"
+
+func UserCreateRequestToDBModel(ur *models.CreateUserRequest) *models.UserDBModel {
+	um := &models.UserDBModel{}
+	err := copier.Copy(um, ur)
+	if err != nil {
+		return nil
+	}
+	return um
+}
 
 func MapUserDBModelToUserResponse(user *models.UserDBModel) *models.UserResponse {
 	userResponse := &models.UserResponse{}
@@ -18,8 +28,6 @@ func MapUserDBModelToUserResponse(user *models.UserDBModel) *models.UserResponse
 	if err != nil {
 		return nil
 	}
-
-	userResponse.Roles = getRolesList(user.RolesJson)
 
 	return userResponse
 }
