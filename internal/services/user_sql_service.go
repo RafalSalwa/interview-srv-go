@@ -96,10 +96,7 @@ func (s *SqlServiceImpl) Exists(user *models.CreateUserRequest) bool {
 }
 
 func (s *SqlServiceImpl) Veryficate(user *models.UserDBModel) bool {
-	fmt.Printf("Veryficate %#v\n", user)
-	dbuser := &models.UserDBResponse{}
 	_, err := s.db.Exec("UPDATE `user` SET is_verified = 1, is_active=1 WHERE id = ?", user.Id)
-	fmt.Printf("Veryficate2 %#v\n", dbuser)
 	if err == sql.ErrNoRows {
 		return false
 	}

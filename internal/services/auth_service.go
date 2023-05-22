@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/generator"
@@ -49,7 +48,6 @@ func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.Use
 	s.repository.SingUp(um)
 
 	ur := mapper.MapUserDBModelToUserResponse(um)
-	fmt.Printf("signUp %#v\n %#v \n", um, ur)
 	return ur, nil
 }
 

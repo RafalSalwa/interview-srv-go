@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
@@ -16,14 +17,147 @@ import (
 const (
 	emailDomain = "@interview.com"
 	password    = "VeryG00dPass!"
+	numUsers    = 500
 )
 
+var l *logger.Logger
+
+type User struct {
+	Id             string
+	ValidationCode string
+	Username       string
+	Password       string
+	token          Token
+}
+
+type Token struct {
+	access  string
+	refresh string
+}
+
+var maxNbConcurrentGoroutines = 100
+var concurrentGoroutines = make(chan struct{}, maxNbConcurrentGoroutines)
+
+func runWorkersInOrder() {
+	conn, _ := grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+
+	authClient := pb.NewAuthServiceClient(conn)
+	userClient := pb.NewUserServiceClient(conn)
+
+	qCreatedUsers := make(chan User, numUsers)
+	qActivatedUsers := make(chan User, numUsers)
+	qFailedUsers := make(chan User, numUsers)
+	done := make(chan bool)
+
+	for i := 1; i <= numUsers; i++ {
+		go createUser(authClient, qCreatedUsers, qFailedUsers)
+	}
+
+	for i := 1; i <= numUsers; i++ {
+		go activateUser(userClient, qCreatedUsers, qActivatedUsers, qFailedUsers)
+	}
+
+	for i := 1; i <= numUsers; i++ {
+		go tokenUser(authClient, qActivatedUsers, qFailedUsers)
+	}
+	go func() {
+		for {
+			fmt.Printf("Concurrent queue len: | %6d | user creation queue:  %6d | user activation queue: %6d \n", len(concurrentGoroutines), len(qCreatedUsers), len(qActivatedUsers))
+			if len(concurrentGoroutines) == 0 {
+				done <- true
+				fmt.Println("Queues depleted, closing")
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+
+	<-done
+}
+
 func main() {
+	// runWorkersInOrder()
+	runWorkersInDaisyChain()
+}
+
+func createUser(authClient pb.AuthServiceClient, created chan User, failed chan User) {
+	concurrentGoroutines <- struct{}{}
+	ctx := context.TODO()
+
+	pUsername, _ := generator.RandomString(12)
+	email := *pUsername + emailDomain
+
+	newUser := &pb.SignUpUserInput{
+		Name:            *pUsername,
+		Email:           email,
+		Password:        password,
+		PasswordConfirm: password,
+	}
+
+	signUp, err := authClient.SignUpUser(ctx, newUser)
+	if err != nil {
+		failed <- User{
+			Id:       "",
+			Username: *pUsername,
+			Password: password,
+		}
+		return
+	}
+
+	created <- User{Id: signUp.GetId(),
+		ValidationCode: signUp.VerificationToken,
+		Username:       *pUsername,
+		Password:       password,
+	}
+	<-concurrentGoroutines
+}
+
+func activateUser(uc pb.UserServiceClient, created chan User, activated chan User, failed chan User) {
+	concurrentGoroutines <- struct{}{}
+	ctx := context.TODO()
+	select {
+	case user := <-created:
+		rVerification := &pb.VerifyUserRequest{Code: user.ValidationCode}
+		_, err := uc.VerifyUser(ctx, rVerification)
+		if err != nil {
+			failed <- User{
+				Id:       "",
+				Username: user.Username,
+				Password: user.Password,
+			}
+			return
+		}
+		activated <- User{Id: user.Id, ValidationCode: user.ValidationCode, Username: user.Username, Password: user.Password}
+	}
+	<-concurrentGoroutines
+}
+
+func tokenUser(authClient pb.AuthServiceClient, activated chan User, failed chan User) {
+	concurrentGoroutines <- struct{}{}
+	ctx := context.TODO()
+
+	select {
+	case user := <-activated:
+		credentials := &pb.SignInUserInput{
+			Username: user.Username,
+			Password: user.Password,
+		}
+		_, err := authClient.SignInUser(ctx, credentials)
+		if err != nil {
+			failed <- User{
+				Id:       "",
+				Username: user.Username,
+				Password: user.Password,
+			}
+		}
+	}
+	<-concurrentGoroutines
+}
+
+func main2() {
 	l := logger.NewConsole(false)
 	pUsername, _ := generator.RandomString(8)
 	username := *pUsername
 	email := username + emailDomain
-	fmt.Println("Client starting")
 	ctx := context.TODO()
 
 	conn, err := grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())

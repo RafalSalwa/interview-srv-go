@@ -3,7 +3,6 @@ package rpc_api
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -15,7 +14,6 @@ import (
 )
 
 func (userServer *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserResponse, error) {
-	fmt.Printf("GetUserById: %s\n", req.GetUserId())
 	id := req.GetUserId()
 	intId, _ := strconv.ParseInt(id, 10, 64)
 	user, err := userServer.userService.GetById(intId)
