@@ -3,6 +3,8 @@ syntax = "proto3";
 package intrvproto;
 option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
 
+import "google/protobuf/timestamp.proto";
+
 message SignInUserInput {
   string username = 1;
   string password = 2;
@@ -12,4 +14,18 @@ message SignInUserResponse {
   string status = 1;
   string access_token = 2;
   string refresh_token = 3;
+}
+
+message SignUpUserInput {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  string passwordConfirm = 4;
+}
+
+message SignUpUserResponse {
+  string id = 1;
+  string username = 2;
+  string verification_token = 3;
+  google.protobuf.Timestamp created_at = 4;
 }

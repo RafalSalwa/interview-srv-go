@@ -6,23 +6,21 @@ import (
 
 // swagger:model User
 type UserDBModel struct {
-	Id               int64   `gorm:"id;primaryKey;autoIncrement"`
-	Username         string  `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
-	Password         string  `gorm:"type:varchar(255);not null"`
-	Firstname        *string `gorm:"type:varchar(255)"`
-	Lastname         *string `gorm:"type:varchar(255)"`
-	Email            string  `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
-	Phone            *string `gorm:"type:varchar(11)"`
-	RolesJson        string
-	Roles            []byte `gorm:"column:roles"`
-	VerificationCode string `gorm:"type:varchar(6)"`
-	Verified         bool   `gorm:"default:false"`
-	Active           bool   `gorm:"default:false"`
-	JwtToken         *string
-	CreatedAt        time.Time `gorm:"column:created_at"`
-	UpdatedAt        time.Time `gorm:"column:updated_at"`
-	LastLogin        time.Time `gorm:"column:last_login"`
-	DeletedAt        time.Time `gorm:"column:deleted_at"`
+	Id               int64      `gorm:"id;primaryKey;autoIncrement"`
+	Username         string     `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
+	Password         string     `gorm:"type:varchar(255);not null"`
+	Firstname        *string    `gorm:"column:first_name;type:varchar(255)"`
+	Lastname         *string    `gorm:"column:last_name;type:varchar(255)"`
+	Email            string     `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
+	Phone            *string    `gorm:"column:phone_no;type:varchar(11)"`
+	Roles            []byte     `gorm:"column:roles"`
+	VerificationCode string     `gorm:"column:verification_code;type:varchar(6)"`
+	Verified         bool       `gorm:"column:is_verified;default:false"`
+	Active           bool       `gorm:"column:is_active;default:false"`
+	CreatedAt        time.Time  `gorm:"column:created_at"`
+	UpdatedAt        *time.Time `gorm:"column:updated_at"`
+	LastLogin        *time.Time `gorm:"column:last_login"`
+	DeletedAt        *time.Time `gorm:"column:deleted_at"`
 }
 
 func (UserDBModel) TableName() string {
@@ -70,19 +68,20 @@ type UserDBResponse struct {
 }
 
 type UserResponse struct {
-	Id           int64      `json:"id,omitempty"`
-	Username     string     `json:"username"`
-	Firstname    *string    `json:"firstname,omitempty"`
-	RolesJson    string     `json:"rolesJson,omitempty"`
-	Roles        []string   `json:"roles,omitempty"`
-	Verified     bool       `json:"is_verified,omitempty"`
-	Active       bool       `json:"is_active,omitempty"`
-	Token        string     `json:"token,omitempty"`
-	RefreshToken string     `json:"refresh_token,omitempty"`
-	CreatedAt    *time.Time `json:"created_at,omitempty"`
-	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
-	LastLogin    *time.Time `json:"last_login,omitempty"`
-	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
+	Id               int64      `json:"id,omitempty"`
+	Username         string     `json:"username"`
+	Firstname        *string    `json:"firstname,omitempty"`
+	RolesJson        string     `json:"rolesJson,omitempty"`
+	Roles            []string   `json:"roles,omitempty"`
+	Verified         bool       `json:"is_verified,omitempty"`
+	VerificationCode string     `json:"verification_token"`
+	Active           bool       `json:"is_active,omitempty"`
+	Token            string     `json:"token,omitempty"`
+	RefreshToken     string     `json:"refresh_token,omitempty"`
+	CreatedAt        *time.Time `json:"created_at,omitempty"`
+	UpdatedAt        *time.Time `json:"updated_at,omitempty"`
+	LastLogin        *time.Time `json:"last_login,omitempty"`
+	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
 }
 
 type UpdateUserRequest struct {

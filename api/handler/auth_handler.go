@@ -56,10 +56,8 @@ func (ah AuthHandler) Login() HandlerFunc {
 		user, err := ah.userORMService.Load(LoginReq)
 		if err != nil {
 			ah.logger.Err(err)
-			err := responses.RespondInternalServerError(w)
-			if err != nil {
-				return
-			}
+			responses.RespondInternalServerError(w)
+
 			return
 		}
 		if user == nil {

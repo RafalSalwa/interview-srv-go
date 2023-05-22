@@ -7,6 +7,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 
+// sample data struct with additional eror details
 type Data struct {
 	Success bool    `json:"success"`
 	Message *string `json:"message"`
@@ -40,15 +41,12 @@ type UserResponse struct {
 	Data *models.UserResponse `json:"user"`
 }
 
-func RespondInternalServerError(w http.ResponseWriter) error {
-	err := NewErrorBuilder().
+func RespondInternalServerError(w http.ResponseWriter) {
+	_ = NewErrorBuilder().
 		SetResponseCode(http.StatusInternalServerError).
 		SetReason("Internal server error").
-		SetWriter(w).Respond()
-	if err != nil {
-		return err
-	}
-	return nil
+		SetWriter(w).
+		Respond()
 }
 
 func RespondNotFound(w http.ResponseWriter) {
@@ -88,10 +86,7 @@ func RespondOk(w http.ResponseWriter) {
 	_, err := w.Write([]byte("{\"status\":\"ok\"}"))
 
 	if err != nil {
-		err := RespondInternalServerError(w)
-		if err != nil {
-			return
-		}
+		RespondInternalServerError(w)
 	}
 }
 
@@ -100,10 +95,7 @@ func NewUserResponse(u *models.UserResponse, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	js, err := json.Marshal(response)
 	if err != nil {
-		err := RespondInternalServerError(w)
-		if err != nil {
-			return
-		}
+		RespondInternalServerError(w)
 	}
 
 	Respond(w, http.StatusOK, js)

@@ -143,3 +143,5 @@ go.work
 .vscode
 .DS_Store
 .swagger
+./client
+./server

@@ -15,7 +15,6 @@ type AuthServer struct {
 
 func NewGrpcAuthServer(config config.ConfGRPC, authService services.AuthService,
 	userService services.UserSqlService) (*AuthServer, error) {
-
 	authServer := &AuthServer{
 		config:      config,
 		authService: authService,

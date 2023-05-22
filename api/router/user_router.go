@@ -15,5 +15,5 @@ func RegisterUserRouter(r *mux.Router, h handler.UserHandler) {
 	s.Methods(http.MethodGet).Path("/{id}").HandlerFunc(auth.BasicAuth(h.GetUserById()))
 	s.Methods(http.MethodPost).Path("").HandlerFunc(auth.BasicAuth(h.PostUser()))
 	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(auth.BasicAuth(h.PasswordChange()))
-
+	s.Methods(http.MethodPost).Path("/validate/{code}").HandlerFunc(auth.BasicAuth(h.ValidateCode()))
 }

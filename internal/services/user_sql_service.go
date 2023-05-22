@@ -26,16 +26,29 @@ type SqlServiceImpl struct {
 
 type UserSqlService interface {
 	GetById(id int64) (user *models.UserDBResponse, err error)
+	GetByCode(code string) (user *models.UserDBModel, err error)
 	Exists(user *models.CreateUserRequest) bool
+	Veryficate(user *models.UserDBModel) bool
 	UpdateUser(user *models.UpdateUserRequest) (err error)
 	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(user *models.UpdateUserRequest) (err error)
 	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
 }
 
-func (u SqlServiceImpl) Load(ctx context.Context, id string) (*models.UserDBModel, error) {
-	//TODO implement me
-	panic("implement me")
+func (u SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
+	user := &models.UserDBModel{}
+	row := u.db.QueryRow("SELECT id,verification_code FROM `user` WHERE verification_code = ?", code)
+	err := row.Scan(&user.Id,
+		&user.VerificationCode)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {
@@ -71,6 +84,19 @@ func (s *SqlServiceImpl) Exists(user *models.CreateUserRequest) bool {
 	row := s.db.QueryRow("SELECT id FROM `user` WHERE username=? OR email = ?", user.Username, user.Email)
 	err := row.Scan(&dbuser.Id)
 
+	if err == sql.ErrNoRows {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (s *SqlServiceImpl) Veryficate(user *models.UserDBModel) bool {
+	_, err := s.db.Exec("UPDATE `user` SET is_verified = 1, is_active=1 WHERE id = ?", user.Id)
 	if err == sql.ErrNoRows {
 		return false
 	}
@@ -139,7 +165,7 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 
 func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error) {
 	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	vcode, _ := generator.VerificationCode(6)
+	vcode, _ := generator.RandomString(6)
 	user.Password, _ = password.HashPassword(user.Password)
 	dbUser := &models.UserDBModel{
 		Username:         user.Username,

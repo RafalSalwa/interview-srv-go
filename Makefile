@@ -6,8 +6,13 @@ compose-up:
 compose-down:
 	docker-compose down --remove-orphans
 
-build:
+.PHONY: server
+server:
 	go build -o server ./cmd/server/main.go
+
+.PHONY: client
+client:
+	go build -o client ./cmd/client/main.go
 
 test:
 	go test -v -cover -race ./internal/... ./pkg/... ./cmd/...
@@ -20,6 +25,7 @@ mock:
 	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
 .PHONY: mock
 
+.PHONY: proto
 proto:
 	@ if ! which protoc > /dev/null; then \
 		echo "error: protoc not installed" >&2; \
