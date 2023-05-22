@@ -7,5 +7,5 @@ import "user.proto";
 
 service UserService {
   rpc GetUserById(GetUserRequest) returns (UserResponse) {}
-  rpc GetUsers(GetUsersRequest) returns (UserResponse) {}
+  rpc VerifyUser(VerifyUserRequest) returns (VerificationResponse) {}
 }

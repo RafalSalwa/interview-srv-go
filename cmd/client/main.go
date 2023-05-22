@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+
 	"github.com/RafalSalwa/interview-app-srv/internal/generator"
 
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
@@ -17,68 +19,69 @@ const (
 )
 
 func main() {
-	username, _ := generator.RandomString(8)
-	email := *username + emailDomain
+	l := logger.NewConsole(false)
+	pUsername, _ := generator.RandomString(8)
+	username := *pUsername
+	email := username + emailDomain
 	fmt.Println("Client starting")
 	ctx := context.TODO()
 
 	conn, err := grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 
 	if err != nil {
-		fmt.Println(err)
+		l.Error().Err(err)
 	}
 	authClient := pb.NewAuthServiceClient(conn)
 	userClient := pb.NewUserServiceClient(conn)
 	defer func(conn *grpc.ClientConn) {
 		err := conn.Close()
 		if err != nil {
-			fmt.Println(err)
+			l.Error().Err(err)
 		}
 	}(conn)
 
 	newUser := &pb.SignUpUserInput{
-		Name:            *username,
+		Name:            username,
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
 	}
 	signUp, err := authClient.SignUpUser(ctx, newUser)
 	if err != nil {
-		fmt.Println(err)
+		l.Error().Err(err)
 	}
-	fmt.Printf("SignUp: %v \n\n", signUp)
+	l.Info().Msgf("Created User %s with id: %s", username, signUp.Id)
+
+	rVerification := &pb.VerifyUserRequest{Code: signUp.VerificationToken}
+	vs, err := userClient.VerifyUser(ctx, rVerification)
+	if err != nil {
+		l.Error().Err(err)
+	}
+	if vs.GetSuccess() {
+		l.Info().Msgf("User %s verified", username)
+	}
 
 	credentials := &pb.SignInUserInput{
-		Username: *username,
+		Username: username,
 		Password: password,
 	}
-
+	l.Info().Msg("SignIn previously created user")
 	signIn, err := authClient.SignInUser(ctx, credentials)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("SignIn: %v \n\n", signIn)
+
+	l.Info().Msgf("Username: %s", username)
+	l.Info().Msgf("AccessToken: %s", signIn.AccessToken)
+	l.Info().Msgf("RefreshToken: %s", signIn.RefreshToken)
 
 	id := &pb.GetUserRequest{
 		UserId: signUp.Id,
 	}
+	l.Info().Msgf("GET username: %s  details. UserId: %s", username, signUp.Id)
 	user, err := userClient.GetUserById(ctx, id)
 	if err != nil {
-		fmt.Println(err)
+		l.Error().Err(err)
 	}
-	fmt.Printf("Get user %v \n\n", user)
-	//
-	// ids := &pb.GetUsersRequest{
-	//	Users: []*pb.GetUserRequest{
-	//		{UserId: "1"},
-	//		{UserId: "2"},
-	//		{UserId: "3"},
-	//		{UserId: "100"},
-	//	},
-	//}
-	// users, err := userClient.GetUsers(ctx, ids)
-	// if err != nil {
-	//	fmt.Println(err)
-	//}
-	// fmt.Printf("%v", users)
+	l.Info().Msgf("GetUser: %s", user.GetUser().GetId())
 }

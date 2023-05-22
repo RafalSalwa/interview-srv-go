@@ -1,3 +1,4 @@
+// Package path implements HTTP responses struct features and functions
 package responses
 
 import "net/http"

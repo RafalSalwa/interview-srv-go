@@ -47,8 +47,9 @@ func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.Use
 	um.CreatedAt = time.Now()
 
 	s.repository.SingUp(um)
-	fmt.Printf("%v\n", um)
+
 	ur := mapper.MapUserDBModelToUserResponse(um)
+	fmt.Printf("signUp %#v\n %#v \n", um, ur)
 	return ur, nil
 }
 

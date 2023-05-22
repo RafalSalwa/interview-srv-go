@@ -19,12 +19,25 @@ type UserHandler interface {
 	GetUserById() HandlerFunc
 	PostUser() HandlerFunc
 	PasswordChange() HandlerFunc
+	ValidateCode() HandlerFunc
 }
 
 type userHandler struct {
 	Router         *mux.Router
 	userSqlService services.UserSqlService
 	logger         *logger.Logger
+}
+
+func (uh userHandler) ValidateCode() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := mux.Vars(r)["code"]
+		um := models.UserDBModel{VerificationCode: code}
+		status := uh.userSqlService.Veryficate(&um)
+		if !status {
+			responses.RespondInternalServerError(w)
+		}
+		responses.RespondOk(w)
+	}
 }
 
 func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger) UserHandler {
@@ -45,10 +58,8 @@ func (uh userHandler) GetUserById() HandlerFunc {
 		user, err := uh.userSqlService.GetById(intId)
 		if err != nil {
 			uh.logger.Err(err)
-			err := responses.RespondInternalServerError(w)
-			if err != nil {
-				return
-			}
+			responses.RespondInternalServerError(w)
+
 			return
 		}
 
@@ -87,10 +98,8 @@ func (uh userHandler) PostUser() HandlerFunc {
 		u, err := uh.userSqlService.CreateUser(newUserRequest)
 		if err != nil {
 			uh.logger.Error().Err(err)
-			err := responses.RespondInternalServerError(w)
-			if err != nil {
-				return
-			}
+			responses.RespondInternalServerError(w)
+
 			return
 		}
 		responses.NewUserResponse(u, w)
@@ -116,10 +125,8 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 		user, err := uh.userSqlService.GetById(passChange.Id)
 		if err != nil {
 			uh.logger.Err(err)
-			err := responses.RespondInternalServerError(w)
-			if err != nil {
-				return
-			}
+			responses.RespondInternalServerError(w)
+
 			return
 		}
 
@@ -141,10 +148,8 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 		err = uh.userSqlService.UpdateUserPassword(updateUser)
 		if err != nil {
 			uh.logger.Err(err)
-			err := responses.RespondInternalServerError(w)
-			if err != nil {
-				return
-			}
+			responses.RespondInternalServerError(w)
+
 			return
 		}
 		responses.RespondOk(w)

@@ -68,20 +68,20 @@ type UserDBResponse struct {
 }
 
 type UserResponse struct {
-	Id                int64      `json:"id,omitempty"`
-	Username          string     `json:"username"`
-	Firstname         *string    `json:"firstname,omitempty"`
-	RolesJson         string     `json:"rolesJson,omitempty"`
-	Roles             []string   `json:"roles,omitempty"`
-	Verified          bool       `json:"is_verified,omitempty"`
-	VerificationToken string     `json:"-"`
-	Active            bool       `json:"is_active,omitempty"`
-	Token             string     `json:"token,omitempty"`
-	RefreshToken      string     `json:"refresh_token,omitempty"`
-	CreatedAt         *time.Time `json:"created_at,omitempty"`
-	UpdatedAt         *time.Time `json:"updated_at,omitempty"`
-	LastLogin         *time.Time `json:"last_login,omitempty"`
-	DeletedAt         *time.Time `json:"deleted_at,omitempty"`
+	Id               int64      `json:"id,omitempty"`
+	Username         string     `json:"username"`
+	Firstname        *string    `json:"firstname,omitempty"`
+	RolesJson        string     `json:"rolesJson,omitempty"`
+	Roles            []string   `json:"roles,omitempty"`
+	Verified         bool       `json:"is_verified,omitempty"`
+	VerificationCode string     `json:"verification_token"`
+	Active           bool       `json:"is_active,omitempty"`
+	Token            string     `json:"token,omitempty"`
+	RefreshToken     string     `json:"refresh_token,omitempty"`
+	CreatedAt        *time.Time `json:"created_at,omitempty"`
+	UpdatedAt        *time.Time `json:"updated_at,omitempty"`
+	LastLogin        *time.Time `json:"last_login,omitempty"`
+	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
 }
 
 type UpdateUserRequest struct {

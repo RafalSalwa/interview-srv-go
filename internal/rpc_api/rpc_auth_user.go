@@ -47,11 +47,8 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 	res := &pb.SignUpUserResponse{
 		Id:                strconv.FormatInt(ur.Id, 10),
 		Username:          ur.Username,
-		VerificationToken: ur.VerificationToken,
+		VerificationToken: ur.VerificationCode,
 		CreatedAt:         nil,
 	}
 	return res, nil
-}
-func (authServer *AuthServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest) (*pb.VerificationResponse, error) {
-	return nil, nil
 }
