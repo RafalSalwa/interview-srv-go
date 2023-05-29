@@ -20,8 +20,6 @@ const (
 	numUsers    = 500
 )
 
-var l *logger.Logger
-
 type User struct {
 	Id             string
 	ValidationCode string
@@ -39,27 +37,30 @@ var maxNbConcurrentGoroutines = 100
 var concurrentGoroutines = make(chan struct{}, maxNbConcurrentGoroutines)
 
 func runWorkersInOrder() {
-	conn, _ := grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-
+	l := logger.NewConsole(true)
+	conn, err := grpc.Dial("0.0.0.0:8089", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		l.Error().Err(err)
+	}
 	authClient := pb.NewAuthServiceClient(conn)
 	userClient := pb.NewUserServiceClient(conn)
 
 	qCreatedUsers := make(chan User, numUsers)
 	qActivatedUsers := make(chan User, numUsers)
 	qFailedUsers := make(chan User, numUsers)
+
 	done := make(chan bool)
 
 	for i := 1; i <= numUsers; i++ {
 		go createUser(authClient, qCreatedUsers, qFailedUsers)
 	}
-
 	for i := 1; i <= numUsers; i++ {
 		go activateUser(userClient, qCreatedUsers, qActivatedUsers, qFailedUsers)
 	}
-
 	for i := 1; i <= numUsers; i++ {
 		go tokenUser(authClient, qActivatedUsers, qFailedUsers)
 	}
+
 	go func() {
 		for {
 			fmt.Printf("Concurrent queue len: | %6d | user creation queue:  %6d | user activation queue: %6d \n", len(concurrentGoroutines), len(qCreatedUsers), len(qActivatedUsers))
@@ -75,8 +76,8 @@ func runWorkersInOrder() {
 }
 
 func main() {
-	// runWorkersInOrder()
-	runWorkersInDaisyChain()
+	fmt.Println("starting client")
+	runWorkersInOrder()
 }
 
 func createUser(authClient pb.AuthServiceClient, created chan User, failed chan User) {
