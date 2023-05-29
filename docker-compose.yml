@@ -5,8 +5,11 @@ services:
     build: .
     env_file: .env
     ports:
-      - "8081:8081"
-      - "8082:8082"
+      - "4000:4000"
+      - "6060:6060"
+      - "8088:8088"
+      - "8089:8089"
+
     volumes:
       - ./:/interview
     depends_on:
@@ -15,27 +18,22 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      external-interview-net:
-        ipv4_address: 172.28.1.2
+      interview-net:
         aliases:
           - iapi
 
   mysql:
     container_name: mysql
     image: mysql
-    env_file: .env
     volumes:
       - ./build/init_db.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      MYSQL_DATABASE: "${MYSQL_NAME}"
+      MYSQL_DATABASE: "interview"
       MYSQL_USER: "interview"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_TCP_PORT: "${MYSQL_PORT}"
+      MYSQL_PASSWORD: "interview"
+      MYSQL_ROOT_PASSWORD: "interview"
     ports:
-      - "${MYSQL_PORT}:${MYSQL_PORT}"
-    expose:
-      - "${MYSQL_PORT}"
+      - "6033:3306"
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
       start_period: 5s
@@ -43,25 +41,61 @@ services:
       timeout: 5s
       retries: 55
     networks:
-      external-interview-net:
-        ipv4_address: 172.28.1.3
+      interview-net:
         aliases:
           - imysql
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: interview
+      MONGO_INITDB_ROOT_PASSWORD: interview
+    networks:
+      interview-net:
+        aliases:
+          - imongo
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: interview
+      ME_CONFIG_MONGODB_ADMINPASSWORD: interview
+      ME_CONFIG_MONGODB_URL: mongodb://interview:interview@mongo:27017/
+    networks:
+      interview-net:
+        aliases:
+          - imongoexpress
 
   cache:
     container_name: cache
     image: redis:6.2-alpine
     restart: always
     ports:
-      - '6379:6379'
+      - '16379:6379'
     command: redis-server --save 20 1 --loglevel warning --requirepass interview
     volumes:
       - cache:/data
     networks:
-      external-interview-net:
-        ipv4_address: 172.28.1.5
+      interview-net:
         aliases:
           - icache
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - 1025:1025 # smtp server
+      - 8025:8025 # web ui
+    networks:
+      interview-net:
+        aliases:
+          - imailhog
 
   postgres:
     container_name: postgres
@@ -83,10 +117,24 @@ services:
       timeout: 5s
       retries: 55
     networks:
-      external-interview-net:
-        ipv4_address: 172.28.1.6
+      interview-net:
         aliases:
-          - ipostgress
+          - ipostgres
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=interview
+      - RABBITMQ_DEFAULT_PASS=interview
+      - RABBITMQ_DEFAULT_VHOST=interview
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      interview-net:
+        aliases:
+          - irabbitmq
 
 volumes:
   cache:
@@ -94,13 +142,7 @@ volumes:
   pg-data:
 
 networks:
-  external-interview-net:
-    external: true
-
-#networks:
-#  interview_net:
-#    external: true
-#    ipam:
-#      driver: default
-#      config:
-#        - subnet: 172.28.1.0/24
+  interview-net:
+    name: interview-net
+    driver: bridge
+    enable_ipv6: false

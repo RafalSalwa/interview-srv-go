@@ -9,10 +9,13 @@ import (
 )
 
 type UserRepository interface {
+	SingUp(user *models.UserDBModel) error
+	Load(user *models.UserDBModel) (*models.UserDBModel, error)
 	ById(ctx context.Context, id int64) (*models.UserDBModel, error)
 	ByLogin(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error)
+	ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error
 	UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
-	SingUp(user *models.UserDBModel) *models.UserDBModel
 	BeginTx() *gorm.DB
+	GetConnection() *gorm.DB
 }

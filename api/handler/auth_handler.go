@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
-	"net/http"
-
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"net/http"
+	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -14,52 +15,143 @@ import (
 )
 
 type IAuthHandler interface {
-	SignUpUser(request *models.CreateUserRequest) HandlerFunc
-	SignInUser(request *models.LoginUserRequest) HandlerFunc
+	SignUpUser() HandlerFunc
+	SignInUser() HandlerFunc
+	ForgotPassword() HandlerFunc
+	NewPassword() HandlerFunc
+	Verify() HandlerFunc
 	Login() HandlerFunc
-	Logout() HandlerFunc
-	Token() HandlerFunc
+	RefreshToken() HandlerFunc
+	NewToken() HandlerFunc
 }
 
 type AuthHandler struct {
-	Router         *mux.Router
-	userORMService services.AuthService
-	logger         *logger.Logger
+	Router  *mux.Router
+	service services.AuthService
+	logger  *logger.Logger
 }
 
-func NewAuthHandler(r *mux.Router, us services.AuthService, l *logger.Logger) IAuthHandler {
-	return AuthHandler{r, us, l}
+func NewAuthHandler(r *mux.Router, as services.AuthService, l *logger.Logger) IAuthHandler {
+	return AuthHandler{r, as, l}
 }
 
-func (a AuthHandler) SignUpUser(input *models.CreateUserRequest) HandlerFunc {
+func (a AuthHandler) SignUpUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+		signUpUser := &models.CreateUserRequest{}
 
-	}
-}
+		if err := decoder.Decode(&signUpUser); err != nil {
+			a.logger.Error().Err(err).Msg("SignUpUser: decode")
+			responses.RespondBadRequest(w, "wrong parameters")
+			return
+		}
 
-func (a AuthHandler) SignInUser(input *models.LoginUserRequest) HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+		validate := validator.New()
+		if err := validate.Struct(signUpUser); err != nil {
+			a.logger.Error().Err(err)
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
 
-	}
-}
-
-func (ah AuthHandler) Login() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		LoginReq := &models.LoginUserRequest{}
-		err := json.NewDecoder(r.Body).Decode(LoginReq)
+		ur, err := a.service.SignUpUser(signUpUser)
 
 		if err != nil {
-			ah.logger.Error().Err(err).Msg("Decode Request")
+			a.logger.Error().Err(err).Msg("SignUpUser: create")
+			responses.RespondInternalServerError(w)
+			return
+		}
+
+		responses.NewUserResponse(ur, w)
+	}
+}
+
+func (a AuthHandler) SignInUser() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+		signIn := &models.LoginUserRequest{}
+
+		if err := decoder.Decode(&signIn); err != nil {
+			a.logger.Error().Err(err).Msg("SignInUser: decode")
+			responses.RespondBadRequest(w, "wrong parameters")
+			return
+		}
+
+		validate := validator.New()
+		if err := validate.Struct(signIn); err != nil {
+			a.logger.Error().Err(err)
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+		ur, err := a.service.SignInUser(signIn)
+		if err != nil {
+			a.logger.Error().Err(err)
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.NewUserResponse(ur, w)
+	}
+}
+
+func (a AuthHandler) Verify() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vCode := mux.Vars(r)["code"]
+		if vCode == "" {
+			responses.RespondBadRequest(w, "code param is missing")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		if err := a.service.Verify(ctx, vCode); err != nil {
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.RespondOk(w)
+	}
+}
+
+func (a AuthHandler) ForgotPassword() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
+func (a AuthHandler) NewPassword() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
+func (a AuthHandler) RefreshToken() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
+func (a AuthHandler) NewToken() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
+}
+
+func (a AuthHandler) Login() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		LoginReq := &models.LoginUserRequest{}
+
+		err := json.NewDecoder(r.Body).Decode(LoginReq)
+		if err != nil {
+			a.logger.Error().Err(err).Msg("Decode Request")
 			responses.RespondBadRequest(w, "")
 			return
 		}
-		user, err := ah.userORMService.Load(LoginReq)
+
+		user, err := a.service.SignInUser(LoginReq)
 		if err != nil {
-			ah.logger.Err(err)
+			a.logger.Err(err)
 			responses.RespondInternalServerError(w)
 
 			return
 		}
+
 		if user == nil {
 			// it's better to hide notFound in unauthorized response to avoid user guessing
 			responses.RespondNotAuthorized(w, "")

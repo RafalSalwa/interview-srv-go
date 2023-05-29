@@ -1,6 +1,7 @@
 package models
 
 import (
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -23,6 +24,13 @@ type UserDBModel struct {
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
 }
 
+func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {
+
+	um.Active = false
+	um.Verified = false
+	return nil
+}
+
 func (UserDBModel) TableName() string {
 	return "user"
 }
@@ -39,16 +47,16 @@ type UserRequest struct {
 }
 
 type CreateUserRequest struct {
-	Username        string `json:"username" govalidator:"-"`
-	Email           string `json:"email" govalidator:"email"`
-	Password        string `json:"password"`
-	PasswordConfirm string `json:"passwordConfirm"`
+	Username        string `json:"username" validate:"required,min=3,max=32"`
+	Email           string `json:"email" validate:"required,email"`
+	Password        string `json:"password" validate:"required,min=8,max=16"`
+	PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,max=16"`
 }
 
 type LoginUserRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `json:"username" validate:"required_without=Email"`
+	Email    string `json:"email" validate:"required_without=Username,omitempty,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 type UserDBResponse struct {
@@ -72,9 +80,9 @@ type UserResponse struct {
 	Username         string     `json:"username"`
 	Firstname        *string    `json:"firstname,omitempty"`
 	RolesJson        string     `json:"rolesJson,omitempty"`
-	Roles            []string   `json:"roles,omitempty"`
+	Roles            string     `json:"roles,omitempty"`
 	Verified         bool       `json:"is_verified,omitempty"`
-	VerificationCode string     `json:"verification_token"`
+	VerificationCode string     `json:"verification_token,omitempty"`
 	Active           bool       `json:"is_active,omitempty"`
 	Token            string     `json:"token,omitempty"`
 	RefreshToken     string     `json:"refresh_token,omitempty"`
@@ -85,14 +93,14 @@ type UserResponse struct {
 }
 
 type UpdateUserRequest struct {
-	Id        int64   `json:"id,omitempty"`
+	Id        int     `json:"id,omitempty"`
 	Firstname *string `json:"firstname"`
 	Lastname  *string `json:"lastname"`
 	Password  *string `json:"password"`
 }
 
 type ChangePasswordRequest struct {
-	Id              int64  `json:"id"`
+	Id              int    `json:"id"`
 	OldPassword     string `json:"oldPassword"`
 	Password        string `json:"password"`
 	PasswordConfirm string `json:"passwordConfirm"`

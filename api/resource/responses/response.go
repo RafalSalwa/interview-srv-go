@@ -72,6 +72,7 @@ func RespondConflict(w http.ResponseWriter, msg string) {
 
 func RespondBadRequest(w http.ResponseWriter, msg string) {
 	errorResponse := NewBadRequestErrorResponse(msg)
+
 	responseBody := marshalErrorResponse(errorResponse)
 	Respond(w, http.StatusBadRequest, responseBody)
 }
@@ -93,7 +94,7 @@ func RespondOk(w http.ResponseWriter) {
 func NewUserResponse(u *models.UserResponse, w http.ResponseWriter) {
 	response := &UserResponse{Data: u}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	js, err := json.Marshal(response)
+	js, err := json.MarshalIndent(response, "", "   ")
 	if err != nil {
 		RespondInternalServerError(w)
 	}

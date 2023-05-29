@@ -39,12 +39,12 @@ func MapUserDBResponseToUserResponse(user *models.UserDBResponse) *models.UserRe
 		return nil
 	}
 
-	userResponse.Roles = getRolesList(user.RolesJson)
+	userResponse.Roles = user.RolesJson
 
 	return userResponse
 }
 
-func getRolesList(r string) []string {
+func GetRolesList(r string) []string {
 	i := strings.Index(r, "roles")
 	type RoleItem struct {
 		Roles []string

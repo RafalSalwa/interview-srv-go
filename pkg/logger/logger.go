@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"io"
 	"os"
 	"strings"
@@ -12,7 +13,8 @@ import (
 )
 
 type Logger struct {
-	logger *zerolog.Logger
+	logger      *zerolog.Logger
+	nrLoggerApp *newrelic.Application
 }
 
 func New(isDebug bool) *Logger {
@@ -51,7 +53,17 @@ func NewConsole(isDebug bool) *Logger {
 
 	logger := zerolog.New(output).With().Timestamp().Logger()
 
-	return &Logger{logger: &logger}
+	app, _ := newrelic.NewApplication(
+		newrelic.ConfigAppName("interview-srv"),
+		newrelic.ConfigLicense("eu01xx9f02edd5735678218e3aa95634826fNRAL"),
+		newrelic.ConfigAppLogDecoratingEnabled(true),
+		newrelic.ConfigAppLogForwardingEnabled(false),
+		func(config *newrelic.Config) {
+			config.Enabled = true
+		},
+	)
+
+	return &Logger{logger: &logger, nrLoggerApp: app}
 }
 
 func (l *Logger) Output(w io.Writer) zerolog.Logger {

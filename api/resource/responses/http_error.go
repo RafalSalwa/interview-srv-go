@@ -8,7 +8,10 @@ type Error struct {
 	Reason       string `json:"reason"`
 	Message      string `json:"message,omitempty"`
 }
-
+type StatusError struct {
+	Code int
+	Err  error
+}
 type ErrorResponse struct {
 	Code    int32  `json:"code"`
 	Reason  string `json:"reason"`
@@ -29,7 +32,7 @@ type UnauthorizedResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-func NewErrorResponse(statusCode int32, reason, message string) *ErrorResponse {
+func NewErrorResponse(statusCode int32, reason string, message string) *ErrorResponse {
 	return &ErrorResponse{
 		Code:    statusCode,
 		Reason:  reason,
@@ -52,13 +55,10 @@ func NewUnauthorizedResponse() *UnauthorizedResponse {
 }
 
 func NewBadRequestErrorResponse(msg string) *ErrorResponse {
-	if msg == "" {
-		msg = "Your request is invalid"
-	}
 
 	return NewErrorResponse(
 		http.StatusBadRequest,
-		"Bad request",
+		"bad request",
 		msg,
 	)
 }

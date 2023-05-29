@@ -4,11 +4,10 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/config"
 )
 
-func GenerateTokenPair(c config.ConfToken, uid int64, username string) (*TokenPair, error) {
+func GenerateTokenPair(c config.ConfToken, uid int64) (*TokenPair, error) {
 
 	accessClaims := UserClaims{
-		ID:       uid,
-		Username: username,
+		ID: uid,
 	}
 
 	t, err := CreateToken(c.AccessTokenExpiresIn, accessClaims, c.AccessTokenPrivateKey)

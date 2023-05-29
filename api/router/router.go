@@ -2,11 +2,9 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/config"
+	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/gorilla/mux"
@@ -27,16 +25,20 @@ type AppRoute struct {
 
 var appRoutes []AppRoute
 
-func NewApiRouter(l *logger.Logger, c config.ConfToken) *mux.Router {
+func NewApiRouter(l *logger.Logger, c *config.Conf) *mux.Router {
 	router := mux.NewRouter()
 
 	router.Use(middlewares.ContentTypeJson())
 	router.Use(middlewares.CorrelationIDMiddleware())
-	// router.Use(middlewares.RequestLogMiddleware(l))
 	router.Use(middlewares.CorsMiddleware())
-	// router.Use(middlewares.DeserializeUser(c))
+	router.Use(middlewares.RequestLogMiddleware(l))
+
 	setupIndexPageRoutesInfo(router)
 	setupHealthCheck(router)
+
+	if c.App.Debug {
+		setupDebug(router)
+	}
 
 	return router
 }
@@ -59,26 +61,6 @@ func setupIndexPageRoutesInfo(router *mux.Router) {
 	}).Methods(http.MethodGet)
 }
 
-func GetRoutesList(r *mux.Router) []AppRoute {
-	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		routePath, err := route.GetPathTemplate()
-		if err != nil {
-
-		}
-		routeMethods, err := route.GetMethods()
-		if err != nil {
-
-		}
-		appRoutes = append(appRoutes, AppRoute{Path: routePath, Methods: routeMethods})
-		return nil
-	})
-	if err != nil {
-		return nil
-	}
-	for _, r := range appRoutes {
-		fmt.Printf("'%-8s'", r.Methods)
-		fmt.Println(r.Path)
-	}
-
-	return appRoutes
+func setupDebug(router *mux.Router) {
+	router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 }

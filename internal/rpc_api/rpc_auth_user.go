@@ -18,7 +18,7 @@ func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUser
 		Password: req.GetPassword(),
 	}
 
-	ur, err := authServer.authService.Load(loginUser)
+	ur, err := authServer.authService.SignInUser(loginUser)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

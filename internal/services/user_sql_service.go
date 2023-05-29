@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"strconv"
 	"time"
 
@@ -15,8 +15,6 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/internal/util"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	mySql "github.com/RafalSalwa/interview-app-srv/sql"
-
-	phpserialize "github.com/kovetskiy/go-php-serialize"
 )
 
 type SqlServiceImpl struct {
@@ -25,21 +23,27 @@ type SqlServiceImpl struct {
 }
 
 type UserSqlService interface {
-	GetById(id int64) (user *models.UserDBResponse, err error)
+	GetById(id int) (user *models.UserDBResponse, err error)
 	GetByCode(code string) (user *models.UserDBModel, err error)
-	Exists(user *models.CreateUserRequest) bool
-	Veryficate(user *models.UserDBModel) bool
+	UsernameInUse(user *models.CreateUserRequest) bool
+	StoreVerificationData(user *models.UserDBModel) bool
 	UpdateUser(user *models.UpdateUserRequest) (err error)
 	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(user *models.UpdateUserRequest) (err error)
 	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
 }
 
-func (u SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
+func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {
+	return &SqlServiceImpl{db, l}
+}
+
+func (s SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 	user := &models.UserDBModel{}
-	row := u.db.QueryRow("SELECT id,verification_code FROM `user` WHERE verification_code = ?", code)
+
+	row := s.db.QueryRow("SELECT id,verification_code FROM `user` WHERE verification_code = ?", code)
 	err := row.Scan(&user.Id,
 		&user.VerificationCode)
+
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -51,12 +55,9 @@ func (u SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 	return user, nil
 }
 
-func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {
-	return &SqlServiceImpl{db, l}
-}
-
-func (s *SqlServiceImpl) GetById(id int64) (user *models.UserDBResponse, err error) {
+func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error) {
 	user = &models.UserDBResponse{}
+
 	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password, roles as roles_json,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
 	err = row.Scan(&user.Id,
 		&user.Username,
@@ -79,10 +80,10 @@ func (s *SqlServiceImpl) GetById(id int64) (user *models.UserDBResponse, err err
 	return user, nil
 }
 
-func (s *SqlServiceImpl) Exists(user *models.CreateUserRequest) bool {
-	dbuser := &models.UserDBResponse{}
+func (s *SqlServiceImpl) UsernameInUse(user *models.CreateUserRequest) bool {
+	dbUser := &models.UserDBResponse{}
 	row := s.db.QueryRow("SELECT id FROM `user` WHERE username=? OR email = ?", user.Username, user.Email)
-	err := row.Scan(&dbuser.Id)
+	err := row.Scan(&dbUser.Id)
 
 	if err == sql.ErrNoRows {
 		return false
@@ -95,7 +96,8 @@ func (s *SqlServiceImpl) Exists(user *models.CreateUserRequest) bool {
 	return true
 }
 
-func (s *SqlServiceImpl) Veryficate(user *models.UserDBModel) bool {
+func (s *SqlServiceImpl) StoreVerificationData(user *models.UserDBModel) bool {
+
 	_, err := s.db.Exec("UPDATE `user` SET is_verified = 1, is_active=1 WHERE id = ?", user.Id)
 	if err == sql.ErrNoRows {
 		return false
@@ -136,18 +138,18 @@ func (s *SqlServiceImpl) LoginUser(u *models.LoginUserRequest) (*models.UserResp
 		return nil, err
 	}
 
-	roles, err := phpserialize.Decode(user.RolesJson)
+	//roles, err := phpserialize.Decode(user.RolesJson)
 
 	if err != nil {
 		return nil, err
 	}
 
-	v, ok := roles.(map[interface{}]interface{})
-	if ok {
-		for _, s := range v {
-			user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
-		}
-	}
+	//v, ok := roles.(map[interface{}]interface{})
+	//if ok {
+	//	for _, s := range v {
+	//		user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
+	//	}
+	//}
 
 	return &user, nil
 }
@@ -163,20 +165,45 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 	return nil
 }
 
-func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error) {
-	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	vcode, _ := generator.RandomString(6)
-	user.Password, _ = password.HashPassword(user.Password)
+func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*models.UserResponse, error) {
+
+	if err := password.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm); err != nil {
+		return nil, err
+	}
+
+	if s.UsernameInUse(newUserRequest) {
+		return nil, errors.New("Create user: username already in use")
+	}
+
+	roles, err := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
+	if err != nil {
+		return nil, err
+	}
+
+	vcode, err := generator.RandomString(6)
+	if err != nil {
+		return nil, err
+	}
+
+	newUserRequest.Password, err = password.HashPassword(newUserRequest.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	dbUser := &models.UserDBModel{
-		Username:         user.Username,
-		Password:         user.Password,
-		Email:            user.Email,
+		Username:         newUserRequest.Username,
+		Password:         newUserRequest.Password,
+		Email:            newUserRequest.Email,
 		Roles:            roles,
 		VerificationCode: *vcode,
 	}
-
+	ctx := getContext()
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
 	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `roles`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,?,0,1);"
-	rows, err := s.db.ExecContext(getContext(),
+	rows, err := tx.ExecContext(ctx,
 		sqlStatement,
 		dbUser.Username,
 		dbUser.Password,
@@ -185,20 +212,25 @@ func (s *SqlServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.Use
 		dbUser.VerificationCode)
 
 	if err != nil {
-		fmt.Println(err)
-		s.logger.Error().Err(err).Msg("")
+		if errTx := tx.Rollback(); errTx != nil {
+			return nil, errTx
+		}
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
 		return nil, err
 	}
 
 	id, err := rows.LastInsertId()
-	ur := &models.UserResponse{
-		Id:        id,
-		Username:  dbUser.Username,
-		CreatedAt: nil,
-	}
 	if err != nil {
-		s.logger.Error().Err(err).Msg("")
 		return nil, err
+	}
+
+	ur := &models.UserResponse{
+		Id:       id,
+		Username: dbUser.Username,
 	}
 
 	return ur, nil

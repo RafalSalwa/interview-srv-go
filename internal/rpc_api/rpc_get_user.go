@@ -15,7 +15,7 @@ import (
 
 func (userServer *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserResponse, error) {
 	id := req.GetUserId()
-	intId, _ := strconv.ParseInt(id, 10, 64)
+	intId, _ := strconv.Atoi(id)
 	user, err := userServer.userService.GetById(intId)
 
 	if err != nil {
@@ -47,7 +47,7 @@ func (userServer *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUser
 	if user == nil {
 		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
 	}
-	s := userServer.userService.Veryficate(user)
+	s := userServer.userService.StoreVerificationData(user)
 	if !s {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

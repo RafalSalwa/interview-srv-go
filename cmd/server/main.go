@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"net/http"
-
 	"github.com/RafalSalwa/interview-app-srv/internal/repository"
-
 	_ "net/http/pprof"
 
 	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
@@ -18,9 +15,8 @@ import (
 )
 
 var (
-	conf   *config.Conf
-	server *http.Server
-	ctx    context.Context
+	conf *config.Conf
+	ctx  context.Context
 
 	userHandler apiHandler.UserHandler
 	authHandler apiHandler.IAuthHandler
@@ -41,20 +37,17 @@ func main() {
 	userService = services.NewMySqlService(db, l)
 	authService = services.NewAuthService(ctx, userRepository, l, conf.Token)
 
-	r := apiRouter.NewApiRouter(l, conf.Token)
+	r := apiRouter.NewApiRouter(l, conf)
+
 	userHandler = apiHandler.NewUserHandler(r, userService, l)
 	authHandler = apiHandler.NewAuthHandler(r, authService, l)
 
-	apiRouter.RegisterUserRouter(r, userHandler)
+	apiRouter.RegisterUserRouter(r, userHandler, conf)
 	apiRouter.RegisterAuthRouter(r, authHandler)
 
-	server = apiServer.NewServer(conf, r)
-	l.Info().Msgf("Starting REST server %v", server.Addr)
+	srv := apiServer.NewServer(conf, r, l)
+	srv.Run()
 
-	apiRouter.GetRoutesList(r)
-	apiServer.Run(server, conf)
-
-	grpcServer, _ := apiServer.NewGrpcServer(conf.GRPC, authService, userService)
-	l.Info().Msg("Starting gRPC server.")
+	grpcServer, _ := apiServer.NewGrpcServer(conf.GRPC, l, authService, userService)
 	grpcServer.Run()
 }
