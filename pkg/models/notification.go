@@ -6,8 +6,9 @@ import (
 
 type NotificationData struct {
 	Sensor int64 `json:"sensor_id"`
-	UserId int64 `json: "user_id`
+	UserId int64 `json:"user_id"`
 }
+
 type Notification struct {
 	Id          int64      `json:"id"`
 	UserId      *int64     `json:"userId"`

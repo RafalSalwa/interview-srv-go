@@ -17,6 +17,9 @@ var (
 	userClient = pb.NewUserServiceClient(dcConn)
 )
 
+func main() {
+	runWorkersInDaisyChain()
+}
 func dcCreateUser() User {
 	ctx := context.TODO()
 
