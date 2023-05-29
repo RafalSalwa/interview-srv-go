@@ -3,10 +3,9 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"time"
-
 	"github.com/RafalSalwa/interview-app-srv/internal/generator"
 	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/query"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 
@@ -26,7 +25,9 @@ type AuthServiceImpl struct {
 
 type AuthService interface {
 	SignUpUser(request *models.CreateUserRequest) (*models.UserResponse, error)
-	Load(request *models.LoginUserRequest) (*models.UserResponse, error)
+	SignInUser(request *models.LoginUserRequest) (*models.UserResponse, error)
+	Verify(ctx context.Context, vCode string) error
+	Load(request *models.UserDBModel) (*models.UserResponse, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
 }
 
@@ -35,24 +36,69 @@ func NewAuthService(ctx context.Context, r repository.UserRepository, l *logger.
 }
 
 func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.UserResponse, error) {
-	um := mapper.UserCreateRequestToDBModel(cur)
 
-	roles, _ := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	vcode, _ := generator.RandomString(6)
-	um.Password, _ = password.HashPassword(um.Password)
+	if err := password.Validate(cur.Password, cur.PasswordConfirm); err != nil {
+		return nil, err
+	}
+
+	um := &models.UserDBModel{}
+	if err := um.FromCreateUserReq(cur); err != nil {
+		return nil, err
+	}
+
+	roles, err := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
+	if err != nil {
+		return nil, err
+	}
+	vcode, err := generator.RandomString(12)
+	if err != nil {
+		return nil, err
+	}
+
+	um.Password, err = password.HashPassword(um.Password)
+	if err != nil {
+		return nil, err
+	}
 
 	um.Roles = roles
 	um.VerificationCode = *vcode
-	um.CreatedAt = time.Now()
 
-	s.repository.SingUp(um)
+	if errDB := s.repository.SingUp(um); errDB != nil {
+		return nil, errDB
+	}
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(um)
+	if err != nil {
+		return nil, err
+	}
 
-	ur := mapper.MapUserDBModelToUserResponse(um)
 	return ur, nil
 }
 
-func (s *AuthServiceImpl) Load(user *models.LoginUserRequest) (*models.UserResponse, error) {
-	dbUser, err := s.repository.ByLogin(s.ctx, user)
+func (s *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.UserResponse, error) {
+	q := query.Use(s.repository.GetConnection()).UserDBModel
+	dbu, errDB := q.FilterWithUsernameOrEmail(user.Username, user.Email)
+	if errDB != nil {
+		return nil, errDB
+	}
+
+	ur := &models.UserResponse{}
+	err := ur.FromDBModel(dbu)
+	if err != nil {
+		return nil, err
+	}
+
+	tp, err := jwt.GenerateTokenPair(s.config, dbu.Id)
+	if err != nil {
+		return nil, err
+	}
+	ur.AssignTokenPair(tp)
+
+	return ur, nil
+}
+
+func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
+	dbUser, err := s.repository.Load(user)
 	if err != nil {
 		return nil, err
 	}
@@ -64,9 +110,8 @@ func (s *AuthServiceImpl) Load(user *models.LoginUserRequest) (*models.UserRespo
 		return nil, err
 	}
 
-	tp, err := jwt.GenerateTokenPair(s.config, dbUser.Id, dbUser.Username)
+	tp, err := jwt.GenerateTokenPair(s.config, dbUser.Id)
 	_, _ = jwt.DecodeToken(tp.AccessToken, s.config.AccessTokenPublicKey)
-	// s.logger.Info().Msgf("%v", v)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("token_pair")
 		return nil, err
@@ -77,6 +122,26 @@ func (s *AuthServiceImpl) Load(user *models.LoginUserRequest) (*models.UserRespo
 	ur.RefreshToken = tp.RefreshToken
 
 	return ur, nil
+}
+
+func (s *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
+	udb := &models.UserDBModel{
+		VerificationCode: vCode,
+	}
+	dbUser, err := s.repository.Load(udb)
+	if err != nil {
+		return err
+	}
+
+	if errV := s.repository.ConfirmVerify(ctx, udb); errV != nil {
+		return errV
+	}
+	ur := &models.UserResponse{}
+
+	if errM := ur.FromDBModel(dbUser); errM != nil {
+		return errM
+	}
+	return nil
 }
 
 func (s *AuthServiceImpl) FindUserById(uid int64) (*models.UserDBModel, error) {

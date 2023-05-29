@@ -13,6 +13,6 @@ type Config struct {
 }
 
 type UserClaims struct {
-	ID       int64  `json:"user_id"`
-	Username string `json:"username"`
+	ID       int64
+	Username string
 }

@@ -13,9 +13,30 @@ type UserAdapter struct {
 	DB *gorm.DB
 }
 
-func (r *UserAdapter) SingUp(user *models.UserDBModel) *models.UserDBModel {
-	r.DB.Create(&user)
-	return user
+func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+	if err := r.DB.Where(&user).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UserAdapter) ConfirmVerify(ctx context.Context, user *models.UserDBModel) error {
+	if err := r.DB.Model(user).
+		Updates(models.UserDBModel{
+			Verified: true,
+			Active:   true,
+		}).
+		Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UserAdapter) SingUp(user *models.UserDBModel) error {
+	if err := r.DB.Create(&user).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewUserAdapter(db *gorm.DB) UserRepository {
@@ -47,6 +68,10 @@ func (r *UserAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel
 func (r *UserAdapter) BeginTx() *gorm.DB {
 	return r.DB.Begin().Begin()
 }
+func (r *UserAdapter) GetConnection() *gorm.DB {
+	return r.DB
+}
+
 func (r *UserAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
 	return nil, nil
 }

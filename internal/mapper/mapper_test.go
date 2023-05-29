@@ -15,7 +15,6 @@ func TestMapUserDBModelToUserResponse(t *testing.T) {
 		Id:           1,
 		Username:     "username",
 		Firstname:    &str,
-		RolesJson:    "{\"roles\": [\"ROLE_ADMIN\", \"ROLE_USER\"]}",
 		Roles:        []string{"ROLE_ADMIN", "ROLE_USER"},
 		Verified:     true,
 		Active:       true,
@@ -33,12 +32,11 @@ func TestMapUserDBModelToUserResponse(t *testing.T) {
 		Lastname:  &str,
 		Email:     "",
 		Password:  "",
-		RolesJson: "{\"roles\": [\"ROLE_ADMIN\", \"ROLE_USER\"]}",
 		Verified:  true,
 		Active:    true,
 		CreatedAt: now,
-		LastLogin: now,
-		DeletedAt: now,
+		LastLogin: &now,
+		DeletedAt: &now,
 	}
 	ur := MapUserDBModelToUserResponse(dbu)
 	assert.Equal(t, expected, ur)

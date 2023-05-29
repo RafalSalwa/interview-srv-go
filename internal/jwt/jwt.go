@@ -3,6 +3,7 @@ package jwt
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -39,27 +40,33 @@ func CreateToken(ttl time.Duration, payload interface{}, privateKey string) (str
 func DecodeToken(token string, publicKey string) (interface{}, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
+		fmt.Println("decode", err)
 		return nil, fmt.Errorf("could not decode: %w", err)
 	}
 
 	_, err = jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
 	if err != nil {
+		fmt.Println("parse key", err)
 		return "", fmt.Errorf("validate: parse key: %w", err)
 	}
-
+	fmt.Println("token:", token)
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+			fmt.Println("parse token", err)
 			return nil, fmt.Errorf("unexpected method: %s", t.Header["alg"])
 		}
+
 		return t, nil
 	})
 	if err != nil {
+		fmt.Println("parsed", err)
 		return nil, err
 	}
+	fmt.Println(parsedToken)
 	return parsedToken, nil
 }
 
-func ValidateToken(token string, publicKey string) (interface{}, error) {
+func ValidateToken(token string, publicKey string) (*UserClaims, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode: %w", err)
@@ -68,10 +75,11 @@ func ValidateToken(token string, publicKey string) (interface{}, error) {
 	key, err := jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
 
 	if err != nil {
-		return "", fmt.Errorf("validate: parse key: %w", err)
+		return nil, fmt.Errorf("validate: parse key: %w", err)
 	}
 
-	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+	cc := jwt.MapClaims{}
+	_, err = jwt.ParseWithClaims(token, cc, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected method: %s", t.Header["alg"])
 		}
@@ -82,10 +90,11 @@ func ValidateToken(token string, publicKey string) (interface{}, error) {
 		return nil, fmt.Errorf("validate: %w", err)
 	}
 
-	claims, ok := parsedToken.Claims.(jwt.MapClaims)
-	if !ok || !parsedToken.Valid {
-		return nil, fmt.Errorf("validate: invalid token")
+	sub := &UserClaims{}
+	err = mapstructure.Decode(cc["sub"], &sub)
+	if err != nil {
+		return nil, err
 	}
 
-	return claims["sub"], nil
+	return sub, nil
 }

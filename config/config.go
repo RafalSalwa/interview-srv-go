@@ -16,7 +16,12 @@ type Conf struct {
 	Server ConfServer
 	DB     ConfDB
 	GRPC   ConfGRPC
+	AMQP   AMQP
 	Token  ConfToken
+}
+
+type Mongo struct {
+	DBUri string `env:"MONGODB_SERVER_ADDR"`
 }
 
 type ConfGRPC struct {
@@ -46,6 +51,14 @@ type ConfServer struct {
 	BasicAuth    ConfBasicAuth
 	BearerToken  string `env:"BEARER_TOKEN"`
 	Debug        bool   `env:"APP_DEBUG,required"`
+}
+
+type AMQP struct {
+	Protocol string `env:"AMQP_PROTOCOL"`
+	Username string `env:"AMQP_USERNAME"`
+	Password string `env:"AMQP_PASSWORD"`
+	Hostname string `env:"AMQP_HOSTNAME"`
+	VHost    string `env:"AMQP_VHOST"`
 }
 
 type ConfDB struct {

@@ -14,7 +14,7 @@ const (
 )
 
 func RandomString(l int) (*string, error) {
-	if l < 6 || l > 12 {
+	if l < 6 || l > 18 {
 		return nil, errors.New("code should be between 6 and 10 letters")
 	}
 	b := make([]byte, l)

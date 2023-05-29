@@ -1,35 +1,34 @@
 package middlewares
 
 import (
-	"encoding/json"
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/config"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
 	"github.com/gorilla/mux"
 )
 
-func ValidateJWTAccessToken() mux.MiddlewareFunc {
+func ValidateJWTAccessToken(c config.ConfToken) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get("authorization")
 			if authorizationHeader != "" {
 				bearerToken := strings.Split(authorizationHeader, " ")
 				if len(bearerToken) == 2 {
-					token, err := jwt.DecodeToken(bearerToken[1])
+					sub, err := jwt.ValidateToken(bearerToken[1], c.AccessTokenPublicKey)
 					if err != nil {
-						json.NewEncoder(w).Encode(Exception{Message: error.Error()})
+						responses.RespondNotAuthorized(w, "Wrong access token")
 						return
 					}
-					if token.Valid {
-						next.ServeHTTP(w, r)
-					} else {
-						json.NewEncoder(w).Encode(Exception{Message: "Invalid authorization token"})
-					}
+					r.Header.Set("x-user-id", strconv.FormatInt(sub.ID, 10))
 				}
 			} else {
-				json.NewEncoder(w).Encode(Exception{Message: "An authorization header is required"})
+				responses.RespondNotAuthorized(w, "An authorization header is required")
 			}
+			h.ServeHTTP(w, r)
 		})
 	}
 }

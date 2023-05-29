@@ -1,19 +1,22 @@
 package router
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
+	"github.com/RafalSalwa/interview-app-srv/config"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/RafalSalwa/interview-app-srv/api/handler"
-	"github.com/RafalSalwa/interview-app-srv/internal/auth"
 )
 
-func RegisterUserRouter(r *mux.Router, h handler.UserHandler) {
+func RegisterUserRouter(r *mux.Router, h handler.UserHandler, conf *config.Conf) {
 	s := r.PathPrefix("/user").Subrouter()
 
-	s.Methods(http.MethodGet).Path("/{id}").HandlerFunc(auth.BasicAuth(h.GetUserById()))
-	s.Methods(http.MethodPost).Path("").HandlerFunc(auth.BasicAuth(h.PostUser()))
-	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(auth.BasicAuth(h.PasswordChange()))
-	s.Methods(http.MethodPost).Path("/validate/{code}").HandlerFunc(auth.BasicAuth(h.ValidateCode()))
+	s.Use(middlewares.ValidateJWTAccessToken(conf.Token))
+
+	s.Methods(http.MethodGet).Path("/{id}").HandlerFunc(h.GetUserById())
+	s.Methods(http.MethodPost).Path("").HandlerFunc(h.CreateUser())
+	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(h.PasswordChange())
+	s.Methods(http.MethodPost).Path("/validate/{code}").HandlerFunc(h.ValidateCode())
 }

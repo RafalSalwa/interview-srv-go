@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 	"strconv"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/internal/password"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
@@ -17,27 +18,15 @@ import (
 
 type UserHandler interface {
 	GetUserById() HandlerFunc
-	PostUser() HandlerFunc
+	CreateUser() HandlerFunc
 	PasswordChange() HandlerFunc
 	ValidateCode() HandlerFunc
 }
 
 type userHandler struct {
-	Router         *mux.Router
-	userSqlService services.UserSqlService
-	logger         *logger.Logger
-}
-
-func (uh userHandler) ValidateCode() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		code := mux.Vars(r)["code"]
-		um := models.UserDBModel{VerificationCode: code}
-		status := uh.userSqlService.Veryficate(&um)
-		if !status {
-			responses.RespondInternalServerError(w)
-		}
-		responses.RespondOk(w)
-	}
+	router  *mux.Router
+	service services.UserSqlService
+	logger  *logger.Logger
 }
 
 func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger) UserHandler {
@@ -46,20 +35,19 @@ func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger)
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userId := mux.Vars(r)["id"]
-		uh.logger.Info().Msgf("Fetching user id %s", userId)
-		intId, err := strconv.ParseInt(userId, 10, 64)
+		user_id := r.Header.Get("x-user-id")
+		fmt.Println(user_id)
+		userId, err := strconv.Atoi(mux.Vars(r)["id"])
 		if err != nil {
 			uh.logger.Err(err)
-			responses.RespondBadRequest(w, "Wrong paramater Type. Required int")
+			responses.RespondBadRequest(w, "Wrong parameter Type. Required int")
 			return
 		}
 
-		user, err := uh.userSqlService.GetById(intId)
+		user, err := uh.service.GetById(userId)
 		if err != nil {
 			uh.logger.Err(err)
 			responses.RespondInternalServerError(w)
-
 			return
 		}
 
@@ -67,66 +55,66 @@ func (uh userHandler) GetUserById() HandlerFunc {
 			responses.RespondNotFound(w)
 			return
 		}
-		ur := mapper.MapUserDBResponseToUserResponse(user)
+
+		ur := &models.UserResponse{}
+		if err = ur.FromDBResponse(user); err != nil {
+			uh.logger.Err(err)
+			responses.RespondInternalServerError(w)
+			return
+		}
 
 		responses.NewUserResponse(ur, w)
 	}
 }
 
-func (uh userHandler) PostUser() HandlerFunc {
+func (uh userHandler) CreateUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		newUserRequest := &models.CreateUserRequest{}
-		err := json.NewDecoder(r.Body).Decode(newUserRequest)
 
-		if err != nil {
+		newUserRequest := &models.CreateUserRequest{}
+		if err := json.NewDecoder(r.Body).Decode(newUserRequest); err != nil {
 			uh.logger.Error().Err(err)
-			responses.RespondBadRequest(w, "")
+			responses.RespondBadRequest(w, "Invalid JSON request")
 			return
 		}
 
-		err = password.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm)
-		if err != nil {
+		validate := validator.New()
+		if err := validate.Struct(newUserRequest); err != nil {
 			uh.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 
-		if uh.userSqlService.Exists(newUserRequest) {
-			responses.RespondConflict(w, "username or email already exists")
-			return
-		}
-		u, err := uh.userSqlService.CreateUser(newUserRequest)
+		newUser, err := uh.service.CreateUser(newUserRequest)
 		if err != nil {
 			uh.logger.Error().Err(err)
 			responses.RespondInternalServerError(w)
-
 			return
 		}
-		responses.NewUserResponse(u, w)
+
+		responses.NewUserResponse(newUser, w)
 	}
 }
 
 func (uh userHandler) PasswordChange() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		passChange := &models.ChangePasswordRequest{}
-		err := json.NewDecoder(r.Body).Decode(passChange)
-		if err != nil {
+		pcr := &models.ChangePasswordRequest{}
+
+		if err := json.NewDecoder(r.Body).Decode(pcr); err != nil {
 			uh.logger.Error().Err(err).Msg("Decode")
-			responses.RespondBadRequest(w, "")
+			responses.RespondBadRequest(w, "Invalid JSON")
 			return
 		}
-		err = password.Validate(passChange.Password, passChange.PasswordConfirm)
-		if err != nil {
+
+		if err := password.Validate(pcr.Password, pcr.PasswordConfirm); err != nil {
 			uh.logger.Error().Err(err).Msg("Validate")
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 
-		user, err := uh.userSqlService.GetById(passChange.Id)
+		user, err := uh.service.GetById(pcr.Id)
 		if err != nil {
-			uh.logger.Err(err)
+			uh.logger.Error().Err(err)
 			responses.RespondInternalServerError(w)
-
 			return
 		}
 
@@ -134,23 +122,40 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 			responses.RespondNotFound(w)
 			return
 		}
-		if !password.CheckPasswordHash(passChange.Password, user.Password) {
-			uh.logger.Error().Msg("Password cannot be the same as old one")
+
+		if !password.CheckPasswordHash(pcr.Password, user.Password) {
+			uh.logger.Error().Msg("New Password cannot be the same as old one")
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-		passHash, _ := password.HashPassword(passChange.Password)
 
+		passHash, err := password.HashPassword(pcr.Password)
+		if err != nil {
+			uh.logger.Error().Err(err).Msg("New Password cannot be the same as old one")
+			responses.RespondInternalServerError(w)
+			return
+		}
 		updateUser := &models.UpdateUserRequest{
-			Id:       passChange.Id,
+			Id:       pcr.Id,
 			Password: &passHash,
 		}
-		err = uh.userSqlService.UpdateUserPassword(updateUser)
-		if err != nil {
-			uh.logger.Err(err)
-			responses.RespondInternalServerError(w)
 
+		if errUpdate := uh.service.UpdateUserPassword(updateUser); errUpdate != nil {
+			uh.logger.Error().Err(errUpdate)
+			responses.RespondInternalServerError(w)
 			return
+		}
+		responses.RespondOk(w) // Instead we can also send redirect to login page
+	}
+}
+
+func (uh userHandler) ValidateCode() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := mux.Vars(r)["code"]
+		um := models.UserDBModel{VerificationCode: code}
+		status := uh.service.StoreVerificationData(&um)
+		if !status {
+			responses.RespondInternalServerError(w)
 		}
 		responses.RespondOk(w)
 	}
