@@ -10,7 +10,7 @@ based on docker containers.
 
 create network for containers in other repos
 ```bash
-docker network create --driver=bridge --subnet=172.28.1.0/24 --ip-range=172.28.1.0/24 --gateway=172.28.5.254 external-interview-net
+docker network create --driver=bridge --subnet=172.28.1.0/24 --ip-range=172.28.1.0/24 --gateway=172.28.1.1 external-interview-net
 ```
 ## Build
 make up
