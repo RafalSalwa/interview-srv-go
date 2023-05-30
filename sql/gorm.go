@@ -14,10 +14,11 @@ type GormDB struct {
 }
 
 func NewUsersDBGorm(c config.ConfDB, l *logger.Logger) *gorm.DB {
-	conString := fmt.Sprintf(dbString, c.Username, c.Password, "mysql", 3306, c.DBName, dbParams)
+	conString := fmt.Sprintf(dbString, c.Username, c.Password, c.Addr, c.DBName, dbParams)
+	fmt.Println(conString)
 	db, err := gorm.Open(mysql.Open(conString), &gorm.Config{Logger: gormlogger.Default.LogMode(gormlogger.Info)})
 	if err != nil {
-		l.Fatal().Err(err).Msg("DB connection start failure")
+		l.Fatal().Err(err).Msg("DB gorm connection failure")
 	}
 	sqlDB, err := db.DB()
 

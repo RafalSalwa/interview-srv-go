@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -62,8 +63,7 @@ type AMQP struct {
 }
 
 type ConfDB struct {
-	Host     string `env:"MYSQL_HOSTS,required"`
-	Port     int    `env:"MYSQL_PORT,required"`
+	Addr     string `env:"MYSQL_ADDR,required"`
 	Username string `env:"MYSQL_USER,required"`
 	Password string `env:"MYSQL_PASSWORD,required"`
 	DBName   string `env:"MYSQL_NAME,required"`
@@ -87,11 +87,9 @@ func New() *Conf {
 	if err != nil {
 		log.Fatalf("Failed to read env file: %s", err)
 	}
-
 	if err := envdecode.StrictDecode(&c); err != nil {
 		log.Fatalf("Failed to read env file via envdecode: %s", err)
 	}
-
 	return &c
 }
 
@@ -99,11 +97,14 @@ func readFromFile() (bool, error) {
 	re := regexp.MustCompile(`^(.*` + "interview-app-srv" + `)`)
 	cwd, _ := os.Getwd()
 	rootPath := re.Find([]byte(cwd))
-
-	err := godotenv.Load(string(rootPath) + `/.env`)
+	err := godotenv.Load(string(rootPath) + `.env`)
 
 	if err != nil {
-		_ = godotenv.Load(".env")
+		fmt.Println("err:", err)
+		errL := godotenv.Load(".env")
+		if errL != nil {
+			fmt.Println("errL:", errL)
+		}
 	}
 	return true, nil
 }

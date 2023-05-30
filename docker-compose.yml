@@ -32,8 +32,9 @@ services:
       MYSQL_USER: "interview"
       MYSQL_PASSWORD: "interview"
       MYSQL_ROOT_PASSWORD: "interview"
+      MYSQL_TCP_PORT: 6033
     ports:
-      - "6033:3306"
+      - "6033:6033"
     healthcheck:
       test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
       start_period: 5s

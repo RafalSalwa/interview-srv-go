@@ -17,12 +17,12 @@ type Tx struct {
 
 const (
 	driver   = "mysql"
-	dbString = "%s:%s@tcp(%s:%d)/%s?%s"
+	dbString = "%s:%s@tcp(%s)/%s?%s"
 	dbParams = "parseTime=true&loc=Europe%2FWarsaw&charset=utf8&collation=utf8_polish_ci"
 )
 
 func NewUsersDB(c config.ConfDB, l *logger.Logger) DB {
-	con := fmt.Sprintf(dbString, c.Username, c.Password, c.Host, c.Port, c.DBName, dbParams)
+	con := fmt.Sprintf(dbString, c.Username, c.Password, c.Addr, c.DBName, dbParams)
 	db, err := sql.Open(driver, con)
 	if err != nil {
 		l.Error().Err(err)
