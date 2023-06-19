@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+
 	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"

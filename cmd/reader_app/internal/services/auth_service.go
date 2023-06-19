@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/RafalSalwa/interview-app-srv/internal/generator"
 	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/internal/password"

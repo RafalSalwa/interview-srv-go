@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -12,7 +14,6 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"os"
 )
 
 var configPath string

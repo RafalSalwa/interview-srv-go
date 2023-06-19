@@ -3,14 +3,15 @@ package config
 import (
 	"flag"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"os"
-	"time"
 )
 
 var configPath string

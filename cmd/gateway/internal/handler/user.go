@@ -1,15 +1,16 @@
 package handler
 
 import (
-    "encoding/json"
-    "github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-    "github.com/RafalSalwa/interview-app-srv/internal/password"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    "github.com/go-playground/validator/v10"
-    "net/http"
+	"encoding/json"
+	"net/http"
 
-    "github.com/gorilla/mux"
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/go-playground/validator/v10"
+
+	"github.com/gorilla/mux"
 )
 
 type UserHandler interface {

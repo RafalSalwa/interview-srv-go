@@ -2,6 +2,10 @@ package server
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/reader_app/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/reader_app/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/internal/repository"
@@ -13,9 +17,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/mongo"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 type server struct {

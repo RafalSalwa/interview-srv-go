@@ -1,10 +1,11 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/auth"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func RegisterAuthRouter(r *mux.Router, h handler.AuthHandler) {

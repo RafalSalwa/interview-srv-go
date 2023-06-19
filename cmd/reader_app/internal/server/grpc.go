@@ -1,6 +1,9 @@
 package server
 
 import (
+	"net"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/internal/rpc_api"
 	"github.com/RafalSalwa/interview-app-srv/internal/services"
 	grpc_config "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
@@ -15,8 +18,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
-	"net"
-	"time"
 )
 
 type GRPC struct {

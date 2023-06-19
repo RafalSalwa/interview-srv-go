@@ -1,11 +1,12 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func RegisterUserRouter(r *mux.Router, h handler.UserHandler, cfg auth.JWTConfig) {

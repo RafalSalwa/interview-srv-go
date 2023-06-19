@@ -2,11 +2,12 @@ package router
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
 	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/gorilla/mux"
-	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 )

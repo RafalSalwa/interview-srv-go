@@ -1,8 +1,9 @@
 package auth
 
 import (
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
-    "net/http"
+	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 )
 
 func Authorization(h handler.HandlerFunc) http.HandlerFunc {

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/server"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/server"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 )
 
 func main() {

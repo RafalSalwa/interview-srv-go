@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
@@ -10,7 +12,6 @@ import (
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 type AuthHandler interface {
