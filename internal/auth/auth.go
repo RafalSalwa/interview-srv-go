@@ -1,8 +1,8 @@
 package auth
 
 import (
+	"handlers"
 	"net/http"
-    "handlers"
 )
 
 func Authorization(h handlers.HandlerFunc) http.HandlerFunc {

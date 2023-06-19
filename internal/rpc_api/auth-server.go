@@ -1,9 +1,9 @@
 package rpc_api
 
 import (
-    "github.com/RafalSalwa/interview-app-srv/internal/services"
-    grpc_config "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
-    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+	"github.com/RafalSalwa/interview-app-srv/internal/services"
+	grpc_config "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
+	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
 
 type AuthServer struct {
