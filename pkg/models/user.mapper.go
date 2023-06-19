@@ -3,8 +3,9 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"strings"
+
+	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/jinzhu/copier"

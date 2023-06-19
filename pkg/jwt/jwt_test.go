@@ -1,11 +1,12 @@
 package jwt
 
 import (
+	"testing"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func initConfig() config.ConfToken {

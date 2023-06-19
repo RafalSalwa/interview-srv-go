@@ -3,8 +3,9 @@ package jwt
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/mitchellh/mapstructure"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/golang-jwt/jwt"
 )

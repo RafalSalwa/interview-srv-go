@@ -2,12 +2,13 @@ package tracing
 
 import (
 	"context"
+	"io"
+	"net/http"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
-	"io"
-	"net/http"
 )
 
 type JaegerConfig struct {
