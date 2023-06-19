@@ -1,3 +1,7 @@
+.PHONY:
+
+build:
+	docker-compose up --build -d
 all: test testrace
 
 compose-up:
