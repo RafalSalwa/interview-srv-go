@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -42,8 +43,9 @@ func (a AuthHandler) SignUpUser() HandlerFunc {
 		signUpUser := &models.CreateUserRequest{}
 
 		if err := decoder.Decode(&signUpUser); err != nil {
+			fmt.Println(signUpUser)
 			a.logger.Error().Err(err).Msg("SignUpUser: decode")
-			responses.RespondBadRequest(w, "wrong parameters")
+			responses.RespondBadRequest(w, "wrong input parameters")
 			return
 		}
 
