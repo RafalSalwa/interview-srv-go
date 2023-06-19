@@ -3,9 +3,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -gcflags \"all=-N -l\" -o server ./cmd/gateway/main.go"
-bin = "./server"
-#full_bin = "dlv  --continue --accept-multiclient --listen=:4000 --headless=true --api-version=2 --log exec ./server"
+cmd = "go build -gcflags \"all=-N -l\" -o reader_app ./cmd/reader_app/main.go"
+bin = "./reader_app"
 log = "./tmp/air_errors.log"
 
 include_ext = ["go", "yaml", "tpl", "tmpl", "html"]
