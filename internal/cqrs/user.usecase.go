@@ -38,32 +38,32 @@ type userUsecase struct {
 }
 
 func (u userUsecase) Get(id int64) (*models.User, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (u userUsecase) Search(query string) ([]*models.User, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (u userUsecase) List() ([]*models.User, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (u userUsecase) Create(email, password, firstName, lastName string) (int64, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (u userUsecase) Update(e *models.User) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (u userUsecase) Delete(id int64) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

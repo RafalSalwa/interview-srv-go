@@ -3,10 +3,12 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
+	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/jinzhu/copier"
 	phpserialize "github.com/kovetskiy/go-php-serialize"
-	"strings"
 )
 
 func (r *UserResponse) FromDBResponse(user *UserDBResponse) error {
@@ -43,6 +45,13 @@ func (r *UserResponse) AssignTokenPair(tp *jwt.TokenPair) {
 	r.RefreshToken = tp.RefreshToken
 }
 
+func (r *UserResponse) FromProtoSignIn(pbu *intrvproto.SignInUserResponse) error {
+	err := copier.Copy(r, &pbu)
+	if err != nil {
+		return fmt.Errorf("from response to db error: %w", err)
+	}
+	return nil
+}
 func getRolesList(r string) []string {
 	i := strings.Index(r, "roles")
 	type RoleItem struct {

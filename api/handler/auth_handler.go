@@ -3,11 +3,12 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"net/http"
-	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"

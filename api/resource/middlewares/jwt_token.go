@@ -1,11 +1,12 @@
 package middlewares
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/config"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/config"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
 	"github.com/gorilla/mux"

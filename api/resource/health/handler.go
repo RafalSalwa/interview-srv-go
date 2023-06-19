@@ -1,8 +1,9 @@
 package health
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func SetupHealthCheck(r *mux.Router) {

@@ -1,8 +1,9 @@
 package password
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHashPassword(t *testing.T) {
@@ -56,13 +57,11 @@ func TestCheckPasswordHash(t *testing.T) {
 				t.Errorf("hashed pass = %v, want %v", tt.args.hash, tt.args.plaintext)
 				return
 			}
-
 		})
 	}
 }
 
 func TestValidate(t *testing.T) {
-
 	type args struct {
 		password    string
 		passwordCon string
@@ -80,7 +79,7 @@ func TestValidate(t *testing.T) {
 				errMsg:      "Password should contain at least one upper case character"},
 		},
 		{
-			name: "check diffrent password",
+			name: "check different password",
 			args: args{
 				password:    "password",
 				passwordCon: "password2",
@@ -128,8 +127,6 @@ func TestValidate(t *testing.T) {
 			if err != nil {
 				assert.EqualError(t, err, tt.args.errMsg)
 			}
-
 		})
 	}
-
 }

@@ -1,45 +1,31 @@
 package mongo
 
 import (
-	"database/sql"
-	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/config"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "context"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type DB struct {
-	*sql.DB
-}
-type Tx struct {
-	*sql.Tx
-}
-
-const (
-	driver   = "mysql"
-	dbString = "%s:%s@tcp(%s:%d)/%s?%s"
-	dbParams = "parseTime=true&loc=Europe%2FWarsaw&charset=utf8&collation=utf8_polish_ci"
-)
-
-func NewUsersDB(c config.ConfDB, l *logger.Logger) DB {
-	con := fmt.Sprintf(dbString, c.Username, c.Password, c.Host, c.Port, c.DBName, dbParams)
-	db, err := sql.Open(driver, con)
-	if err != nil {
-		l.Error().Err(err)
-
-	}
-	err = db.Ping()
-	if err != nil {
-		l.Error().Err(err)
-
-	}
-	return DB{db}
+type Config struct {
+    Addr     string `mapstructure:"addr"`
+    Username string `mapstructure:"username"`
+    Password string `mapstructure:"password"`
 }
 
-// Begin starts an returns a new transaction.
-func (db *DB) Begin() (*Tx, error) {
-	tx, err := db.DB.Begin()
-	if err != nil {
-		return nil, err
-	}
-	return &Tx{tx}, nil
+func NewClient(ctx context.Context, cfg Config) (*mongo.Client, error) {
+    client, err := mongo.NewClient(
+        options.Client().ApplyURI(cfg.Addr).
+            SetAuth(options.Credential{Username: cfg.Username, Password: cfg.Password}))
+
+    if err != nil {
+        return nil, err
+    }
+    if err = client.Connect(ctx); err != nil {
+        return nil, err
+    }
+    if err = client.Ping(context.TODO(), readpref.Primary()); err != nil {
+        return nil, err
+    }
+    return client, nil
 }

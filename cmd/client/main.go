@@ -33,8 +33,10 @@ type Token struct {
 	refresh string
 }
 
-var maxNbConcurrentGoroutines = 100
-var concurrentGoroutines = make(chan struct{}, maxNbConcurrentGoroutines)
+var (
+	maxNbConcurrentGoroutines = 100
+	concurrentGoroutines      = make(chan struct{}, maxNbConcurrentGoroutines)
+)
 
 func runWorkersInOrder() {
 	l := logger.NewConsole(true)

@@ -2,11 +2,12 @@ package middlewares
 
 import (
 	"bytes"
-	"github.com/gorilla/mux"
 	"io"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 )

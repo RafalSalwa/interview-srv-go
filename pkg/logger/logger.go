@@ -3,11 +3,12 @@ package logger
 import (
 	"context"
 	"fmt"
-	"github.com/newrelic/go-agent/v3/newrelic"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/newrelic/go-agent/v3/newrelic"
 
 	"github.com/rs/zerolog"
 )
@@ -17,10 +18,15 @@ type Logger struct {
 	nrLoggerApp *newrelic.Application
 }
 
+type Config struct {
+	LogLevel string `mapstructure:"level"`
+	DevMode  bool   `mapstructure:"devMode"`
+}
+
 func New(isDebug bool) *Logger {
 	logLevel := zerolog.InfoLevel
 	if isDebug {
-		logLevel = zerolog.TraceLevel
+		logLevel = zerolog.DebugLevel
 	}
 
 	zerolog.SetGlobalLevel(logLevel)
@@ -34,7 +40,6 @@ func NewConsole(isDebug bool) *Logger {
 	if isDebug {
 		logLevel = zerolog.TraceLevel
 	}
-
 	zerolog.SetGlobalLevel(logLevel)
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 

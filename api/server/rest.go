@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+
 	"github.com/gorilla/mux"
 
 	apiConfig "github.com/RafalSalwa/interview-app-srv/config"
@@ -20,7 +21,7 @@ type REST struct {
 	l   *logger.Logger
 }
 
-func NewServer(c *apiConfig.Conf, r *mux.Router, l *logger.Logger) *REST {
+func NewRESTServer(c *apiConfig.Conf, r *mux.Router, l *logger.Logger) *REST {
 	s := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port),
 		Handler:      r,
