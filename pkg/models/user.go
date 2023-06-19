@@ -1,8 +1,9 @@
 package models
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // swagger:model User
@@ -25,7 +26,6 @@ type UserDBModel struct {
 }
 
 func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {
-
 	um.Active = false
 	um.Verified = false
 	return nil

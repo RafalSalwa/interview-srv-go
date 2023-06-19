@@ -2,10 +2,10 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/go-playground/validator/v10"
 	"net/http"
 	"strconv"
+
+	"github.com/go-playground/validator/v10"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/internal/password"
@@ -35,8 +35,6 @@ func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger)
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user_id := r.Header.Get("x-user-id")
-		fmt.Println(user_id)
 		userId, err := strconv.Atoi(mux.Vars(r)["id"])
 		if err != nil {
 			uh.logger.Err(err)
@@ -69,7 +67,6 @@ func (uh userHandler) GetUserById() HandlerFunc {
 
 func (uh userHandler) CreateUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		newUserRequest := &models.CreateUserRequest{}
 		if err := json.NewDecoder(r.Body).Decode(newUserRequest); err != nil {
 			uh.logger.Error().Err(err)

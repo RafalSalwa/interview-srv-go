@@ -26,7 +26,6 @@ func (c *IntrvClient) SetDebug(debug bool) {
 
 func (c *IntrvClient) SetHandler(eventName string, handler EventHandler) {
 	c.handlers[eventName] = handler
-	fmt.Println("SetHandler", c.handlers)
 }
 
 func (c *IntrvClient) HandleChannel(ctx context.Context, channelName string, requeueOnError bool) error {

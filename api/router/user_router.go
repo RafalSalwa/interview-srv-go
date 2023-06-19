@@ -1,9 +1,10 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/config"
-	"net/http"
 
 	"github.com/gorilla/mux"
 

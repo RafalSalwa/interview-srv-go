@@ -2,11 +2,12 @@ package middlewares
 
 import (
 	"bytes"
-	"github.com/gorilla/mux"
 	"io"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 )
@@ -14,8 +15,6 @@ import (
 func RequestLogMiddleware(logger *logger.Logger) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-
 			start := time.Now()
 
 			le := &logEntry{
@@ -33,12 +32,17 @@ func RequestLogMiddleware(logger *logger.Logger) mux.MiddlewareFunc {
 				le.ServerIP = ipFromHostPort(addr.String())
 			}
 			body, _ := io.ReadAll(r.Body)
+			err := r.Body.Close()
+			if err != nil {
+				logger.Error().Err(err)
+			}
 			r.Body = io.NopCloser(bytes.NewBuffer(body))
 			r2 := new(http.Request)
 			*r2 = *r
 			rcc := &readCounterCloser{r: io.NopCloser(bytes.NewBuffer(body))}
 			r2.Body = rcc
 			w2 := &responseStats{w: w}
+			r2.Body = io.NopCloser(bytes.NewBuffer(body))
 
 			le.Latency = time.Since(start)
 			if rcc.err == nil && rcc.r != nil {
@@ -69,7 +73,7 @@ func RequestLogMiddleware(logger *logger.Logger) mux.MiddlewareFunc {
 				Int64("resp_header_size", le.ResponseHeaderSize).
 				Int64("resp_body_size", le.ResponseBodySize).
 				Dur("latency", le.Latency).
-				Msg("")
+				Msg("Request")
 
 			h.ServeHTTP(w2, r2)
 		})

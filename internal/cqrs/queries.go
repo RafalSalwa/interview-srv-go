@@ -1,6 +1,6 @@
 package cqrs
 
-//type Queries struct {
+// type Queries struct {
 //	ApproveTrainingReschedule query.ApproveTrainingRescheduleHandler
 //	CancelTraining            query.CancelTrainingHandler
 //}

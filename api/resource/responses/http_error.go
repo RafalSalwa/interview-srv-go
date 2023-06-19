@@ -55,7 +55,6 @@ func NewUnauthorizedResponse() *UnauthorizedResponse {
 }
 
 func NewBadRequestErrorResponse(msg string) *ErrorResponse {
-
 	return NewErrorResponse(
 		http.StatusBadRequest,
 		"bad request",

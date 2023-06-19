@@ -3,11 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"net/http"
-	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -41,8 +43,9 @@ func (a AuthHandler) SignUpUser() HandlerFunc {
 		signUpUser := &models.CreateUserRequest{}
 
 		if err := decoder.Decode(&signUpUser); err != nil {
+			fmt.Println(signUpUser)
 			a.logger.Error().Err(err).Msg("SignUpUser: decode")
-			responses.RespondBadRequest(w, "wrong parameters")
+			responses.RespondBadRequest(w, "wrong input parameters")
 			return
 		}
 

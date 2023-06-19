@@ -24,9 +24,8 @@ import (
 )
 
 var (
-	conf   *config.Conf
-	server *http.Server
-	ctx    context.Context
+	conf *config.Conf
+	ctx  context.Context
 
 	userHandler apiHandler.UserHandler
 	authHandler apiHandler.IAuthHandler
@@ -37,25 +36,28 @@ var (
 
 func runTestServer() {
 	ctx = context.TODO()
-	conf = config.New()
+	conf = config.NewViper()
 	l := logger.NewConsole(conf.App.Debug)
 
 	db := sql.NewUsersDB(conf.DB, l)
 	ormDB := sql.NewUsersDBGorm(conf.DB, l)
 	userRepository := repository.NewUserAdapter(ormDB)
+
 	userService = services.NewMySqlService(db, l)
 	authService = services.NewAuthService(ctx, userRepository, l, conf.Token)
 
-	r := apiRouter.NewApiRouter(l, conf.Token)
+	r := apiRouter.NewApiRouter(l, conf)
 	userHandler = apiHandler.NewUserHandler(r, userService, l)
 	authHandler = apiHandler.NewAuthHandler(r, authService, l)
 
-	apiRouter.RegisterUserRouter(r, userHandler)
+	apiRouter.RegisterUserRouter(r, userHandler, conf)
 	apiRouter.RegisterAuthRouter(r, authHandler)
 
-	server = apiServer.NewServer(conf, r)
-	l.Info().Msgf("Starting REST server %v", server.Addr)
-	apiServer.Run(server, conf)
+	srv := apiServer.NewRESTServer(conf, r, l)
+	srv.Run()
+
+	grpcServer, _ := apiServer.NewGrpcServer(conf.GRPC, l, authService, userService)
+	grpcServer.Run()
 }
 
 func Test_get_api_health(t *testing.T) {
@@ -122,7 +124,7 @@ func Test_get_api_user(t *testing.T) {
 		}
 		fmt.Println(string(respBody), http.DetectContentType(respBody))
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		//assert.Equal(t, http.StatusOK, resp.C)
-		//assert.Equal(t, `{"statusMessage":"validation error"}`, respBody)
+		// assert.Equal(t, http.StatusOK, resp.C)
+		// assert.Equal(t, `{"statusMessage":"validation error"}`, respBody)
 	})
 }

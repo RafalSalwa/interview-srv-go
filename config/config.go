@@ -1,37 +1,43 @@
 package config
 
 import (
+	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"regexp"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"github.com/joeshaw/envdecode"
-	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv"
 )
 
 type Conf struct {
-	App    ConfApp
-	Server ConfServer
-	DB     ConfDB
-	GRPC   ConfGRPC
-	AMQP   AMQP
-	Token  ConfToken
+	App    ConfApp              `mapstructure:",squash"`
+	Server ConfServer           `mapstructure:",squash"`
+	DB     ConfDB               `mapstructure:",squash"`
+	GRPC   ConfGRPC             `mapstructure:",squash"`
+	AMQP   AMQP                 `mapstructure:",squash"`
+	Token  ConfToken            `mapstructure:",squash"`
+	Jaeger tracing.JaegerConfig `mapstructure:",squash"`
 }
 
 type Mongo struct {
-	DBUri string `env:"MONGODB_SERVER_ADDR"`
+	DBUri string `env:"MONGODB_SERVER_ADDR" mapstructure:"MONGODB_SERVER_ADDR"`
 }
 
 type ConfGRPC struct {
-	GrpcServerAddress string `env:"GRPC_SERVER_ADDRESS"`
+	GrpcServerAddress string `env:"GRPC_SERVER_ADDRESS" mapstructure:"GRPC_SERVER_ADDRESS"`
 }
 
 type ConfApp struct {
-	Env          string `env:"APP_ENV, default=dev"`
-	Debug        bool   `env:"APP_DEBUG, default=false"`
-	JwtSecretKey string `env:"JWT_SECRET_KEY, required"`
+	Env           string `env:"APP_ENV, default=dev" mapstructure:"APP_ENV"`
+	Debug         bool   `env:"APP_DEBUG, default=false" mapstructure:"APP_DEBUG"`
+	JaegerEnabled bool   `env:"JAEGER_ENABLE, default=false" mapstructure:"JAEGER_ENABLE"`
+	JwtSecretKey  string `env:"JWT_SECRET_KEY, required" mapstructure:"JWT_SECRET_KEY"`
 }
 
 type ConfBasicAuth struct {
@@ -40,17 +46,17 @@ type ConfBasicAuth struct {
 }
 
 type ConfServer struct {
-	Addr         string        `env:"SERVER_ADDR"`
-	Host         string        `env:"SERVER_HOST"`
-	Port         int           `env:"SERVER_PORT,required"`
-	TimeoutRead  time.Duration `env:"SERVER_TIMEOUT_READ,required"`
-	TimeoutWrite time.Duration `env:"SERVER_TIMEOUT_WRITE,required"`
-	TimeoutIdle  time.Duration `env:"SERVER_TIMEOUT_IDLE,required"`
-	APIKey       string        `env:"X_API_KEY, required"`
-	AuthMethod   string        `env:"SERVER_AUTH_METHOD"`
+	Addr         string        `env:"SERVER_ADDR" mapstructure:"SERVER_ADDR"`
+	Host         string        `env:"SERVER_HOST" mapstructure:"SERVER_HOST"`
+	Port         int           `env:"SERVER_PORT" mapstructure:"SERVER_PORT"`
+	TimeoutRead  time.Duration `env:"SERVER_TIMEOUT_READ,required" mapstructure:"SERVER_TIMEOUT_READ"`
+	TimeoutWrite time.Duration `env:"SERVER_TIMEOUT_WRITE,required" mapstructure:"SERVER_TIMEOUT_WRITE"`
+	TimeoutIdle  time.Duration `env:"SERVER_TIMEOUT_IDLE,required" mapstructure:"SERVER_TIMEOUT_IDLE"`
+	APIKey       string        `env:"X_API_KEY, required" mapstructure:"X_API_KEY"`
+	AuthMethod   string        `env:"SERVER_AUTH_METHOD" mapstructure:"SERVER_AUTH_METHOD"`
 	BasicAuth    ConfBasicAuth
-	BearerToken  string `env:"BEARER_TOKEN"`
-	Debug        bool   `env:"APP_DEBUG,required"`
+	BearerToken  string `env:"BEARER_TOKEN" mapstructure:"BEARER_TOKEN"`
+	Debug        bool   `env:"APP_DEBUG,required" mapstructure:"APP_DEBUG"`
 }
 
 type AMQP struct {
@@ -62,12 +68,11 @@ type AMQP struct {
 }
 
 type ConfDB struct {
-	Host     string `env:"MYSQL_HOSTS,required"`
-	Port     int    `env:"MYSQL_PORT,required"`
-	Username string `env:"MYSQL_USER,required"`
-	Password string `env:"MYSQL_PASSWORD,required"`
-	DBName   string `env:"MYSQL_NAME,required"`
-	Debug    bool   `env:"MYSQL_DEBUG,required"`
+	Addr     string `env:"MYSQL_ADDR,required" mapstructure:"MYSQL_ADDR"`
+	Username string `env:"MYSQL_USER,required" mapstructure:"MYSQL_USER"`
+	Password string `env:"MYSQL_PASSWORD,required" mapstructure:"MYSQL_PASSWORD"`
+	DBName   string `env:"MYSQL_NAME,required" mapstructure:"MYSQL_NAME"`
+	Debug    bool   `env:"MYSQL_DEBUG,required" mapstructure:"MYSQL_DEBUG"`
 }
 
 type ConfToken struct {
@@ -87,23 +92,44 @@ func New() *Conf {
 	if err != nil {
 		log.Fatalf("Failed to read env file: %s", err)
 	}
-
 	if err := envdecode.StrictDecode(&c); err != nil {
 		log.Fatalf("Failed to read env file via envdecode: %s", err)
+	}
+	return &c
+}
+
+func NewViper() *Conf {
+	var c Conf
+	viper.SetConfigFile(getEnvPath())
+	err := viper.ReadInConfig()
+	if err != nil {
+		return nil
+	}
+	err = viper.Unmarshal(&c)
+	if err != nil {
+		log.Fatalf("Failed to unmarshal env file: %s", err)
+		return nil
 	}
 
 	return &c
 }
-
-func readFromFile() (bool, error) {
+func getEnvPath() string {
 	re := regexp.MustCompile(`^(.*` + "interview-app-srv" + `)`)
 	cwd, _ := os.Getwd()
 	rootPath := re.Find([]byte(cwd))
 
-	err := godotenv.Load(string(rootPath) + `/.env`)
+	return string(rootPath) + `.env`
+}
+
+func readFromFile() (bool, error) {
+	err := godotenv.Load(getEnvPath())
 
 	if err != nil {
-		_ = godotenv.Load(".env")
+		fmt.Println("err:", err)
+		errL := godotenv.Load(".env")
+		if errL != nil {
+			fmt.Println("errL:", errL)
+		}
 	}
 	return true, nil
 }

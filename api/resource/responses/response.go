@@ -13,22 +13,6 @@ type Data struct {
 	Message *string `json:"message"`
 }
 
-type NotificationResponse struct {
-	Data *models.Notification `json:"data"`
-}
-type NotificationsResponse struct {
-	Data *models.Notifications `json:"data"`
-}
-type UserDeviceResponse struct {
-	Data *models.UserDevice `json:"data"`
-}
-type UserDevicesResponse struct {
-	Data *models.UserDevices `json:"data"`
-}
-type AuthResponse struct {
-	Data *models.Authentication `json:"data"`
-}
-
 type SuccessResponse struct {
 	Data Data `json:"data"`
 }

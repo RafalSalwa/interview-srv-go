@@ -18,7 +18,7 @@ import (
 )
 
 type SqlServiceImpl struct {
-	db     mySql.DB
+	db     *mySql.DB
 	logger *logger.Logger
 }
 
@@ -33,7 +33,7 @@ type UserSqlService interface {
 	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
 }
 
-func NewMySqlService(db mySql.DB, l *logger.Logger) *SqlServiceImpl {
+func NewMySqlService(db *mySql.DB, l *logger.Logger) *SqlServiceImpl {
 	return &SqlServiceImpl{db, l}
 }
 
@@ -97,7 +97,6 @@ func (s *SqlServiceImpl) UsernameInUse(user *models.CreateUserRequest) bool {
 }
 
 func (s *SqlServiceImpl) StoreVerificationData(user *models.UserDBModel) bool {
-
 	_, err := s.db.Exec("UPDATE `user` SET is_verified = 1, is_active=1 WHERE id = ?", user.Id)
 	if err == sql.ErrNoRows {
 		return false
@@ -138,14 +137,14 @@ func (s *SqlServiceImpl) LoginUser(u *models.LoginUserRequest) (*models.UserResp
 		return nil, err
 	}
 
-	//roles, err := phpserialize.Decode(user.RolesJson)
+	// roles, err := phpserialize.Decode(user.RolesJson)
 
 	if err != nil {
 		return nil, err
 	}
 
-	//v, ok := roles.(map[interface{}]interface{})
-	//if ok {
+	// v, ok := roles.(map[interface{}]interface{})
+	// if ok {
 	//	for _, s := range v {
 	//		user.Roles = append(user.Roles, fmt.Sprintf("%v", s))
 	//	}
@@ -166,13 +165,12 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 }
 
 func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*models.UserResponse, error) {
-
 	if err := password.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm); err != nil {
 		return nil, err
 	}
 
 	if s.UsernameInUse(newUserRequest) {
-		return nil, errors.New("Create user: username already in use")
+		return nil, errors.New("create user: username already in use")
 	}
 
 	roles, err := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})

@@ -3,9 +3,8 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -gcflags \"all=-N -l\" -o server ./cmd/server/main.go"
-#bin = "./server"
-full_bin = "dlv exec --continue --accept-multiclient --listen=:4000 --headless=true --api-version=2 --log ./server"
+cmd = "go build -gcflags \"all=-N -l\" -o reader_app ./cmd/reader_app/main.go"
+bin = "./reader_app"
 log = "./tmp/air_errors.log"
 
 include_ext = ["go", "yaml", "tpl", "tmpl", "html"]
@@ -13,7 +12,7 @@ exclude_dir = ["assets", "tmp", "vendor", "swagger"]
 follow_symlink = true
 exclude_regex = ["_test\\.go"]
 
-delay = 1000 # ms
+delay = 100 # ms
 kill_delay = 0 # ms
 stop_on_error = true
 send_interrupt = true
@@ -25,7 +24,6 @@ time = true
 main_only = false
 
 [color]
-# Customize each part's color. If no color found, use the raw app log.
 main = "magenta"
 watcher = "cyan"
 build = "yellow"

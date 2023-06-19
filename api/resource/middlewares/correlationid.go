@@ -2,10 +2,11 @@ package middlewares
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
-	"net/http"
 )
 
 type CorrId struct {
