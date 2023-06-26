@@ -1,7 +1,6 @@
 package amqp
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/config"
 	"github.com/streadway/amqp"
 )
 
@@ -10,13 +9,12 @@ type Connection struct {
 	credentials Credentials
 }
 
-func NewConnectionFromCredentials(credentials config.AMQP) *Connection {
+func NewConnection(cfg Config) *Connection {
 	cred := Credentials{
-		Protocol: credentials.Protocol,
-		Username: credentials.Username,
-		Password: credentials.Password,
-		Hostname: credentials.Hostname,
-		VHost:    credentials.VHost,
+		Username: cfg.Username,
+		Password: cfg.Password,
+		Addr:     cfg.Addr,
+        VHost: 
 	}
 
 	return &Connection{

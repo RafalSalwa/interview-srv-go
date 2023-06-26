@@ -4,18 +4,16 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+	"go.opentelemetry.io/otel"
+	"time"
 
 	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/gorilla/mux"
-	"github.com/opentracing/opentracing-go"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -28,6 +26,7 @@ type REST struct {
 	userHandler handler.UserHandler
 	authHandler handler.AuthHandler
 	router      *mux.Router
+	cqrs        *cqrs.Application
 	log         *logger.Logger
 	cfg         *gatewayConfig.Config
 }
@@ -53,7 +52,8 @@ func NewRESTServer(c *gatewayConfig.Config, l *logger.Logger) *REST {
 	}
 }
 
-func (s *REST) Run() {
+func (s *REST) Run(ctx context.Context) {
+	s.SetupCQRS(ctx)
 	s.SetupHandlers()
 	s.SetupRoutes()
 	go func() {
@@ -70,13 +70,24 @@ func (s *REST) Run() {
 			}
 		}
 	}()
+
 	if s.cfg.Jaeger.Enable {
-		tracer, closer, err := tracing.NewJaegerTracer(*s.cfg.Jaeger)
+		tp, err := tracing.NewJaegerTracer(*s.cfg.Jaeger)
 		if err != nil {
-			s.log.Error().Err(err).Msg("REST:run:jaeger")
+			s.log.Error().Err(err).Msg("REST:jaeger:register")
 		}
-		defer closer.Close() // nolint: errcheck
-		opentracing.SetGlobalTracer(tracer)
+		otel.SetTracerProvider(tp)
+
+		ctxj, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		defer func(ctxj context.Context) {
+			ctxj, cancel = context.WithTimeout(ctxj, time.Second*5)
+			defer cancel()
+			if err := tp.Shutdown(ctxj); err != nil {
+				s.log.Fatal().Err(err).Msg("REST:jaeger:shutdown")
+			}
+		}(ctxj)
 	}
 	closed := make(chan struct{})
 	go func() {
@@ -96,16 +107,15 @@ func (s *REST) Run() {
 }
 
 func (s *REST) SetupHandlers() {
-	s.userHandler = handler.NewUserHandler(s.router, s.log)
-	conn, err := grpc.Dial(s.cfg.Grpc.ReaderServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		s.log.Error().Err(err)
-	}
-	authClient := intrvproto.NewAuthServiceClient(conn)
-	s.authHandler = handler.NewAuthHandler(s.router, authClient, s.log)
+	s.userHandler = handler.NewUserHandler(s.router, s.cqrs, s.log)
+	s.authHandler = handler.NewAuthHandler(s.router, s.cqrs, s.log)
 }
 
 func (s *REST) SetupRoutes() {
 	apiRouter.RegisterUserRouter(s.router, s.userHandler, s.cfg.Auth.JWTToken)
 	apiRouter.RegisterAuthRouter(s.router, s.authHandler)
+}
+
+func (s *REST) SetupCQRS(ctx context.Context) {
+	s.cqrs, _ = cqrs.NewCQRSService(ctx, s.cfg)
 }

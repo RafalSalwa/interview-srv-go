@@ -2,14 +2,14 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
 	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
@@ -20,57 +20,85 @@ type AuthHandler interface {
 	ForgotPassword() HandlerFunc
 	NewPassword() HandlerFunc
 	Verify() HandlerFunc
+	GetVerificationCode() HandlerFunc
 	Login() HandlerFunc
 	RefreshToken() HandlerFunc
 	NewToken() HandlerFunc
 }
 
 type authHandler struct {
-	Router     *mux.Router
-	authClient intrvproto.AuthServiceClient
-	logger     *logger.Logger
+	Router *mux.Router
+	cqrs   *cqrs.Application
+	logger *logger.Logger
 }
 
-func NewAuthHandler(r *mux.Router, authClient intrvproto.AuthServiceClient, l *logger.Logger) AuthHandler {
-	return authHandler{r, authClient, l}
+func NewAuthHandler(r *mux.Router, cqrs *cqrs.Application, l *logger.Logger) AuthHandler {
+	return authHandler{r, cqrs, l}
 }
 
 func (a authHandler) SignUpUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		decoder := json.NewDecoder(r.Body)
-		signUpUser := &models.CreateUserRequest{}
+		signUpReq := models.CreateUserRequest{}
 
-		if err := decoder.Decode(&signUpUser); err != nil {
-			fmt.Println(signUpUser)
+		if err := decoder.Decode(&signUpReq); err != nil {
 			a.logger.Error().Err(err).Msg("SignUpUser: decode")
 			responses.RespondBadRequest(w, "wrong input parameters")
 			return
 		}
 
 		validate := validator.New()
-		if err := validate.Struct(signUpUser); err != nil {
+		if err := validate.StructCtx(ctx, signUpReq); err != nil {
 			a.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-		//ur, err := a.authClient.SignUpUser(signUpUser)
-		//
-		//if err != nil {
-		//	a.logger.Error().Err(err).Msg("SignUpUser: create")
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//responses.NewUserResponse(ur, w)
+
+		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: signUpReq})
+
+		if err != nil {
+			a.logger.Error().Err(err).Msg("SignUpUser:create")
+			responses.RespondInternalServerError(w)
+			return
+		}
+
+		responses.RespondOk(w)
+	}
+}
+
+func (a authHandler) GetVerificationCode() HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		decoder := json.NewDecoder(r.Body)
+		signIn := models.VerificationCodeRequest{}
+
+		if err := decoder.Decode(&signIn); err != nil {
+			a.logger.Error().Err(err).Msg("VerificationCode:decode")
+			responses.RespondBadRequest(w, "wrong parameters")
+			return
+		}
+		validate := validator.New()
+		if err := validate.Struct(signIn); err != nil {
+			a.logger.Error().Err(err)
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+		u, err := a.cqrs.Queries.VerificationCode.Handle(ctx, query.VerificationCode{Email: signIn.Email})
+		if err != nil {
+			a.logger.Error().Err(err).Msg("gRPC:VerificationCode")
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.NewUserResponse(&u, w)
 	}
 }
 
 func (a authHandler) SignInUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := tracing.StartHttpServerTracerSpan(r, "authHandler:SignIn")
-		defer span.Finish()
-
+		ctx := r.Context()
 		decoder := json.NewDecoder(r.Body)
-		signIn := &intrvproto.SignInUserInput{}
+		signIn := models.LoginUserRequest{}
 
 		if err := decoder.Decode(&signIn); err != nil {
 			a.logger.Error().Err(err).Msg("SignInUser: decode")
@@ -83,22 +111,13 @@ func (a authHandler) SignInUser() HandlerFunc {
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-		pbUser, err := a.authClient.SignInUser(ctx, signIn)
-		fmt.Println(err)
+		u, err := a.cqrs.Queries.SignIn.Handle(ctx, query.SignInUser{User: signIn})
 		if err != nil {
-			span.SetTag("error", true)
-			span.LogKV("error_code", err.Error())
-			a.logger.Error().Err(err)
+			a.logger.Error().Err(err).Msg("gRPC:SignIn")
 			responses.RespondInternalServerError(w)
 			return
 		}
-		fmt.Println("pbUser", pbUser)
-		ur := models.UserResponse{}
-		err = ur.FromProtoSignIn(pbUser)
-		if err != nil {
-			return
-		}
-		responses.NewUserResponse(&ur, w)
+		responses.NewUserResponse(&u, w)
 	}
 }
 
@@ -108,14 +127,13 @@ func (a authHandler) Verify() HandlerFunc {
 		if vCode == "" {
 			responses.RespondBadRequest(w, "code param is missing")
 		}
-		//ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		//defer cancel()
-
-		//if err := a.service.Verify(ctx, vCode); err != nil {
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//responses.RespondOk(w)
+		err := a.cqrs.Commands.Verify.Handle(r.Context(), command.VerifyCode{VerificationCode: vCode})
+		if err != nil {
+			a.logger.Error().Err(err).Msg("gRPC:Verify")
+			responses.RespondInternalServerError(w)
+			return
+		}
+		responses.RespondOk(w)
 	}
 }
 

@@ -1,14 +1,16 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"time"
 
-	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
+	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	mongodb "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
+	"github.com/RafalSalwa/interview-app-srv/pkg/redis"
+	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -16,17 +18,15 @@ import (
 
 var configPath string
 
-func init() {
-	flag.StringVar(&configPath, "config", "", "API Gateway microservice config path")
-}
-
 type Config struct {
 	ServiceName string                `mapstructure:"serviceName"`
 	App         App                   `mapstructure:"app"`
 	Logger      *logger.Config        `mapstructure:"logger"`
-	Http        Http                  `mapstructure:"http"`
-	Auth        auth.Auth             `mapstructure:"auth"`
-	Grpc        Grpc                  `mapstructure:"grpc"`
+	GRPC        grpc.Config           `mapstructure:"grpc"`
+	JWTToken    jwt.JWTConfig         `mapstructure:"jwt"`
+	MySQL       sql.MySQL             `mapstructure:"mysql"`
+	Mongo       mongodb.Config        `mapstructure:"mongo"`
+	Redis       *redis.Config         `mapstructure:"redis"`
 	Probes      probes.Config         `mapstructure:"probes"`
 	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
 }
@@ -34,24 +34,6 @@ type Config struct {
 type App struct {
 	Env   string `mapstructure:"env"`
 	Debug bool   `mapstructure:"debug"`
-}
-
-type Http struct {
-	Addr                string        `mapstructure:"addr"`
-	Development         bool          `mapstructure:"development"`
-	BasePath            string        `mapstructure:"basePath"`
-	DebugHeaders        bool          `mapstructure:"debugHeaders"`
-	HttpClientDebug     bool          `mapstructure:"httpClientDebug"`
-	DebugErrorsResponse bool          `mapstructure:"debugErrorsResponse"`
-	IgnoreLogUrls       []string      `mapstructure:"ignoreLogUrls"`
-	TimeoutRead         time.Duration `mapstructure:"SERVER_TIMEOUT_READ"`
-	TimeoutWrite        time.Duration `mapstructure:"SERVER_TIMEOUT_WRITE"`
-	TimeoutIdle         time.Duration `mapstructure:"SERVER_TIMEOUT_IDLE"`
-}
-
-type Grpc struct {
-	AuthServicePort string `mapstructure:"authServicePort"`
-	UserServicePort string `mapstructure:"userServicePort"`
 }
 
 func InitConfig() (*Config, error) {
@@ -78,7 +60,7 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath = fmt.Sprintf("%s/cmd/gateway/config/config.yaml", getwd)
+	configPath = fmt.Sprintf("%s/cmd/reader_app/config/config.yaml", getwd)
 
 	return configPath, nil
 }

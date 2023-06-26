@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
@@ -16,10 +17,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	ctx := context.Background()
 	l := logger.NewConsole(cfg.App.Debug)
 	srv := server.NewRESTServer(cfg, l)
-	srv.Run()
+	srv.Run(ctx)
 
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)

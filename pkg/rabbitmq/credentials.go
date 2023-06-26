@@ -14,31 +14,24 @@ type Credentials struct {
 	Protocol string
 	Username string
 	Password string
-	Hostname string
+	Addr     string
 	VHost    string
 }
 
-func NewCredentials() *Credentials {
-	return &Credentials{}
-}
 func NewCredentialsFromConfig() (*Credentials, error) {
 	c := &Credentials{
-		Protocol: os.Getenv("AMQP_PROTOCOL"),
 		Username: os.Getenv("AMQP_USERNAME"),
 		Password: os.Getenv("AMQP_PASSWORD"),
-		Hostname: os.Getenv("AMQP_HOSTNAME"),
-		VHost:    os.Getenv("AMQP_VHOST"),
+		Addr:     os.Getenv("AMQP_HOSTNAME"),
 	}
 
-	if c.Protocol == "" {
-		c.Protocol = "amqp"
-	}
+	c.Protocol = "amqp"
 
 	if c.Hostname == "" {
 		return nil, CredentialsFromEnvHostnameNotSetError
 	}
 
-	if c.Hostname == "" {
+	if c.VHost == "" {
 		return nil, CredentialsFromEnvVHostNotSetError
 	}
 

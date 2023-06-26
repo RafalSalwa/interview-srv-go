@@ -22,6 +22,9 @@ func (a *bearerTokenHandler) middleware(h apiHandler.HandlerFunc) http.HandlerFu
 			responses.RespondNotAuthorized(w, "Authentication header not present or malformed")
 			return
 		}
+
+		//jwt.DecodeToken()
+		//r.Header.Set("x-user-id")
 		h(w, r)
 	}
 }
