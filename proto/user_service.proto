@@ -6,6 +6,8 @@ option go_package = "github.com/RafalSalwa/interview-app-srv/intrvproto";
 import "user.proto";
 
 service UserService {
-  rpc GetUserById(GetUserRequest) returns (UserResponse) {}
-  rpc VerifyUser(VerifyUserRequest) returns (VerificationResponse) {}
+    rpc GetUserById(GetUserRequest) returns (UserResponse) {}
+    rpc GetUserDetails(GetUserRequest) returns (UserDetails) {}
+    rpc VerifyUser(VerifyUserRequest) returns (VerificationResponse) {}
+    rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
 }
