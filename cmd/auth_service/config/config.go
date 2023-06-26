@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/email"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	"os"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
@@ -23,10 +25,12 @@ type Config struct {
 	App         App                   `mapstructure:"app"`
 	Logger      *logger.Config        `mapstructure:"logger"`
 	GRPC        grpc.Config           `mapstructure:"grpc"`
+	Email       email.Config          `mapstructure:"email"`
 	JWTToken    jwt.JWTConfig         `mapstructure:"jwt"`
 	MySQL       sql.MySQL             `mapstructure:"mysql"`
 	Mongo       mongodb.Config        `mapstructure:"mongo"`
 	Redis       *redis.Config         `mapstructure:"redis"`
+	Rabbit      rabbitmq.Config       `mapstructure:"rabbitmq"`
 	Probes      probes.Config         `mapstructure:"probes"`
 	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
 }
@@ -60,7 +64,7 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath = fmt.Sprintf("%s/cmd/reader_app/config/config.yaml", getwd)
+	configPath = fmt.Sprintf("%s/cmd/auth_service/config/config.yaml", getwd)
 
 	return configPath, nil
 }

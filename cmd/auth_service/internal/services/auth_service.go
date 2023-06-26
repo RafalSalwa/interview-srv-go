@@ -3,37 +3,74 @@ package services
 import (
 	"context"
 	"encoding/json"
-
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/internal/generator"
 	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
 	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
 	"github.com/RafalSalwa/interview-app-srv/pkg/query"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
 type AuthServiceImpl struct {
-	ctx        context.Context
-	repository repository.UserRepository
-	logger     *logger.Logger
-	config     jwt.JWTConfig
+	repository      repository.UserRepository
+	mongoRepo       *repository.Mongo
+	redisRepo       *repository.Redis
+	rabbitPublisher *rabbitmq.Publisher
+	logger          *logger.Logger
+	config          jwt.JWTConfig
 }
 
 type AuthService interface {
-	SignUpUser(request *models.CreateUserRequest) (*models.UserResponse, error)
+	SignUpUser(ctx context.Context, request *models.CreateUserRequest) (*models.UserResponse, error)
 	SignInUser(request *models.LoginUserRequest) (*models.UserResponse, error)
+	GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error)
 	Verify(ctx context.Context, vCode string) error
 	Load(request *models.UserDBModel) (*models.UserResponse, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
 }
 
-func NewAuthService(ctx context.Context, r repository.UserRepository, l *logger.Logger, c jwt.JWTConfig) AuthService {
-	return &AuthServiceImpl{ctx, r, l, c}
+func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger) AuthService {
+	mongoClient, err := apiMongo.NewClient(ctx, cfg.Mongo)
+	if err != nil {
+		log.Error().Err(err).Msg("grpc:run:mongo")
+	}
+
+	universalRedisClient, err := redisClient.NewUniversalRedisClient(cfg.Redis)
+	if err != nil {
+		log.Error().Err(err).Msg("redis")
+	}
+
+	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
+	if errP != nil {
+		log.Error().Err(err).Msg("rabbitmq")
+	}
+
+	ormDB, err := sql.NewGormConnection(cfg.MySQL)
+	if err != nil {
+		log.Error().Err(err).Msg("gorm")
+	}
+	userRepository := repository.NewUserAdapter(ormDB)
+	mongoRepo := repository.NewMongoRepository(mongoClient, log)
+	redisRepo := repository.NewRedisRepository(universalRedisClient, log)
+
+	return &AuthServiceImpl{
+		repository:      userRepository,
+		mongoRepo:       mongoRepo,
+		redisRepo:       redisRepo,
+		rabbitPublisher: publisher,
+		logger:          log,
+		config:          cfg.JWTToken,
+	}
 }
 
-func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.UserResponse, error) {
+func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
 	if err := password.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -61,7 +98,17 @@ func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.Use
 	um.VerificationCode = *vcode
 
 	if errDB := s.repository.SingUp(um); errDB != nil {
+		s.logger.Error().Err(errDB).Msg("repo:user:signUp")
 		return nil, errDB
+	}
+
+	if errR := s.redisRepo.PutUser(ctx, *um); errR != nil {
+		s.logger.Error().Err(err).Msg("redis:user:set")
+		return nil, errR
+	}
+	if err = s.rabbitPublisher.Publish(um.AMQP()); err != nil {
+		s.logger.Error().Err(err).Msg("rabbit:publish")
+		return nil, err
 	}
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(um)
@@ -90,11 +137,28 @@ func (s *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.Use
 		return nil, err
 	}
 	ur.AssignTokenPair(tp)
+	return ur, nil
+}
+
+func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error) {
+	user := &models.UserDBModel{
+		Email: email,
+	}
+	dbUser, err := a.repository.Load(user)
+	if err != nil {
+		return nil, err
+	}
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
+	if err != nil {
+		return nil, err
+	}
 
 	return ur, nil
 }
 
 func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
+	ctx := context.Background()
 	dbUser, err := s.repository.Load(user)
 	if err != nil {
 		return nil, err
@@ -102,7 +166,7 @@ func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, 
 	if dbUser == nil {
 		return nil, nil
 	}
-	dbUser, err = s.repository.UpdateLastLogin(s.ctx, dbUser)
+	dbUser, err = s.repository.UpdateLastLogin(ctx, dbUser)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +206,8 @@ func (s *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 }
 
 func (s *AuthServiceImpl) FindUserById(uid int64) (*models.UserDBModel, error) {
-	dbUser, err := s.repository.ById(s.ctx, uid)
+	ctx := context.Background()
+	dbUser, err := s.repository.ById(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
