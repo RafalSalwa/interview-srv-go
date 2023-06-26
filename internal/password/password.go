@@ -7,6 +7,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type MismatchError struct {
+	error string
+}
+
+func (m MismatchError) Error() string {
+	return "boom"
+}
+
 type ValidationError struct {
 	Message string
 	Field   string

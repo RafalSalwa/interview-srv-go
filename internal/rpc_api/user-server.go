@@ -9,10 +9,10 @@ import (
 type UserServer struct {
 	pb.UnimplementedUserServiceServer
 	config      grpcconfig.Config
-	userService services.UserSqlService
+	userService services.UserService
 }
 
-func NewGrpcUserServer(config grpcconfig.Config, userService services.UserSqlService) (*UserServer, error) {
+func NewGrpcUserServer(config grpcconfig.Config, userService services.UserService) (*UserServer, error) {
 	userServer := &UserServer{
 		config:      config,
 		userService: userService,

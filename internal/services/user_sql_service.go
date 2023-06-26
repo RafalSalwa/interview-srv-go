@@ -23,7 +23,7 @@ type SqlServiceImpl struct {
 }
 
 type UserSqlService interface {
-	GetById(id int) (user *models.UserDBResponse, err error)
+	GetById(id int64) (user *models.UserDBResponse, err error)
 	GetByCode(code string) (user *models.UserDBModel, err error)
 	UsernameInUse(user *models.CreateUserRequest) bool
 	StoreVerificationData(user *models.UserDBModel) bool
@@ -55,7 +55,7 @@ func (s SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 	return user, nil
 }
 
-func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error) {
+func (s *SqlServiceImpl) GetById(id int64) (user *models.UserDBResponse, err error) {
 	user = &models.UserDBResponse{}
 
 	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password, roles as roles_json,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)

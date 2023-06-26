@@ -39,7 +39,7 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		PasswordConfirm: req.GetPasswordConfirm(),
 	}
 
-	ur, err := authServer.authService.SignUpUser(signUpUser)
+	ur, err := authServer.authService.SignUpUser(ctx, signUpUser)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -51,4 +51,12 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		CreatedAt:         nil,
 	}
 	return res, nil
+}
+
+func (authServer *AuthServer) GetVerificationKey(ctx context.Context, in *pb.VerificationCodeRequest) (*pb.VerificationCodeResponse, error) {
+	ur, err := authServer.authService.GetVerificationKey(ctx, in.Email)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.VerificationCodeResponse{Code: ur.VerificationCode}, nil
 }

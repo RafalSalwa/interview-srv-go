@@ -3,14 +3,11 @@ package rpc_api
 import (
 	"context"
 	"errors"
-	"strconv"
-
+	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strconv"
 )
 
 func (userServer *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserResponse, error) {
