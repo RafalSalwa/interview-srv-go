@@ -35,7 +35,7 @@ func NewUserHandler(r *mux.Router, us services.UserSqlService, l *logger.Logger)
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userId, err := strconv.Atoi(mux.Vars(r)["id"])
+		userId, err := strconv.ParseInt(mux.Vars(r)["id"], 10, 64)
 		if err != nil {
 			uh.logger.Err(err)
 			responses.RespondBadRequest(w, "Wrong parameter Type. Required int")

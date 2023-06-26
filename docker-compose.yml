@@ -19,45 +19,53 @@ services:
       interview-net:
         aliases:
           - igateway
-  reader_app:
-    container_name: reader_app
+  auth_service:
+    container_name: auth_service
     build:
       context: ./
-      dockerfile: ./.docker/reader_app/Dockerfile
+      dockerfile: ./.docker/auth_service/Dockerfile
     env_file: .env
     ports:
       - "8021:8021"
       - "8022:8022"
     volumes:
       - ./:/interview
-      - ./build/keys/server.crt:/etc/ssl/certs/server.crt
-      - ./build/keys/server.key:/etc/ssl/private/server.key
     networks:
       interview-net:
         aliases:
-          - ireader_app
-#  writer_app:
-#    container_name: writer_app
-#    build: .
-#    env_file: .env
-#    ports:
-#      - "8020:8020"
-#      - "8021:8021"
-#    volumes:
-#      - ./:/interview
-#      - ./build/keys/server.crt:/etc/ssl/certs/server.crt
-#      - ./build/keys/server.key:/etc/ssl/private/server.key
-#    #    security_opt:
-#    #      - seccomp:unconfined
-#    depends_on:
-#      mysql:
-#        condition: service_healthy
-#      postgres:
-#        condition: service_healthy
-#    networks:
-#      interview-net:
-#        aliases:
-#          - iwriter_app
+          - iauth_service
+  user_service:
+    container_name: user_service
+    build:
+      context: ./
+      dockerfile: ./.docker/user_service/Dockerfile
+    env_file: .env
+    ports:
+      - "8031:8031"
+      - "8032:8032"
+    volumes:
+      - ./:/interview
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      interview-net:
+        aliases:
+          - iuser_service
+  consumer_service:
+    container_name: consumer_service
+    build:
+      context: ./
+      dockerfile: ./.docker/consumer_service/Dockerfile
+    env_file: .env
+    volumes:
+      - ./:/interview
+    networks:
+      interview-net:
+        aliases:
+          - iconsumer_service
   mysql:
     container_name: mysql
     image: mysql
@@ -115,6 +123,9 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
+    volumes:
+      - ./.docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.config:ro
+      - ./.docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
     networks:
       interview-net:
         aliases:
@@ -183,6 +194,8 @@ services:
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog
+    logging:
+      driver: "none"
     ports:
       - "1025:1025" # smtp server
       - "8025:8025" # web ui
