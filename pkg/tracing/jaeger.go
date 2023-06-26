@@ -2,38 +2,39 @@ package tracing
 
 import (
 	"context"
-	"io"
-	"net/http"
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/uber/jaeger-client-go"
-	"github.com/uber/jaeger-client-go/config"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"net/http"
 )
 
 type JaegerConfig struct {
 	ServiceName string `mapstructure:"serviceName"`
-	HostPort    string `mapstructure:"hostPort"`
+	Env         string `mapstructure:"env"`
+	Addr        string `mapstructure:"addr"`
 	Enable      bool   `mapstructure:"enable"`
 	LogSpans    bool   `mapstructure:"logSpans"`
 }
 
-func NewJaegerTracer(jaegerConfig JaegerConfig) (opentracing.Tracer, io.Closer, error) {
-	cfg := &config.Configuration{
-		ServiceName: jaegerConfig.ServiceName,
-
-		Sampler: &config.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-
-		Reporter: &config.ReporterConfig{
-			LogSpans:           jaegerConfig.LogSpans,
-			LocalAgentHostPort: jaegerConfig.HostPort,
-		},
+func NewJaegerTracer(cfg JaegerConfig) (*tracesdk.TracerProvider, error) {
+	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(cfg.Addr)))
+	if err != nil {
+		return nil, err
 	}
-
-	return cfg.NewTracer(config.Logger(jaeger.StdLogger))
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exp),
+		tracesdk.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(cfg.ServiceName),
+			attribute.String("environment", cfg.Env),
+			attribute.Int64("ID", 1),
+		)),
+	)
+	return tp, nil
 }
 
 func StartHttpServerTracerSpan(r *http.Request, operationName string) (context.Context, opentracing.Span) {

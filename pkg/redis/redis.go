@@ -1,10 +1,8 @@
 package redis
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/go-redis/redis/v8"
+    "context"
+    "github.com/go-redis/redis/v8"
 )
 
 type Config struct {
@@ -15,7 +13,6 @@ type Config struct {
 }
 
 func NewUniversalRedisClient(cfg *Config) (redis.UniversalClient, error) {
-	fmt.Printf("%#v\n", cfg)
 	universalClient := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs:    []string{cfg.Addr},
 		Password: cfg.Password,
