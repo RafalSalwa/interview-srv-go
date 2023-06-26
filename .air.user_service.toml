@@ -3,11 +3,11 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -gcflags \"all=-N -l\" -o auth_service ./cmd/auth_service/main.go"
-bin = "./auth_service"
-log = "./tmp/air_as_errors.log"
+cmd = "go build -gcflags \"all=-N -l\" -o user_service ./cmd/user_service/main.go"
+bin = "./user_service"
+log = "./tmp/air_us_errors.log"
 
-include_dir = ["cmd/auth_service"]
+include_dir = ["cmd/user_service"]
 include_ext = ["go", "yaml", "tpl", "tmpl", "html"]
 exclude_dir = ["assets", "tmp", "vendor", "swagger"]
 follow_symlink = true

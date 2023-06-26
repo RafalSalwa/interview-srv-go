@@ -3,11 +3,11 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "go build -gcflags \"all=-N -l\" -o auth_service ./cmd/auth_service/main.go"
-bin = "./auth_service"
-log = "./tmp/air_as_errors.log"
+cmd = "go build -gcflags \"all=-N -l\" -o consumer_service ./cmd/consumer_service/main.go"
+bin = "./consumer_service"
+log = "./tmp/air_consumer_service_errors.log"
 
-include_dir = ["cmd/auth_service"]
+include_dir = ["cmd/consumer_service"]
 include_ext = ["go", "yaml", "tpl", "tmpl", "html"]
 exclude_dir = ["assets", "tmp", "vendor", "swagger"]
 follow_symlink = true
@@ -17,8 +17,8 @@ delay = 100 # ms
 kill_delay = 0 # ms
 stop_on_error = true
 send_interrupt = false
-rerun = false
-rerun_delay = 500
+rerun = true
+rerun_delay = 200
 
 [log]
 time = true
