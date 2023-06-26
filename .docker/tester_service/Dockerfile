@@ -8,5 +8,4 @@ RUN go mod download
 COPY . .
 COPY .env /interview/bin/
 
-CMD ["air", "-c", ".air.auth_service.toml"]
-EXPOSE 8021 8022
+CMD ["air", "-c", ".air.tester_service.toml"]
