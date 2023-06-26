@@ -1,9 +1,10 @@
-package amqp
+package rabbitmq
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/streadway/amqp"
 )
 
 type IntrvClient struct {
@@ -28,8 +29,8 @@ func (c *IntrvClient) SetHandler(eventName string, handler EventHandler) {
 	c.handlers[eventName] = handler
 }
 
-func (c *IntrvClient) HandleChannel(ctx context.Context, channelName string, requeueOnError bool) error {
-	consumer, err := c.connection.CreateConsumer(channelName, requeueOnError, c.handleEvent)
+func (c *IntrvClient) HandleChannel(ctx context.Context, channelName string, consumerName string, args amqp.Table) error {
+	consumer, err := c.connection.CreateConsumer(channelName, consumerName, c.handleEvent, args)
 	if err != nil {
 		return err
 	}
@@ -47,10 +48,8 @@ func (c *IntrvClient) handleEvent(data []byte) (isSuccess bool) {
 		fmt.Printf("processing event %s\n %#v\n", event.Name, event)
 	}
 
-	fmt.Println("handlers", c.handlers)
 	if handler, ok := c.handlers[event.Name]; ok {
 		_ = handler(event)
-		fmt.Println("handler", event, event.Name)
 	}
 	// we have no handler for that type of event
 	return true

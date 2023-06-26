@@ -1,4 +1,4 @@
-package amqp
+package rabbitmq
 
 import (
 	"context"
@@ -55,13 +55,12 @@ func (l *Consumer) Close() error {
 	return l.channel.Close()
 }
 
-func (l *Connection) CreateConsumer(channelName string, requeueOnError bool, handler ConsumerHandler) (*Consumer, error) {
+func (l *Connection) CreateConsumer(channelName string, consumerName string, handler ConsumerHandler, args amqp.Table) (*Consumer, error) {
 	amqpChannel, err := l.Connection.Channel()
 	if err != nil {
 		return nil, err
 	}
-
-	queue, err := amqpChannel.QueueDeclare(channelName, true, false, false, false, nil)
+	queue, err := amqpChannel.QueueDeclare(channelName, true, false, false, false, args)
 	if err != nil {
 		_ = amqpChannel.Close()
 		return nil, err
@@ -74,14 +73,13 @@ func (l *Connection) CreateConsumer(channelName string, requeueOnError bool, han
 
 	delivery, err := amqpChannel.Consume(
 		queue.Name,
-		"",
+		consumerName,
 		false,
 		false,
 		false,
 		false,
 		nil,
 	)
-
 	if err != nil {
 		_ = amqpChannel.Close()
 		return nil, err
