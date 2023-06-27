@@ -7,11 +7,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"os"
+	"strings"
 )
 
 type Config struct {
-	AMQP  rabbitmq.Config `mapstructure:"rabbitmq"`
-	Email email.Config    `mapstructure:"email"`
+	ServiceName string          `mapstructure:"serviceName"`
+	AMQP        rabbitmq.Config `mapstructure:"rabbitmq"`
+	Email       email.Config    `mapstructure:"email"`
 }
 
 func InitConfig() (*Config, error) {
@@ -38,7 +40,11 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath := fmt.Sprintf("%s/cmd/consumer_service/config/config.yaml", getwd)
-
+	configPath := ""
+	if strings.Contains(getwd, "consumer_service") {
+		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+	} else {
+		configPath = fmt.Sprintf("%s/cmd/consumer_service/config/config.yaml", getwd)
+	}
 	return configPath, nil
 }

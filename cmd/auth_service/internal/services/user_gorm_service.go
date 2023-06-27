@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 

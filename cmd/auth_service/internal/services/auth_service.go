@@ -1,21 +1,19 @@
 package services
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"github.com/RafalSalwa/interview-app-srv/pkg/query"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/internal/generator"
+    "github.com/RafalSalwa/interview-app-srv/internal/password"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "github.com/RafalSalwa/interview-app-srv/pkg/query"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
 type AuthServiceImpl struct {
@@ -80,10 +78,6 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 		return nil, err
 	}
 
-	roles, err := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	if err != nil {
-		return nil, err
-	}
 	vcode, err := generator.RandomString(12)
 	if err != nil {
 		return nil, err
@@ -94,7 +88,6 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 		return nil, err
 	}
 
-	um.Roles = roles
 	um.VerificationCode = *vcode
 
 	if errDB := s.repository.SingUp(um); errDB != nil {
@@ -178,9 +171,12 @@ func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, 
 		return nil, err
 	}
 
-	ur := mapper.MapUserDBModelToUserResponse(dbUser)
-	ur.Token = tp.AccessToken
-	ur.RefreshToken = tp.RefreshToken
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
+	if err != nil {
+		return nil, err
+	}
+	ur.AssignTokenPair(tp)
 
 	return ur, nil
 }

@@ -1,20 +1,19 @@
 package services
 
 import (
-	"context"
-	"database/sql"
-	"encoding/json"
-	"errors"
-	"strconv"
-	"time"
+    "context"
+    "database/sql"
+    "errors"
+    "strconv"
+    "time"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/internal/generator"
+    "github.com/RafalSalwa/interview-app-srv/internal/password"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/util"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	mySql "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "github.com/RafalSalwa/interview-app-srv/internal/util"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    mySql "github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
 type SqlServiceImpl struct {
@@ -58,13 +57,12 @@ func (s SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error) {
 	user = &models.UserDBResponse{}
 
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password, roles as roles_json,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
 	err = row.Scan(&user.Id,
 		&user.Username,
 		&user.Firstname,
 		&user.Lastname,
 		&user.Password,
-		&user.RolesJson,
 		&user.Verified,
 		&user.Active,
 		&user.CreatedAt)
@@ -123,11 +121,10 @@ func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) 
 func (s *SqlServiceImpl) LoginUser(u *models.LoginUserRequest) (*models.UserResponse, error) {
 	user := models.UserResponse{}
 
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name,roles as roles_json FROM `user` WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name FROM `user` WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
 	err := row.Scan(&user.Id,
 		&user.Username,
-		&user.Firstname,
-		&user.RolesJson)
+		&user.Firstname)
 
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -173,11 +170,6 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*
 		return nil, errors.New("create user: username already in use")
 	}
 
-	roles, err := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	if err != nil {
-		return nil, err
-	}
-
 	vcode, err := generator.RandomString(6)
 	if err != nil {
 		return nil, err
@@ -192,7 +184,6 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*
 		Username:         newUserRequest.Username,
 		Password:         newUserRequest.Password,
 		Email:            newUserRequest.Email,
-		Roles:            roles,
 		VerificationCode: *vcode,
 	}
 	ctx := getContext()
@@ -200,13 +191,12 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `roles`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,?,0,1);"
+	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,0,1);"
 	rows, err := tx.ExecContext(ctx,
 		sqlStatement,
 		dbUser.Username,
 		dbUser.Password,
 		dbUser.Email,
-		dbUser.Roles,
 		dbUser.VerificationCode)
 
 	if err != nil {

@@ -1,9 +1,9 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
@@ -13,12 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
-
-var configPath string
-
-func init() {
-	flag.StringVar(&configPath, "config", "", "API Gateway microservice config path")
-}
 
 type Config struct {
 	ServiceName string                `mapstructure:"serviceName"`
@@ -78,7 +72,11 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath = fmt.Sprintf("%s/cmd/gateway/config/config.yaml", getwd)
-
+	configPath := ""
+	if strings.Contains(getwd, "gateway") {
+		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+	} else {
+		configPath = fmt.Sprintf("%s/cmd/gateway/config/config.yaml", getwd)
+	}
 	return configPath, nil
 }

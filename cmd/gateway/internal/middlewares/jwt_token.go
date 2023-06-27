@@ -8,7 +8,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/gorilla/mux"
 )
 

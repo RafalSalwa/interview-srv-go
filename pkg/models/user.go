@@ -9,21 +9,20 @@ import (
 
 // swagger:model User
 type UserDBModel struct {
-	Id               int64      `gorm:"id;primaryKey;autoIncrement"`
-	Username         string     `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
-	Password         string     `gorm:"type:varchar(255);not null"`
-	Firstname        *string    `gorm:"column:first_name;type:varchar(255)"`
-	Lastname         *string    `gorm:"column:last_name;type:varchar(255)"`
-	Email            string     `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
-	Phone            *string    `gorm:"column:phone_no;type:varchar(11)"`
-	Roles            []byte     `gorm:"column:roles"`
-	VerificationCode string     `gorm:"column:verification_code;type:varchar(12)"`
-	Verified         bool       `gorm:"column:is_verified;default:false"`
-	Active           bool       `gorm:"column:is_active;default:false"`
-	CreatedAt        time.Time  `gorm:"column:created_at"`
-	UpdatedAt        *time.Time `gorm:"column:updated_at"`
-	LastLogin        *time.Time `gorm:"column:last_login"`
-	DeletedAt        *time.Time `gorm:"column:deleted_at"`
+	Id               int64     `gorm:"id;primaryKey;autoIncrement"`
+	Username         string    `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
+	Password         string    `gorm:"type:varchar(255);not null"`
+	Firstname        string    `gorm:"column:first_name;type:varchar(255)"`
+	Lastname         string    `gorm:"column:last_name;type:varchar(255)"`
+	Email            string    `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
+	Phone            string    `gorm:"column:phone_no;type:varchar(11)"`
+	VerificationCode string    `gorm:"column:verification_code;type:varchar(12)"`
+	Verified         bool      `gorm:"column:is_verified;default:false"`
+	Active           bool      `gorm:"column:is_active;default:false"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
+	UpdatedAt        time.Time `gorm:"column:updated_at"`
+	LastLogin        time.Time `gorm:"column:last_login"`
+	DeletedAt        time.Time `gorm:"column:deleted_at"`
 }
 
 func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {
@@ -42,9 +41,9 @@ type Users struct {
 }
 
 type UserRequest struct {
-	Id       int64   `json:"id" govalidator:"int"`
-	Username *string `json:"username"`
-	Email    *string `json:"email" `
+	Id       int64  `json:"id" govalidator:"int"`
+	Username string `json:"username"`
+	Email    string `json:"email" `
 }
 
 type CreateUserRequest struct {
@@ -63,34 +62,29 @@ type LoginUserRequest struct {
 type UserDBResponse struct {
 	Id        int64
 	Username  string
-	Firstname *string
-	Lastname  *string
+	Firstname string
+	Lastname  string
 	Email     string
 	Password  string
-	RolesJson string
-	Roles     []string
-	Role      string
 	Verified  bool
 	Active    bool
 	CreatedAt time.Time
-	LastLogin *time.Time
+	LastLogin time.Time
 }
 
 type UserResponse struct {
-	Id               int64      `json:"id,omitempty"`
-	Username         string     `json:"username,omitempty"`
-	Firstname        *string    `json:"firstname,omitempty"`
-	RolesJson        string     `json:"rolesJson,omitempty"`
-	Roles            string     `json:"roles,omitempty"`
-	Verified         bool       `json:"is_verified,omitempty"`
-	VerificationCode string     `json:"verification_token,omitempty"`
-	Active           bool       `json:"is_active,omitempty"`
-	Token            string     `json:"token,omitempty"`
-	RefreshToken     string     `json:"refresh_token,omitempty"`
-	CreatedAt        *time.Time `json:"created_at,omitempty"`
-	UpdatedAt        *time.Time `json:"updated_at,omitempty"`
-	LastLogin        *time.Time `json:"last_login,omitempty"`
-	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
+	Id               int64     `json:"id,omitempty"`
+	Username         string    `json:"username,omitempty"`
+	Firstname        string    `json:"firstname,omitempty"`
+	Verified         bool      `json:"is_verified,omitempty"`
+	VerificationCode string    `json:"verification_token,omitempty"`
+	Active           bool      `json:"is_active,omitempty"`
+	Token            string    `json:"token,omitempty"`
+	RefreshToken     string    `json:"refresh_token,omitempty"`
+	CreatedAt        time.Time `json:"created_at,omitempty"`
+	UpdatedAt        time.Time `json:"updated_at,omitempty"`
+	LastLogin        time.Time `json:"last_login,omitempty"`
+	DeletedAt        time.Time `json:"deleted_at,omitempty"`
 	*cache.Cacheable
 }
 
@@ -126,7 +120,7 @@ type User struct {
 }
 
 type Roles struct {
-	Roles []string
+	Roles []string `json:"roles"`
 }
 
 type VerificationCodeRequest struct {

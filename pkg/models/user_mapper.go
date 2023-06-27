@@ -17,9 +17,6 @@ func (r *UserResponse) FromDBResponse(user *UserDBResponse) error {
 	if err != nil {
 		return fmt.Errorf("from db to response error: %w", err)
 	}
-
-	r.Roles = user.RolesJson
-
 	return nil
 }
 
@@ -37,7 +34,6 @@ func (r *UserResponse) FromDBModel(um *UserDBModel) error {
 	if err != nil {
 		return fmt.Errorf("from response to db error: %w", err)
 	}
-	r.Roles = string(um.Roles)
 	return nil
 }
 
@@ -54,7 +50,7 @@ func (r *UserResponse) FromProtoSignUp(pbu *intrvproto.SignUpUserResponse) error
 	r.Username = pbu.GetUsername()
 	r.VerificationCode = pbu.GetVerificationToken()
 	c := pbu.GetCreatedAt().AsTime()
-	r.CreatedAt = &c
+	r.CreatedAt = c
 	return nil
 }
 

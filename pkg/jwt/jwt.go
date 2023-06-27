@@ -58,29 +58,23 @@ func CreateToken(ttl time.Duration, payload interface{}, privateKey string) (str
 func DecodeToken(token string, publicKey string) (interface{}, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
-		fmt.Println("decode", err)
 		return nil, fmt.Errorf("could not decode: %w", err)
 	}
 
 	_, err = jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
 	if err != nil {
-		fmt.Println("parse key", err)
 		return "", fmt.Errorf("validate: parse key: %w", err)
 	}
-	fmt.Println("token:", token)
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
-			fmt.Println("parse token", err)
 			return nil, fmt.Errorf("unexpected method: %s", t.Header["alg"])
 		}
 
 		return t, nil
 	})
 	if err != nil {
-		fmt.Println("parsed", err)
 		return nil, err
 	}
-	fmt.Println(parsedToken)
 	return parsedToken, nil
 }
 
