@@ -3,8 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/amqp"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
 type CustomerAccountActivatedEventEmail struct {
@@ -12,7 +11,7 @@ type CustomerAccountActivatedEventEmail struct {
 	SubscriptionId int `json:"subscription_id"`
 }
 
-func WrapHandleUserSubscription(event amqp.Event) error {
+func WrapHandleUserSubscription(event rabbitmq.Event) error {
 	fmt.Println("WrapHandleUserSubscription", event.Name, event.Channel)
 	var data CustomerAccountActivatedEventEmail
 	_ = json.Unmarshal([]byte(event.Content), &data)
