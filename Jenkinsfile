@@ -1,18 +1,10 @@
 pipeline {
   agent any
       tools { go '1.20' }
-      environment {
-          GO111MODULE = 'on'
-          CGO_ENABLED = 0 
-          GOPATH = "${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"
-      }
-
-  options {
-    ansiColor("xterm")
-  }
-
-  triggers {
-    cron(env.BRANCH_NAME == 'master' ? '@weekly' : '')
+  environment {
+      GO111MODULE = 'on'
+      CGO_ENABLED = 0 
+      GOPATH = "${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"
   }
 
   stages {
