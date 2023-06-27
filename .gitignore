@@ -51,13 +51,3 @@ go.work
 .vscode
 .DS_Store
 .swagger
-./client
-client
-./server
-server
-reader_app
-auth_service
-consumer_service
-gateway
-tester_service
-user_service
