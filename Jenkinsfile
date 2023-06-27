@@ -21,13 +21,7 @@ pipeline {
     
     stage('Test') {
         steps {
-            sh 'pwd'
-            sh 'ls -lah'
-            sh 'go vet .'
-            echo 'Running linting'
-            sh 'golint .'
-            echo 'Running test'
-            sh 'go test -v'
+            sh 'make test'
         }
     }
 
