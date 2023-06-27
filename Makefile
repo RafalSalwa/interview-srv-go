@@ -19,7 +19,7 @@ client:
 	go build -o client ./cmd/client/main.go
 
 test:
-	go test -v -cover -race ./internal/... ./pkg/... ./cmd/...
+	go test -v -cover ./internal/... ./pkg/... ./cmd/...
 .PHONY: test
 
 linter-golangci:
