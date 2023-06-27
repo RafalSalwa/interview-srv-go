@@ -1,15 +1,11 @@
-additionalBuildArgs = "--pull"
-if (env.BRANCH_NAME == "master") {
-  additionalBuildArgs = "--pull --no-cache"
-}
-
-dokkuHostname = "kabisa-dokku-demo-staging.westeurope.cloudapp.azure.com"
-if (env.BRANCH_NAME == "production") {
-  dokkuHostname = "kabisa-dokku-demo-production.westeurope.cloudapp.azure.com"
-}
-
 pipeline {
-  agent none
+  agent any
+      tools { go '1.20' }
+      environment {
+          GO111MODULE = 'on'
+          CGO_ENABLED = 0 
+          GOPATH = "${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"
+      }
 
   options {
     ansiColor("xterm")
@@ -20,108 +16,39 @@ pipeline {
   }
 
   stages {
-    stage("Test back end") {
-      agent {
-        dockerfile {
-          additionalBuildArgs "${additionalBuildArgs}"
-          filename "back-end/dockerfiles/ci/Dockerfile"
-          label "webapps"
+    stage('Build') {
+        steps {
+          // Output will be something like "go version go1.19 darwin/arm64"
+          sh 'go version'
+          sh 'go get -u golang.org/x/lint/golint'
+          sh 'go mod download'
         }
-      }
-
-      steps {
-        sh "cd back-end && bin/ci"
-      }
     }
-
-    stage("Test front end") {
-      agent {
-        dockerfile {
-          additionalBuildArgs "${additionalBuildArgs}"
-          args "-u root"
-          filename "front-end/dockerfiles/ci/Dockerfile"
-          label "webapps"
+    stage('Test') {
+        steps {
+            sh 'go vet .'
+            echo 'Running linting'
+            sh 'golint .'
+            echo 'Running test'
+            sh 'go test -v'
         }
-      }
-
-      steps {
-        sh "rm -f front-end/node_modules && ln -s /app/node_modules front-end/node_modules"
-        sh "cd front-end && bin/ci"
-      }
-
-      post {
-        always {
-          sh "chown -R \$(stat -c '%u:%g' .) \$WORKSPACE"
-        }
-      }
     }
 
     stage("Deploy back end") {
-      agent {
-        label "webapps"
-      }
-
-      when {
-        anyOf {
-          branch 'staging';
-          branch 'production'
+        steps {
+            echo 'Compiling gateway'
+            sh 'go build -o gateway cmd/gateway/main.go'
+            
+            echo 'Compiling auth_service'
+            sh 'go build -o auth_service cmd/auth_service/main.go'
+            
+            echo 'Compiling user_service'
+            sh 'go build -o user_service cmd/user_service/main.go'
+            
+            echo 'Compiling consumer_service'
+            sh 'go build -o consumer_service cmd/consumer_service/main.go'
+            
         }
-      }
-
-      steps {
-        sh "git push -f dokku@${dokkuHostname}:back-end HEAD:refs/heads/master"
-      }
-    }
-
-    stage("Build front end") {
-      agent {
-        dockerfile {
-          args "-u root -e 'API_BASE_URL=http://${dokkuHostname}:8000/api'"
-          filename "front-end/dockerfiles/ci/Dockerfile"
-          label "webapps"
-        }
-      }
-
-      when {
-        beforeAgent true
-        anyOf {
-          branch 'staging';
-          branch 'production'
-        }
-      }
-
-      steps {
-        sh "cd front-end && yarn build"
-      }
-
-      post {
-        always {
-          sh "chown -R \$(stat -c '%u:%g' .) \$WORKSPACE"
-        }
-      }
-    }
-
-    stage("Deploy front end") {
-      agent {
-        label "webapps"
-      }
-
-      when {
-        anyOf {
-          branch 'staging';
-          branch 'production'
-        }
-      }
-
-      steps {
-        sh "rm -rf deploy-front-end"
-        sh "git clone dokku@${dokkuHostname}:front-end deploy-front-end"
-        sh "rm -rf deploy-front-end/dist"
-        sh "mkdir -p deploy-front-end/dist"
-        sh "cp -R front-end/dist/* deploy-front-end/dist"
-        sh "touch deploy-front-end/.static"
-        sh "cd deploy-front-end && git add . && git commit -m \"Deploy\" --allow-empty && git push -f"
-      }
     }
   }
 }

@@ -50,3 +50,4 @@ go.work
 .vscode
 .DS_Store
 .swagger
+auth_service
