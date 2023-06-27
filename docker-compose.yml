@@ -30,6 +30,12 @@ services:
       - "8022:8022"
     volumes:
       - ./:/interview
+    depends_on:
+      - gateway
+      - mysql
+      - rabbitmq
+      - mongo
+      - cache
     networks:
       interview-net:
         aliases:
@@ -47,8 +53,6 @@ services:
       - ./:/interview
     depends_on:
       mysql:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
     networks:
       interview-net:
@@ -89,30 +93,6 @@ services:
       interview-net:
         aliases:
           - imysql
-  postgres:
-    container_name: postgres
-    image: postgres
-    user: postgres
-    volumes:
-      - pg-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: 'interview'
-      POSTGRES_PASSWORD: 'interview'
-      POSTGRES_DB: 'interview'
-      POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - 5432:5432
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -h localhost -U interview -d interview" ]
-      start_period: 5s
-      interval: 5s
-      timeout: 5s
-      retries: 55
-    networks:
-      interview-net:
-        aliases:
-          - ipostgres
-
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
