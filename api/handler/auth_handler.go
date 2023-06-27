@@ -39,6 +39,7 @@ func NewAuthHandler(r *mux.Router, as services.AuthService, l *logger.Logger) IA
 
 func (a AuthHandler) SignUpUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		decoder := json.NewDecoder(r.Body)
 		signUpUser := &models.CreateUserRequest{}
 
@@ -56,7 +57,7 @@ func (a AuthHandler) SignUpUser() HandlerFunc {
 			return
 		}
 
-		ur, err := a.service.SignUpUser(signUpUser)
+		ur, err := a.service.SignUpUser(ctx, signUpUser)
 
 		if err != nil {
 			a.logger.Error().Err(err).Msg("SignUpUser: create")

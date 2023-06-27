@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+  tester_service:
+    container_name: tester_service
+    build:
+      context: ./
+      dockerfile: ./.docker/tester_service/Dockerfile
+    volumes:
+      - ./:/interview
+    depends_on:
+      - jaeger
+      - prometheus
+    networks:
+      interview-net:
+        aliases:
+          - itester_service
+
+networks:
+  interview-net:
+    name: interview-net
+    driver: bridge
+    enable_ipv6: false

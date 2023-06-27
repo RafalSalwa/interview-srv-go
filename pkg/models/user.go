@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/pkg/cache"
 	"time"
 
 	"gorm.io/gorm"
@@ -16,7 +17,7 @@ type UserDBModel struct {
 	Email            string     `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
 	Phone            *string    `gorm:"column:phone_no;type:varchar(11)"`
 	Roles            []byte     `gorm:"column:roles"`
-	VerificationCode string     `gorm:"column:verification_code;type:varchar(6)"`
+	VerificationCode string     `gorm:"column:verification_code;type:varchar(12)"`
 	Verified         bool       `gorm:"column:is_verified;default:false"`
 	Active           bool       `gorm:"column:is_active;default:false"`
 	CreatedAt        time.Time  `gorm:"column:created_at"`
@@ -77,7 +78,7 @@ type UserDBResponse struct {
 
 type UserResponse struct {
 	Id               int64      `json:"id,omitempty"`
-	Username         string     `json:"username"`
+	Username         string     `json:"username,omitempty"`
 	Firstname        *string    `json:"firstname,omitempty"`
 	RolesJson        string     `json:"rolesJson,omitempty"`
 	Roles            string     `json:"roles,omitempty"`
@@ -90,26 +91,27 @@ type UserResponse struct {
 	UpdatedAt        *time.Time `json:"updated_at,omitempty"`
 	LastLogin        *time.Time `json:"last_login,omitempty"`
 	DeletedAt        *time.Time `json:"deleted_at,omitempty"`
+	*cache.Cacheable
 }
 
 type UpdateUserRequest struct {
-	Id        int     `json:"id,omitempty"`
+	Id        int64   `json:"id,omitempty"`
 	Firstname *string `json:"firstname"`
 	Lastname  *string `json:"lastname"`
 	Password  *string `json:"password"`
 }
 
 type ChangePasswordRequest struct {
-	Id              int    `json:"id"`
+	Id              int64  `json:"id"`
 	OldPassword     string `json:"oldPassword"`
 	Password        string `json:"password"`
 	PasswordConfirm string `json:"passwordConfirm"`
 }
 
 type User struct {
-	ID int
+	ID int64
 	// Creates a primary key for UserID.
-	UserID int `gorm:"primary_key"`
+	UserID int64 `gorm:"primary_key"`
 	// Creates constrains for Username
 	// -> 15 character max limit and not be passed a the blank
 	Username string `sql:"type:VARCHAR(15);not null"`
@@ -125,4 +127,8 @@ type User struct {
 
 type Roles struct {
 	Roles []string
+}
+
+type VerificationCodeRequest struct {
+	Email string
 }

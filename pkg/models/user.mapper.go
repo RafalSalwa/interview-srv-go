@@ -46,10 +46,54 @@ func (r *UserResponse) AssignTokenPair(tp *jwt.TokenPair) {
 	r.RefreshToken = tp.RefreshToken
 }
 
-func (r *UserResponse) FromProtoSignIn(pbu *intrvproto.SignInUserResponse) error {
-	err := copier.Copy(r, &pbu)
+func (r *UserResponse) FromProtoSignIn(pbu *intrvproto.SignInUserResponse) {
+	r.Token = pbu.AccessToken
+	r.RefreshToken = pbu.RefreshToken
+}
+func (r *UserResponse) FromProtoSignUp(pbu *intrvproto.SignUpUserResponse) error {
+	r.Username = pbu.GetUsername()
+	r.VerificationCode = pbu.GetVerificationToken()
+	c := pbu.GetCreatedAt().AsTime()
+	r.CreatedAt = &c
+	return nil
+}
+
+func (r *UserResponse) FromProtoUserResponse(pu *intrvproto.UserResponse) error {
+	err := copier.Copy(r, &pu)
 	if err != nil {
 		return fmt.Errorf("from response to db error: %w", err)
+	}
+	return nil
+}
+
+func (r *UserDBResponse) FromProtoUserResponse(pw *intrvproto.UserResponse) error {
+	err := copier.Copy(r, pw.User)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *UserDBResponse) FromProtoUserDetails(pw *intrvproto.UserDetails) error {
+	err := copier.Copy(r, pw)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r CreateUserRequest) ToProto() *intrvproto.SignUpUserInput {
+	u := &intrvproto.SignUpUserInput{}
+
+	u.Name = r.Username
+	u.Email = r.Email
+	u.Password = r.Password
+	u.PasswordConfirm = r.PasswordConfirm
+
+	return u
+}
+func (r *UserDBResponse) FromDBModel(user *UserDBResponse) error {
+	err := copier.Copy(r, user)
+	if err != nil {
+		return err
 	}
 	return nil
 }

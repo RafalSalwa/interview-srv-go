@@ -2,94 +2,56 @@ package handler
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/go-playground/validator/v10"
+	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
 type UserHandler interface {
 	GetUserById() HandlerFunc
-	CreateUser() HandlerFunc
 	PasswordChange() HandlerFunc
 	ValidateCode() HandlerFunc
 }
 
 type userHandler struct {
 	router *mux.Router
+	cqrs   *cqrs.Application
 	logger *logger.Logger
 }
 
-func NewUserHandler(r *mux.Router, l *logger.Logger) UserHandler {
-	return userHandler{r, l}
+func NewUserHandler(r *mux.Router, cqrs *cqrs.Application, l *logger.Logger) UserHandler {
+	return userHandler{r, cqrs, l}
 }
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//userId, err := strconv.Atoi(mux.Vars(r)["id"])
-		//if err != nil {
-		//	uh.logger.Err(err)
-		//	responses.RespondBadRequest(w, "Wrong parameter Type. Required int")
-		//	return
-		//}
-		responses.Respond(w, 200, []byte("123"))
-		//user, err := uh.service.GetById(userId)
-		//if err != nil {
-		//	uh.logger.Err(err)
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//
-		//if user == nil {
-		//	responses.RespondNotFound(w)
-		//	return
-		//}
-		//
-		//ur := &models.UserResponse{}
-		//if err = ur.FromDBResponse(user); err != nil {
-		//	uh.logger.Err(err)
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//
-		//responses.NewUserResponse(ur, w)
-	}
-}
-
-func (uh userHandler) CreateUser() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		newUserRequest := &models.CreateUserRequest{}
-		if err := json.NewDecoder(r.Body).Decode(newUserRequest); err != nil {
-			uh.logger.Error().Err(err)
-			responses.RespondBadRequest(w, "Invalid JSON request")
+		ctx := r.Context()
+		userId, _ := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+		user, err := uh.cqrs.Queries.UserBasic.Handle(ctx, query.UserRequest{UserId: userId})
+		if err != nil {
+			uh.logger.Error().Err(err).Msg("rest:handler:getUser")
+			responses.RespondInternalServerError(w)
+			return
+		}
+		if user == nil {
+			responses.RespondNotFound(w)
 			return
 		}
 
-		validate := validator.New()
-		if err := validate.Struct(newUserRequest); err != nil {
-			uh.logger.Error().Err(err)
-			responses.RespondBadRequest(w, err.Error())
-			return
-		}
-
-		//newUser, err := uh.service.CreateUser(newUserRequest)
-		//if err != nil {
-		//	uh.logger.Error().Err(err)
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//
-		//responses.NewUserResponse(newUser, w)
+		responses.NewUserResponse(user, w)
 	}
 }
 
 func (uh userHandler) PasswordChange() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		pcr := &models.ChangePasswordRequest{}
 
 		if err := json.NewDecoder(r.Body).Decode(pcr); err != nil {
@@ -98,47 +60,35 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 			return
 		}
 
-		if err := password.Validate(pcr.Password, pcr.PasswordConfirm); err != nil {
-			uh.logger.Error().Err(err).Msg("Validate")
-			responses.RespondBadRequest(w, err.Error())
-			return
-		}
-
-		//user, err := uh.service.GetById(pcr.Id)
-		//if err != nil {
-		//	uh.logger.Error().Err(err)
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//
-		//if user == nil {
-		//	responses.RespondNotFound(w)
-		//	return
-		//}
-		//
-		//if !password.CheckPasswordHash(pcr.Password, user.Password) {
-		//	uh.logger.Error().Msg("New Password cannot be the same as old one")
+		//if err := password.Validate(pcr.Password, pcr.PasswordConfirm); err != nil {
+		//	uh.logger.Error().Err(err).Msg("Validate")
 		//	responses.RespondBadRequest(w, err.Error())
 		//	return
 		//}
-		//
-		//passHash, err := password.HashPassword(pcr.Password)
-		//if err != nil {
-		//	uh.logger.Error().Err(err).Msg("New Password cannot be the same as old one")
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//updateUser := &models.UpdateUserRequest{
-		//	Id:       pcr.Id,
-		//	Password: &passHash,
-		//}
-		//
-		//if errUpdate := uh.service.UpdateUserPassword(updateUser); errUpdate != nil {
-		//	uh.logger.Error().Err(errUpdate)
-		//	responses.RespondInternalServerError(w)
-		//	return
-		//}
-		//responses.RespondOk(w) // Instead we can also send redirect to login page
+		user, err := uh.cqrs.Queries.UserDetails.Handle(ctx, query.UserRequest{UserId: pcr.Id})
+		if err != nil {
+			uh.logger.Error().Err(err).Msg("cqrs:user:details:get")
+			responses.RespondInternalServerError(w)
+			return
+		}
+
+		if user == nil {
+			responses.RespondNotFound(w)
+			return
+		}
+		err = uh.cqrs.Commands.ChangePassword.Handle(ctx, command.ChangePassword{
+			Id:              pcr.Id,
+			OldPassword:     user.Password,
+			Password:        pcr.Password,
+			PasswordConfirm: pcr.PasswordConfirm,
+		})
+		if err != nil {
+			uh.logger.Error().Err(err).Msg("cqrs:changePassword")
+			responses.RespondInternalServerError(w)
+			return
+		}
+
+		responses.RespondOk(w)
 	}
 }
 

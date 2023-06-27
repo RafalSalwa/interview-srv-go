@@ -22,8 +22,9 @@ type AuthServiceImpl struct {
 }
 
 type AuthService interface {
-	SignUpUser(request *models.CreateUserRequest) (*models.UserResponse, error)
+	SignUpUser(ctx context.Context, request *models.CreateUserRequest) (*models.UserResponse, error)
 	SignInUser(request *models.LoginUserRequest) (*models.UserResponse, error)
+	GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error)
 	Verify(ctx context.Context, vCode string) error
 	Load(request *models.UserDBModel) (*models.UserResponse, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
@@ -33,7 +34,7 @@ func NewAuthService(ctx context.Context, r repository.UserRepository, l *logger.
 	return &AuthServiceImpl{ctx, r, l, c}
 }
 
-func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.UserResponse, error) {
+func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
 	if err := password.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -71,7 +72,22 @@ func (s *AuthServiceImpl) SignUpUser(cur *models.CreateUserRequest) (*models.Use
 
 	return ur, nil
 }
+func (s *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error) {
+	user := &models.UserDBModel{
+		Email: email,
+	}
+	dbUser, err := s.repository.Load(user)
+	if err != nil {
+		return nil, err
+	}
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
+	if err != nil {
+		return nil, err
+	}
 
+	return ur, nil
+}
 func (s *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.UserResponse, error) {
 	q := query.Use(s.repository.GetConnection()).UserDBModel
 	dbu, errDB := q.FilterWithUsernameOrEmail(user.Username, user.Email)

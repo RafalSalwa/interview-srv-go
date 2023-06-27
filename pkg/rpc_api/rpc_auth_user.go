@@ -2,14 +2,11 @@ package rpc_api
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strconv"
 )
 
 func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.SignInUserResponse, error) {
@@ -22,7 +19,6 @@ func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUser
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
 	res := &pb.SignInUserResponse{
 		Status:       "success",
 		AccessToken:  ur.Token,
@@ -39,7 +35,7 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		PasswordConfirm: req.GetPasswordConfirm(),
 	}
 
-	ur, err := authServer.authService.SignUpUser(signUpUser)
+	ur, err := authServer.authService.SignUpUser(ctx, signUpUser)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -51,4 +47,11 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		CreatedAt:         nil,
 	}
 	return res, nil
+}
+func (authServer *AuthServer) GetVerificationKey(ctx context.Context, req *pb.VerificationCodeRequest) (*pb.VerificationCodeResponse, error) {
+	ur, err := authServer.authService.GetVerificationkey(ctx, req.Email)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.VerificationCodeResponse{Code: ur.VerificationCode}, nil
 }
