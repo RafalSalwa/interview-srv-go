@@ -1,13 +1,18 @@
-package main
+package workers
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-
+	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
 	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"log"
+	"net/http"
 )
 
 var (
@@ -17,11 +22,66 @@ var (
 	userClient = pb.NewUserServiceClient(dcConn)
 )
 
-func main() {
-	runWorkersInDaisyChain()
+const (
+	emailDomain = "@interview.com"
+	password    = "VeryG00dPass!"
+	numUsers    = 50
+)
+
+type User struct {
+	ValidationCode string
+	Username       string
+	Email          string
+	Password       string
+	Token          *Token
 }
-func dcCreateUser() User {
+
+type Token struct {
+	access  string
+	refresh string
+}
+
+func NewDaisyChain(cfg *config.Config) {
+	ch := make(chan User, numUsers+1)
+
+	go Generate(ch, cfg)
+	mid := make(chan User)
+	go worker(ch, mid, "activate")
+	out := make(chan User)
+	go worker(mid, out, "token")
+	ch = out
+}
+
+func Generate(ch chan<- User, cfg *config.Config) {
+	ch <- dcCreateUser(cfg)
+}
+
+func dcCreateUser(cfg *config.Config) User {
 	ctx := context.TODO()
+	pUsername, _ := generator.RandomString(12)
+	email := *pUsername + emailDomain
+
+	newUser := &models.CreateUserRequest{
+		Username:        *pUsername,
+		Email:           email,
+		Password:        password,
+		PasswordConfirm: password,
+	}
+	marshalled, err := json.Marshal(newUser)
+	if err != nil {
+		log.Fatalf("impossible to marshall: %s", err)
+	}
+	client := &http.Client{}
+	URL := "http://" + cfg.Http.Addr + "/auth/signup"
+	//pass the values to the request's body
+	req, err := http.NewRequest("POST", URL, bytes.NewReader(marshalled))
+	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
+	_, err = client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		<-concurrentGoroutines
+		return
+	}
 
 	pUsername, _ := generator.RandomString(12)
 	email := *pUsername + emailDomain
@@ -43,10 +103,6 @@ func dcCreateUser() User {
 	}
 }
 
-func Generate(ch chan<- User) {
-	ch <- dcCreateUser()
-}
-
 func worker(in <-chan User, out chan<- User, task string) {
 	inUser := <-in
 	var outUser User
@@ -57,17 +113,6 @@ func worker(in <-chan User, out chan<- User, task string) {
 		outUser = dcTokenUser(inUser)
 	}
 	out <- outUser
-}
-
-func runWorkersInDaisyChain() {
-	ch := make(chan User, numUsers+1)
-
-	go Generate(ch)
-	mid := make(chan User)
-	go worker(ch, mid, "activate")
-	out := make(chan User)
-	go worker(mid, out, "token")
-	ch = out
 }
 
 func dcActivateUser(inUser User) User {
