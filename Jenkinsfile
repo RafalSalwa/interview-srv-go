@@ -21,6 +21,8 @@ pipeline {
     
     stage('Test') {
         steps {
+            sh 'pwd'
+            sh 'ls -lah'
             sh 'go vet .'
             echo 'Running linting'
             sh 'golint .'
