@@ -6,6 +6,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -29,7 +30,11 @@ type Queries struct {
 }
 
 func NewCQRSService(ctx context.Context, cfg *config.Config) (*Application, error) {
-	conn, err := grpc.Dial(cfg.Grpc.AuthServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(cfg.Grpc.AuthServicePort,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+	)
 	if err != nil {
 		return nil, err
 	}

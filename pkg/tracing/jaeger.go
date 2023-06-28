@@ -18,6 +18,7 @@ type JaegerConfig struct {
 	Addr        string `mapstructure:"addr"`
 	Enable      bool   `mapstructure:"enable"`
 	LogSpans    bool   `mapstructure:"logSpans"`
+	Id          int64  `mapstructure:"id"`
 }
 
 func NewJaegerTracer(cfg JaegerConfig) (*tracesdk.TracerProvider, error) {
@@ -31,7 +32,7 @@ func NewJaegerTracer(cfg JaegerConfig) (*tracesdk.TracerProvider, error) {
 			semconv.SchemaURL,
 			semconv.ServiceName(cfg.ServiceName),
 			attribute.String("environment", cfg.Env),
-			attribute.Int64("ID", 1),
+			attribute.Int64("ID", cfg.Id),
 		)),
 	)
 	return tp, nil

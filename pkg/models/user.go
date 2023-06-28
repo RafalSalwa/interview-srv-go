@@ -25,6 +25,22 @@ type UserDBModel struct {
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
 }
 
+type UserMongoModel struct {
+	Id               int64      `bson:"_id,omitempty"`
+	Username         string     `bson:"username,omitempty"`
+	Password         string     `bson:"password,omitempty"`
+	Firstname        string     `bson:"firstname,omitempty"`
+	Lastname         string     `bson:"lastname,omitempty"`
+	Email            string     `bson:"email,omitempty"`
+	Phone            string     `bson:"phone,omitempty"`
+	VerificationCode string     `bson:"verification_code,omitempty"`
+	Verified         bool       `bson:"is_verified,omitempty"`
+	Active           bool       `bson:"is_active,omitempty"`
+	CreatedAt        time.Time  `bson:"createdAt,omitempty"`
+	UpdatedAt        *time.Time `bson:"updatedAt,omitempty"`
+	LastLogin        *time.Time `bson:"lastLogin,omitempty"`
+}
+
 func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {
 	um.Active = false
 	um.Verified = false

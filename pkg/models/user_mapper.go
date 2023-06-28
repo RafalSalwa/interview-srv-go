@@ -92,6 +92,13 @@ func (r *UserDBResponse) FromDBModel(user *UserDBResponse) error {
 	}
 	return nil
 }
+func (m *UserMongoModel) FromDBModel(user *UserDBModel) error {
+	err := copier.Copy(m, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func getRolesList(r string) []string {
 	i := strings.Index(r, "roles")
 	type RoleItem struct {

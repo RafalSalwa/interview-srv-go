@@ -1,9 +1,6 @@
 package server
 
 import (
-	"net"
-	"time"
-
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rpc_api"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
 	grpcconfig "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
@@ -13,11 +10,13 @@ import (
 	grpclogrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"net"
+	"time"
 )
 
 type GRPC struct {
@@ -60,19 +59,19 @@ func (s GRPC) Run() {
 	grpcServer := grpc.NewServer(
 		grpc.StreamInterceptor(grpcmiddleware.ChainStreamServer(
 			grpcctxtags.StreamServerInterceptor(),
-			grpcopentracing.StreamServerInterceptor(),
+			otelgrpc.StreamServerInterceptor(),
 			grpclogrus.StreamServerInterceptor(logEntry, opts...),
 			grpcrecovery.StreamServerInterceptor(),
 		)),
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcctxtags.UnaryServerInterceptor(),
-			grpcopentracing.UnaryServerInterceptor(),
+			otelgrpc.UnaryServerInterceptor(),
 			grpclogrus.UnaryServerInterceptor(logEntry, opts...),
 			grpcrecovery.UnaryServerInterceptor(),
 		)),
 	)
 
-	authServer, err := rpc_api.NewGrpcAuthServer(s.config, s.authService)
+	authServer, err := rpc_api.NewGrpcAuthServer(s.config, s.logger, s.authService)
 	if err != nil {
 		s.logger.Error().Err(err)
 	}

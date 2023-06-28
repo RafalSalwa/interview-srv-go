@@ -3,6 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,8 +29,16 @@ func NewServerGRPC(cfg *config.Config, log *logger.Logger) *server {
 func (srv *server) Run() error {
 	ctx, rejectContext := context.WithCancel(NewContextCancellableByOsSignals(context.Background()))
 
-	authService := services.NewAuthService(ctx, srv.cfg, srv.log)
+	if srv.cfg.Jaeger.Enable {
+		tp, err := tracing.NewJaegerTracer(srv.cfg.Jaeger)
+		if err != nil {
+			srv.log.Error().Err(err).Msg("REST:jaeger:register")
+		}
+		otel.SetTracerProvider(tp)
+		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	}
 
+	authService := services.NewAuthService(ctx, srv.cfg, srv.log)
 	grpcServer, err := NewGrpcServer(srv.cfg.GRPC, srv.log, authService)
 	if err != nil {
 		srv.log.Error().Err(err)

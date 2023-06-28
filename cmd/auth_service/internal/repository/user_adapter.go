@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"go.opentelemetry.io/otel"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/password"
@@ -32,7 +33,9 @@ func (r *UserAdapter) ConfirmVerify(ctx context.Context, user *models.UserDBMode
 	return nil
 }
 
-func (r *UserAdapter) SingUp(user *models.UserDBModel) error {
+func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
+	ctx, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "MySQL Repository SingUp")
+	defer span.End()
 	if err := r.DB.Create(&user).Error; err != nil {
 		return err
 	}

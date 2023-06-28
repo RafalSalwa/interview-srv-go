@@ -69,9 +69,9 @@ func initStructs() usersModels {
 		Verified:         true,
 		Active:           true,
 		CreatedAt:        timeNow,
-		UpdatedAt:        timeNow,
-		LastLogin:        timeNow,
-		DeletedAt:        timeNow,
+		UpdatedAt:        &timeNow,
+		LastLogin:        &timeNow,
+		DeletedAt:        &timeNow,
 	}
 	um := usersModels{
 		uresp:   uresp,

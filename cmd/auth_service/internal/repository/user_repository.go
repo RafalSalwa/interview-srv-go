@@ -9,7 +9,7 @@ import (
 )
 
 type UserRepository interface {
-	SingUp(user *models.UserDBModel) error
+	SingUp(ctx context.Context, user *models.UserDBModel) error
 	Load(user *models.UserDBModel) (*models.UserDBModel, error)
 	ById(ctx context.Context, id int64) (*models.UserDBModel, error)
 	ByLogin(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error)
