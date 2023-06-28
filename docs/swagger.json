@@ -1,0 +1,85 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "Interview API with usage of REST,gRPC,MySQL,Redis,mongo,AMQP",
+    "title": "Go Interview REST API",
+    "contact": {
+      "name": "RafalSalwa",
+      "url": "https://github.com/RafalSalwa"
+    },
+    "version": "1.0"
+  },
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "description": "Create account",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security":[{
+    "basicAuth" : [],
+    "ApiKeyAuth" : [],
+    "BearerAuth" : []
+  }],
+  "components": {
+    "securitySchemes" : {
+      "basicAuth" : {
+        "type" : "http",
+        "scheme": "basic"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SignUpRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "rafal@interview.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "VeryG00dPass!"
+          },
+          "passwordConfirm": {
+            "type": "string",
+            "example": "VeryG00dPass!"
+          }
+        }
+      }
+    }
+  }
+}
