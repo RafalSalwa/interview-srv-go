@@ -1,19 +1,20 @@
 package services
 
 import (
-    "context"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-    "github.com/RafalSalwa/interview-app-srv/internal/generator"
-    "github.com/RafalSalwa/interview-app-srv/internal/password"
-    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-    "github.com/RafalSalwa/interview-app-srv/pkg/query"
-    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+	"context"
+	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+	"github.com/RafalSalwa/interview-app-srv/pkg/query"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
 type AuthServiceImpl struct {
@@ -69,6 +70,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 }
 
 func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
+	fmt.Println(cur.Password, cur.PasswordConfirm)
 	if err := password.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}

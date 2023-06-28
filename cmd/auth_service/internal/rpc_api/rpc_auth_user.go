@@ -31,7 +31,6 @@ func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUser
 
 func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.SignUpUserResponse, error) {
 	signUpUser := &models.CreateUserRequest{
-		Username:        req.GetName(),
 		Email:           req.GetEmail(),
 		Password:        req.GetPassword(),
 		PasswordConfirm: req.GetPasswordConfirm(),

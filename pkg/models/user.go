@@ -9,20 +9,20 @@ import (
 
 // swagger:model User
 type UserDBModel struct {
-	Id               int64     `gorm:"id;primaryKey;autoIncrement"`
-	Username         string    `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
-	Password         string    `gorm:"type:varchar(255);not null"`
-	Firstname        string    `gorm:"column:first_name;type:varchar(255)"`
-	Lastname         string    `gorm:"column:last_name;type:varchar(255)"`
-	Email            string    `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
-	Phone            string    `gorm:"column:phone_no;type:varchar(11)"`
-	VerificationCode string    `gorm:"column:verification_code;type:varchar(12)"`
-	Verified         bool      `gorm:"column:is_verified;default:false"`
-	Active           bool      `gorm:"column:is_active;default:false"`
-	CreatedAt        time.Time `gorm:"column:created_at"`
-	UpdatedAt        time.Time `gorm:"column:updated_at"`
-	LastLogin        time.Time `gorm:"column:last_login"`
-	DeletedAt        time.Time `gorm:"column:deleted_at"`
+	Id               int64      `gorm:"id;primaryKey;autoIncrement"`
+	Username         string     `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
+	Password         string     `gorm:"type:varchar(255);not null"`
+	Firstname        string     `gorm:"column:first_name;type:varchar(255)"`
+	Lastname         string     `gorm:"column:last_name;type:varchar(255)"`
+	Email            string     `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
+	Phone            string     `gorm:"column:phone_no;type:varchar(11)"`
+	VerificationCode string     `gorm:"column:verification_code;type:varchar(12)"`
+	Verified         bool       `gorm:"column:is_verified;default:false"`
+	Active           bool       `gorm:"column:is_active;default:false"`
+	CreatedAt        time.Time  `gorm:"column:created_at"`
+	UpdatedAt        *time.Time `gorm:"column:updated_at"`
+	LastLogin        *time.Time `gorm:"column:last_login"`
+	DeletedAt        *time.Time `gorm:"column:deleted_at"`
 }
 
 func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {
@@ -47,7 +47,6 @@ type UserRequest struct {
 }
 
 type CreateUserRequest struct {
-	Username        string `json:"username" validate:"required,min=3,max=32"`
 	Email           string `json:"email" validate:"required,email"`
 	Password        string `json:"password" validate:"required,min=8,max=16"`
 	PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,max=16"`

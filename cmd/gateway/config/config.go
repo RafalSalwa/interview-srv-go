@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 	"os"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ type Config struct {
 	Grpc        Grpc                  `mapstructure:"grpc"`
 	Probes      probes.Config         `mapstructure:"probes"`
 	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
+	CSRF        csrf.Config           `mapstructure:"csrf"`
 }
 
 type App struct {

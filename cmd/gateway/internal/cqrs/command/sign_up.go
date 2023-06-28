@@ -20,7 +20,6 @@ func NewSignUpHandler(authClient intrvproto.AuthServiceClient) SignUpHandler {
 
 func (h SignUpHandler) Handle(ctx context.Context, cmd SignUpUser) error {
 	_, err := h.authClient.SignUpUser(ctx, &intrvproto.SignUpUserInput{
-		Name:            cmd.User.Username,
 		Email:           cmd.User.Email,
 		Password:        cmd.User.Password,
 		PasswordConfirm: cmd.User.PasswordConfirm,

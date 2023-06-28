@@ -79,7 +79,6 @@ func (r *UserDBResponse) FromProtoUserDetails(pw *intrvproto.UserDetails) error 
 func (r CreateUserRequest) ToProto() *intrvproto.SignUpUserInput {
 	u := &intrvproto.SignUpUserInput{}
 
-	u.Name = r.Username
 	u.Email = r.Email
 	u.Password = r.Password
 	u.PasswordConfirm = r.PasswordConfirm

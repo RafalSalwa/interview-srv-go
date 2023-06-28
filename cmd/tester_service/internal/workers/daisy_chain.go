@@ -61,7 +61,6 @@ func dcCreateUser(cfg *config.Config) User {
 	email := *pUsername + emailDomain
 
 	newUser := &models.CreateUserRequest{
-		Username:        *pUsername,
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
@@ -82,7 +81,6 @@ func dcCreateUser(cfg *config.Config) User {
 
 	return User{
 		ValidationCode: "",
-		Username:       newUser.Username,
 		Password:       newUser.Password,
 	}
 }

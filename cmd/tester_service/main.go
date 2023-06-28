@@ -93,7 +93,6 @@ func createUser(cfg *config.Config, created chan User, failed chan User) {
 	email := *pUsername + emailDomain
 
 	newUser := &models.CreateUserRequest{
-		Username:        *pUsername,
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,

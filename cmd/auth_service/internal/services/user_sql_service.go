@@ -1,19 +1,15 @@
 package services
 
 import (
-    "context"
-    "database/sql"
-    "errors"
-    "strconv"
-    "time"
+	"context"
+	"database/sql"
+	"errors"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
-    "github.com/RafalSalwa/interview-app-srv/internal/generator"
-    "github.com/RafalSalwa/interview-app-srv/internal/password"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-
-    "github.com/RafalSalwa/interview-app-srv/internal/util"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    mySql "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	mySql "github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
 type SqlServiceImpl struct {
@@ -80,7 +76,7 @@ func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error
 
 func (s *SqlServiceImpl) UsernameInUse(user *models.CreateUserRequest) bool {
 	dbUser := &models.UserDBResponse{}
-	row := s.db.QueryRow("SELECT id FROM `user` WHERE username=? OR email = ?", user.Username, user.Email)
+	row := s.db.QueryRow("SELECT id FROM `user` WHERE email = ?", user.Email)
 	err := row.Scan(&dbUser.Id)
 
 	if err == sql.ErrNoRows {
@@ -181,9 +177,8 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*
 	}
 
 	dbUser := &models.UserDBModel{
-		Username:         newUserRequest.Username,
-		Password:         newUserRequest.Password,
 		Email:            newUserRequest.Email,
+		Password:         newUserRequest.Password,
 		VerificationCode: *vcode,
 	}
 	ctx := getContext()
@@ -191,10 +186,9 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	sqlStatement := "INSERT INTO `user` (`username`, `password`, `email`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,?,0,1);"
+	sqlStatement := "INSERT INTO `user` ( `password`, `email`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,0,1);"
 	rows, err := tx.ExecContext(ctx,
 		sqlStatement,
-		dbUser.Username,
 		dbUser.Password,
 		dbUser.Email,
 		dbUser.VerificationCode)
@@ -226,9 +220,5 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*
 
 func getContext() context.Context {
 	ctx := context.Background()
-	var timeout, err = strconv.Atoi(util.Env("SQL_REQUEST_TIMEOUT_SECONDS", "60"))
-	if err == nil {
-		ctx, _ = context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	}
 	return ctx
 }
