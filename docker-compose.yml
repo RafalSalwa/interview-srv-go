@@ -124,12 +124,34 @@ services:
       interview-net:
         aliases:
           - iprometheus
-    
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - ./.docker/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./.docker/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - 3000:3000
+    networks:
+      interview-net:
+        aliases:
+          - igrafana
   jaeger:
     image: jaegertracing/all-in-one:1.46
     container_name: jaeger
     environment:
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+      - LOG_LEVEL=debug
+      - PROMETHEUS_QUERY_SUPPORT_SPANMETRICS_CONNECTOR=true
+      - PROMETHEUS_QUERY_NAMESPACE=span_metrics
+      - PROMETHEUS_QUERY_DURATION_UNIT=s
     ports:
       - "5775:5775/udp"
       - "5778:5778"
@@ -174,8 +196,6 @@ services:
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog
-    logging:
-      driver: "none"
     ports:
       - "1025:1025" # smtp server
       - "8025:8025" # web ui

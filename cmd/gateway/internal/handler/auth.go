@@ -2,16 +2,17 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
-	"net/http"
-
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"net/http"
 )
 
 type AuthHandler interface {
@@ -38,11 +39,15 @@ func NewAuthHandler(r *mux.Router, cqrs *cqrs.Application, l *logger.Logger) Aut
 
 func (a authHandler) SignUpUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
+		defer span.End()
+
 		decoder := json.NewDecoder(r.Body)
 		signUpReq := models.CreateUserRequest{}
 
 		if err := decoder.Decode(&signUpReq); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err).Msg("SignUpUser: decode")
 			responses.RespondBadRequest(w, "wrong input parameters")
 			return
@@ -50,6 +55,8 @@ func (a authHandler) SignUpUser() HandlerFunc {
 
 		validate := validator.New()
 		if err := validate.StructCtx(ctx, signUpReq); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
@@ -58,6 +65,8 @@ func (a authHandler) SignUpUser() HandlerFunc {
 		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: signUpReq})
 
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err).Msg("SignUpUser:create")
 			responses.RespondInternalServerError(w)
 			return

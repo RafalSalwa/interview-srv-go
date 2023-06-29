@@ -1,21 +1,20 @@
 package services
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/mapper"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"github.com/RafalSalwa/interview-app-srv/pkg/query"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rabbitmq"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/internal/generator"
+    "github.com/RafalSalwa/interview-app-srv/internal/password"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "github.com/RafalSalwa/interview-app-srv/pkg/query"
+    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
@@ -57,7 +56,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 		log.Error().Err(err).Msg("gorm")
 	}
 	userRepository := repository.NewUserAdapter(ormDB)
-	mongoRepo := repository.NewMongoRepository(mongoClient, log)
+	mongoRepo := repository.NewMongoRepository(mongoClient, cfg.Mongo, log)
 	redisRepo := repository.NewRedisRepository(universalRedisClient, log)
 
 	return &AuthServiceImpl{
@@ -71,6 +70,9 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 }
 
 func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
+	defer span.End()
+
 	if err := password.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -80,10 +82,6 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 		return nil, err
 	}
 
-	roles, err := json.Marshal(models.Roles{Roles: []string{"ROLE_USER"}})
-	if err != nil {
-		return nil, err
-	}
 	vcode, err := generator.RandomString(12)
 	if err != nil {
 		return nil, err
@@ -94,22 +92,22 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 		return nil, err
 	}
 
-	um.Roles = roles
 	um.VerificationCode = *vcode
 
-	if errDB := s.repository.SingUp(um); errDB != nil {
-		s.logger.Error().Err(errDB).Msg("repo:user:signUp")
+	if errDB := s.repository.SingUp(ctx, um); errDB != nil {
 		return nil, errDB
 	}
 
 	if errR := s.redisRepo.PutUser(ctx, *um); errR != nil {
-		s.logger.Error().Err(err).Msg("redis:user:set")
 		return nil, errR
 	}
-	if err = s.rabbitPublisher.Publish(um.AMQP()); err != nil {
-		s.logger.Error().Err(err).Msg("rabbit:publish")
+	if err = s.rabbitPublisher.Publish(ctx, um.AMQP()); err != nil {
 		return nil, err
 	}
+	if err = s.mongoRepo.CreateUser(ctx, um); err != nil {
+		return nil, err
+	}
+
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(um)
 	if err != nil {
@@ -178,9 +176,12 @@ func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, 
 		return nil, err
 	}
 
-	ur := mapper.MapUserDBModelToUserResponse(dbUser)
-	ur.Token = tp.AccessToken
-	ur.RefreshToken = tp.RefreshToken
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
+	if err != nil {
+		return nil, err
+	}
+	ur.AssignTokenPair(tp)
 
 	return ur, nil
 }

@@ -1,33 +1,24 @@
 .PHONY:
 
 build:
-	docker-compose up --build -d
-all: test testrace
+	docker compose up --build -d
 
 compose-up:
-	docker-compose up --build -d postgres rabbitmq && docker-compose logs -f
+	docker compose up --build -d postgres rabbitmq && docker-compose logs -f
 
 compose-down:
-	docker-compose down --remove-orphans
+	docker compose down --remove-orphans
 
-.PHONY: server
-server:
-	go build -o server ./cmd/server/main.go
-
-.PHONY: client
-client:
-	go build -o client ./cmd/client/main.go
+.PHONY: tester
+tester:
+	docker compose up -f docker-compose.tester.yml -d
 
 test:
-	go test -v -cover -race ./internal/... ./pkg/... ./cmd/...
+	go test -v -cover ./internal/... ./pkg/... ./cmd/...
 .PHONY: test
 
 linter-golangci:
 	golangci-lint run
-
-mock:
-	mockgen -source ./internal/usecase/interfaces.go -package usecase_test > ./internal/usecase/mocks_test.go
-.PHONY: mock
 
 .PHONY: proto
 proto:

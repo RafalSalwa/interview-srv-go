@@ -3,36 +3,35 @@ package config
 import (
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	"os"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	mongodb "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	"github.com/RafalSalwa/interview-app-srv/pkg/redis"
 	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"os"
+	"strings"
 )
 
-var configPath string
-
 type Config struct {
-	ServiceName string                `mapstructure:"serviceName"`
-	App         App                   `mapstructure:"app"`
-	Logger      *logger.Config        `mapstructure:"logger"`
-	GRPC        grpc.Config           `mapstructure:"grpc"`
-	Email       email.Config          `mapstructure:"email"`
-	JWTToken    jwt.JWTConfig         `mapstructure:"jwt"`
-	MySQL       sql.MySQL             `mapstructure:"mysql"`
-	Mongo       mongodb.Config        `mapstructure:"mongo"`
-	Redis       *redis.Config         `mapstructure:"redis"`
-	Rabbit      rabbitmq.Config       `mapstructure:"rabbitmq"`
-	Probes      probes.Config         `mapstructure:"probes"`
-	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
+	ServiceName      string               `mapstructure:"serviceName"`
+	App              App                  `mapstructure:"app"`
+	Logger           *logger.Config       `mapstructure:"logger"`
+	GRPC             grpc.Config          `mapstructure:"grpc"`
+	Email            email.Config         `mapstructure:"email"`
+	JWTToken         jwt.JWTConfig        `mapstructure:"jwt"`
+	MySQL            sql.MySQL            `mapstructure:"mysql"`
+	Mongo            mongodb.Config       `mapstructure:"mongo"`
+	MongoCollections mongodb.Collections  `mapstructure:"mongoCollections"`
+	Redis            *redis.Config        `mapstructure:"redis"`
+	Rabbit           rabbitmq.Config      `mapstructure:"rabbitmq"`
+	Probes           probes.Config        `mapstructure:"probes"`
+	Jaeger           tracing.JaegerConfig `mapstructure:"jaeger"`
 }
 
 type App struct {
@@ -64,7 +63,11 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath = fmt.Sprintf("%s/cmd/auth_service/config/config.yaml", getwd)
-
+	configPath := ""
+	if strings.Contains(getwd, "auth_service") {
+		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+	} else {
+		configPath = fmt.Sprintf("%s/cmd/auth_service/config/config.yaml", getwd)
+	}
 	return configPath, nil
 }

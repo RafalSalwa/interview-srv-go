@@ -1,10 +1,9 @@
 package auth
 
 import (
+	simpleHandler "github.com/RafalSalwa/interview-app-srv/pkg/simple_handler"
 	"net/http"
 	"time"
-
-	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
 )
 
 type Auth struct {
@@ -30,7 +29,7 @@ type Token struct {
 	MaxAge     int           `mapstructure:"maxAge"`
 }
 
-func Authorization(h apiHandler.HandlerFunc) http.HandlerFunc {
+func Authorization(h simpleHandler.HandlerFunc) http.HandlerFunc {
 	at, _ := NewAuthMethod(h, "basic")
 	return at.middleware(h)
 }

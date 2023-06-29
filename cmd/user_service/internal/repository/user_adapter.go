@@ -1,13 +1,12 @@
 package repository
 
 import (
-	"context"
-	"fmt"
-	"time"
+    "context"
+    "time"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"gorm.io/gorm"
+    "github.com/RafalSalwa/interview-app-srv/internal/password"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "gorm.io/gorm"
 )
 
 type UserAdapter struct {
@@ -36,7 +35,6 @@ func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error
 
 func (r *UserAdapter) ConfirmVerify(ctx context.Context, vCode string) error {
 	user := models.UserDBModel{VerificationCode: vCode}
-	fmt.Printf("%#v\n", user)
 	if err := r.DB.Model(user).Where(&user).
 		Updates(models.UserDBModel{
 			Verified: true,

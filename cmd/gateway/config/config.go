@@ -1,9 +1,10 @@
 package config
 
 import (
-	"flag"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
@@ -14,12 +15,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var configPath string
-
-func init() {
-	flag.StringVar(&configPath, "config", "", "API Gateway microservice config path")
-}
-
 type Config struct {
 	ServiceName string                `mapstructure:"serviceName"`
 	App         App                   `mapstructure:"app"`
@@ -29,6 +24,7 @@ type Config struct {
 	Grpc        Grpc                  `mapstructure:"grpc"`
 	Probes      probes.Config         `mapstructure:"probes"`
 	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
+	CSRF        csrf.Config           `mapstructure:"csrf"`
 }
 
 type App struct {
@@ -78,7 +74,11 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath = fmt.Sprintf("%s/cmd/gateway/config/config.yaml", getwd)
-
+	configPath := ""
+	if strings.Contains(getwd, "gateway") {
+		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+	} else {
+		configPath = fmt.Sprintf("%s/cmd/gateway/config/config.yaml", getwd)
+	}
 	return configPath, nil
 }

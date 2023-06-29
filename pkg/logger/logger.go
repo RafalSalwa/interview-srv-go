@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"os"
 	"strings"
@@ -60,7 +61,7 @@ func NewConsole(isDebug bool) *Logger {
 
 	app, _ := newrelic.NewApplication(
 		newrelic.ConfigAppName("interview-srv"),
-		newrelic.ConfigLicense("eu01xx9f02edd5735678218e3aa95634826fNRAL"),
+		newrelic.ConfigLicense("asd"),
 		newrelic.ConfigAppLogDecoratingEnabled(true),
 		newrelic.ConfigAppLogForwardingEnabled(false),
 		func(config *newrelic.Config) {
@@ -109,6 +110,9 @@ func (l *Logger) Info() *zerolog.Event {
 
 func (l *Logger) Warn() *zerolog.Event {
 	return l.logger.Warn()
+}
+func (l *Logger) WithTracing(span trace.Span) *zerolog.Event {
+	return l.logger.Error()
 }
 
 func (l *Logger) Error() *zerolog.Event {

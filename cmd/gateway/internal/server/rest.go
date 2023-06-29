@@ -4,16 +4,15 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-	"go.opentelemetry.io/otel"
-	"time"
-
 	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -77,18 +76,9 @@ func (s *REST) Run(ctx context.Context) {
 			s.log.Error().Err(err).Msg("REST:jaeger:register")
 		}
 		otel.SetTracerProvider(tp)
-
-		ctxj, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		defer func(ctxj context.Context) {
-			ctxj, cancel = context.WithTimeout(ctxj, time.Second*5)
-			defer cancel()
-			if err := tp.Shutdown(ctxj); err != nil {
-				s.log.Fatal().Err(err).Msg("REST:jaeger:shutdown")
-			}
-		}(ctxj)
+		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
+
 	closed := make(chan struct{})
 	go func() {
 		sigint := make(chan os.Signal, 1)

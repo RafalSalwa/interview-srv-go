@@ -5,6 +5,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	"os"
+	"strings"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
@@ -17,8 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
-
-var configPath string
 
 type Config struct {
 	ServiceName string                `mapstructure:"serviceName"`
@@ -64,7 +63,11 @@ func getEnvPath() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
-	configPath = fmt.Sprintf("%s/cmd/user_service/config/config.yaml", getwd)
-
+	configPath := ""
+	if strings.Contains(getwd, "user_service") {
+		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+	} else {
+		configPath = fmt.Sprintf("%s/cmd/user_service/config/config.yaml", getwd)
+	}
 	return configPath, nil
 }

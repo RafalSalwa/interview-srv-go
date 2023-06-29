@@ -57,12 +57,10 @@ func Generate(ch chan<- User, cfg *config.Config) {
 }
 
 func dcCreateUser(cfg *config.Config) User {
-	ctx := context.TODO()
 	pUsername, _ := generator.RandomString(12)
 	email := *pUsername + emailDomain
 
 	newUser := &models.CreateUserRequest{
-		Username:        *pUsername,
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
@@ -79,27 +77,11 @@ func dcCreateUser(cfg *config.Config) User {
 	_, err = client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		<-concurrentGoroutines
-		return
 	}
-
-	pUsername, _ := generator.RandomString(12)
-	email := *pUsername + emailDomain
-
-	newUser := &pb.SignUpUserInput{
-		Name:            *pUsername,
-		Email:           email,
-		Password:        password,
-		PasswordConfirm: password,
-	}
-
-	signUp, _ := authClient.SignUpUser(ctx, newUser)
 
 	return User{
-		Id:             signUp.GetId(),
-		ValidationCode: signUp.VerificationToken,
-		Username:       *pUsername,
-		Password:       password,
+		ValidationCode: "",
+		Password:       newUser.Password,
 	}
 }
 
@@ -123,7 +105,6 @@ func dcActivateUser(inUser User) User {
 }
 
 func dcTokenUser(inUser User) User {
-	concurrentGoroutines <- struct{}{}
 	ctx := context.TODO()
 
 	credentials := &pb.SignInUserInput{
@@ -131,6 +112,6 @@ func dcTokenUser(inUser User) User {
 		Password: inUser.Password,
 	}
 	_, _ = authClient.SignInUser(ctx, credentials)
-	fmt.Println(inUser.Id, inUser.Username)
+	fmt.Println(inUser.Username)
 	return inUser
 }

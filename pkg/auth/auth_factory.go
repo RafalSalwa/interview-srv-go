@@ -2,14 +2,13 @@ package auth
 
 import (
 	"errors"
-	"net/http"
-
-	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
 	"github.com/RafalSalwa/interview-app-srv/config"
+	simpleHandler "github.com/RafalSalwa/interview-app-srv/pkg/simple_handler"
+	"net/http"
 )
 
 type IAuthType interface {
-	middleware(h apiHandler.HandlerFunc) http.HandlerFunc
+	middleware(h simpleHandler.HandlerFunc) http.HandlerFunc
 }
 
 type AuthType int
@@ -26,7 +25,7 @@ var types = map[string]interface{}{
 	"bearer_token": bearerToken,
 }
 
-func NewAuthMethod(h apiHandler.HandlerFunc, method string) (IAuthType, error) {
+func NewAuthMethod(h simpleHandler.HandlerFunc, method string) (IAuthType, error) {
 	val, ok := types[method]
 	if !ok {
 		return nil, errors.New("wrong auth type")

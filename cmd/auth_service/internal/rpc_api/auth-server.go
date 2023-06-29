@@ -1,20 +1,23 @@
 package rpc_api
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/internal/services"
-	grpc_config "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
+	grpcconfig "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
 
 type AuthServer struct {
 	pb.UnimplementedAuthServiceServer
-	config      grpc_config.Config
+	config      grpcconfig.Config
+	logger      *logger.Logger
 	authService services.AuthService
 }
 
-func NewGrpcAuthServer(config grpc_config.Config, authService services.AuthService) (*AuthServer, error) {
+func NewGrpcAuthServer(config grpcconfig.Config, logger *logger.Logger, authService services.AuthService) (*AuthServer, error) {
 	authServer := &AuthServer{
 		config:      config,
+		logger:      logger,
 		authService: authService,
 	}
 

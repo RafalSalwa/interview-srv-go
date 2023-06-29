@@ -12,6 +12,7 @@ type Config struct {
 	Addr     string `mapstructure:"addr"`
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
+	Database string `mapstructure:"database"`
 }
 
 func NewClient(ctx context.Context, cfg Config) (*mongo.Client, error) {

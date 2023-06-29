@@ -1,19 +1,18 @@
 package auth
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	simpleHandler "github.com/RafalSalwa/interview-app-srv/pkg/simple_handler"
 	"net/http"
 	"strings"
-
-	apiHandler "github.com/RafalSalwa/interview-app-srv/api/handler"
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 )
 
 type bearerTokenHanndler struct {
-	h     apiHandler.HandlerFunc
+	h     simpleHandler.HandlerFunc
 	token string
 }
 
-func (a *bearerTokenHanndler) middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
+func (a *bearerTokenHanndler) middleware(h simpleHandler.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prefix := "Bearer "
 		authHeader := r.Header.Get("Authorization")
@@ -26,7 +25,7 @@ func (a *bearerTokenHanndler) middleware(h apiHandler.HandlerFunc) http.HandlerF
 	}
 }
 
-func newBearerTokenMiddleware(h apiHandler.HandlerFunc, token string) *bearerTokenHanndler {
+func newBearerTokenMiddleware(h simpleHandler.HandlerFunc, token string) *bearerTokenHanndler {
 	return &bearerTokenHanndler{
 		h:     h,
 		token: token,
