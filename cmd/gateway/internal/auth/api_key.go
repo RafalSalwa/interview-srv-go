@@ -8,11 +8,11 @@ import (
 )
 
 type apiKeyAuth struct {
-	h      apiHandler.HandlerFunc
+	h      apiHandler.AuthHandler
 	apiKey string
 }
 
-func (a *apiKeyAuth) middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
+func (a *apiKeyAuth) Middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("x-api-key")
 		if key == "" {
@@ -27,7 +27,7 @@ func (a *apiKeyAuth) middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func newApiKeyMiddleware(h apiHandler.HandlerFunc, apiKey string) *apiKeyAuth {
+func newApiKeyMiddleware(h apiHandler.AuthHandler, apiKey string) *apiKeyAuth {
 	return &apiKeyAuth{
 		h:      h,
 		apiKey: apiKey,

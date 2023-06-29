@@ -9,11 +9,11 @@ import (
 )
 
 type bearerTokenHandler struct {
-	h     apiHandler.HandlerFunc
+	h     apiHandler.AuthHandler
 	token string
 }
 
-func (a *bearerTokenHandler) middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
+func (a *bearerTokenHandler) Middleware(h apiHandler.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prefix := "Bearer "
 		authHeader := r.Header.Get("Authorization")
@@ -23,13 +23,11 @@ func (a *bearerTokenHandler) middleware(h apiHandler.HandlerFunc) http.HandlerFu
 			return
 		}
 
-		//jwt.DecodeToken()
-		//r.Header.Set("x-user-id")
 		h(w, r)
 	}
 }
 
-func newBearerTokenMiddleware(h apiHandler.HandlerFunc, token string) *bearerTokenHandler {
+func newBearerTokenMiddleware(h apiHandler.AuthHandler, token string) *bearerTokenHandler {
 	return &bearerTokenHandler{
 		h:     h,
 		token: token,

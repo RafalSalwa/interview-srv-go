@@ -41,7 +41,7 @@ func (srv *server) Run() error {
 	authService := services.NewAuthService(ctx, srv.cfg, srv.log)
 	grpcServer, err := NewGrpcServer(srv.cfg.GRPC, srv.log, authService)
 	if err != nil {
-		srv.log.Error().Err(err)
+		srv.log.Error().Err(err).Msg("grpc:server:new")
 	}
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

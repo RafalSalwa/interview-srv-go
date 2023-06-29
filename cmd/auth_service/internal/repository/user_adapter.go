@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"go.opentelemetry.io/otel"
+	otelcodes "go.opentelemetry.io/otel/codes"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/internal/password"
@@ -37,6 +38,8 @@ func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) erro
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "MySQL Repository SingUp")
 	defer span.End()
 	if err := r.DB.Create(&user).Error; err != nil {
+		span.RecordError(err)
+		span.SetStatus(otelcodes.Error, err.Error())
 		return err
 	}
 	return nil
