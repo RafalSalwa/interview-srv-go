@@ -76,6 +76,6 @@ make test
 - user1:password
 
 screenshots:
-# jaeger
-![](/home/rsalwa/GolandProjects/interview-app-srv/docs/jaeger.png)
-![](/home/rsalwa/GolandProjects/interview-app-srv/docs/postman.png)
+![db](docs/db_design.png)
+![jaeger](docs/jaeger.png)
+![postman](docs/postman.png)
