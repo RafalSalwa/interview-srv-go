@@ -7,6 +7,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/go-redis/redis/v8"
 	"go.opentelemetry.io/otel"
+	otelcodes "go.opentelemetry.io/otel/codes"
 	"strconv"
 )
 
@@ -27,12 +28,14 @@ func (r Redis) PutUser(ctx context.Context, user models.UserDBModel) error {
 	bytes, err := json.Marshal(user)
 
 	if err != nil {
-		r.log.Error().Err(err).Msg("redis:user:put:marshal")
+		span.RecordError(err)
+		span.SetStatus(otelcodes.Error, err.Error())
 		return err
 	}
 
 	if errR := r.redisClient.HSetNX(ctx, "users", key, bytes).Err(); errR != nil {
-		r.log.Error().Err(errR).Msg("redis:user:put:HSetNX")
+		span.RecordError(err)
+		span.SetStatus(otelcodes.Error, err.Error())
 		return errR
 	}
 	return nil

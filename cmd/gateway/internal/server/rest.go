@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 	apiRouter "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
@@ -27,10 +27,10 @@ type REST struct {
 	router      *mux.Router
 	cqrs        *cqrs.Application
 	log         *logger.Logger
-	cfg         *gatewayConfig.Config
+	cfg         *config.Config
 }
 
-func NewRESTServer(c *gatewayConfig.Config, l *logger.Logger) *REST {
+func NewRESTServer(c *config.Config, l *logger.Logger) *REST {
 	tlsConf := new(tls.Config)
 	r := apiRouter.NewApiRouter(c, l)
 
@@ -52,9 +52,16 @@ func NewRESTServer(c *gatewayConfig.Config, l *logger.Logger) *REST {
 }
 
 func (s *REST) Run(ctx context.Context) {
-	s.SetupCQRS(ctx)
+	err := s.SetupCQRS(ctx)
+	if err != nil {
+		s.log.Error().Err(err).Msg("REST:cqrs:setup")
+	}
 	s.SetupHandlers()
-	s.SetupRoutes()
+	err = s.SetupRoutes()
+	if err != nil {
+		s.log.Error().Err(err).Msg("REST:routes:setup")
+	}
+
 	go func() {
 		s.log.Info().Msgf("Starting REST server on: %v", s.srv.Addr)
 		if s.cfg.App.Env == "dev" {
@@ -101,11 +108,20 @@ func (s *REST) SetupHandlers() {
 	s.authHandler = handler.NewAuthHandler(s.router, s.cqrs, s.log)
 }
 
-func (s *REST) SetupRoutes() {
+func (s *REST) SetupRoutes() error {
 	apiRouter.RegisterUserRouter(s.router, s.userHandler, s.cfg.Auth.JWTToken)
-	apiRouter.RegisterAuthRouter(s.router, s.authHandler)
+	err := apiRouter.RegisterAuthRouter(s.router, s.authHandler, s.cfg)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (s *REST) SetupCQRS(ctx context.Context) {
-	s.cqrs, _ = cqrs.NewCQRSService(ctx, s.cfg)
+func (s *REST) SetupCQRS(ctx context.Context) error {
+	service, err := cqrs.NewCQRSService(ctx, s.cfg)
+	if err != nil {
+		return err
+	}
+	s.cqrs = service
+	return nil
 }

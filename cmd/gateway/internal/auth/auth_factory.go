@@ -4,12 +4,12 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	apiHandler "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
-	"github.com/RafalSalwa/interview-app-srv/config"
 )
 
 type IAuthType interface {
-	middleware(h apiHandler.HandlerFunc) http.HandlerFunc
+	Middleware(h apiHandler.HandlerFunc) http.HandlerFunc
 }
 
 type AuthType int
@@ -26,19 +26,18 @@ var types = map[string]interface{}{
 	"bearer_token": bearerToken,
 }
 
-func NewAuthMethod(h apiHandler.HandlerFunc, method string) (IAuthType, error) {
-	val, ok := types[method]
+func NewAuthMethod(h apiHandler.AuthHandler, cfg *config.Config) (IAuthType, error) {
+	val, ok := types[cfg.Auth.AuthMethod]
 	if !ok {
 		return nil, errors.New("wrong auth type")
 	}
-	c := config.New()
 	switch val {
 	case apiKey:
-		return newApiKeyMiddleware(h, c.Server.APIKey), nil
+		return newApiKeyMiddleware(h, cfg.Auth.APIKey), nil
 	case basic:
-		return newBasicAuthMiddleware(h, c.Server.BasicAuth.Username, c.Server.BasicAuth.Password), nil
+		return newBasicAuthMiddleware(h, cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password), nil
 	case bearerToken:
-		return newBearerTokenMiddleware(h, c.Server.BearerToken), nil
+		return newBearerTokenMiddleware(h, cfg.Auth.BearerToken), nil
 	}
 	return nil, nil
 }

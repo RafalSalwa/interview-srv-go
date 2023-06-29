@@ -7,16 +7,22 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpclogrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	"github.com/sirupsen/logrus"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 	"net"
 	"time"
+)
+
+const (
+	maxConnectionIdle = 5
+	gRPCTimeout       = 15
+	maxConnectionAge  = 5
+	gRPCTime          = 10
 )
 
 type GRPC struct {
@@ -40,40 +46,29 @@ func NewGrpcServer(config grpcconfig.Config,
 }
 
 func (s GRPC) Run() {
-	logEntry := logger.NewGRPCLogger()
-	grpclogrus.ReplaceGrpcLogger(logEntry)
-
-	opts := []grpclogrus.Option{
-		grpclogrus.WithLevels(func(code codes.Code) logrus.Level {
-			if code == codes.OK {
-				return logrus.InfoLevel
-			}
-			return logrus.ErrorLevel
-		}),
-
-		grpclogrus.WithDurationField(func(duration time.Duration) (key string, value interface{}) {
-			return "grpc.time_ms", duration.Milliseconds()
-		}),
-	}
-
 	grpcServer := grpc.NewServer(
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: maxConnectionIdle * time.Minute,
+			Timeout:           gRPCTimeout * time.Second,
+			MaxConnectionAge:  maxConnectionAge * time.Minute,
+			Time:              gRPCTime * time.Minute,
+		}),
 		grpc.StreamInterceptor(grpcmiddleware.ChainStreamServer(
 			grpcctxtags.StreamServerInterceptor(),
 			otelgrpc.StreamServerInterceptor(),
-			grpclogrus.StreamServerInterceptor(logEntry, opts...),
 			grpcrecovery.StreamServerInterceptor(),
 		)),
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcctxtags.UnaryServerInterceptor(),
+			grpc_prometheus.UnaryServerInterceptor,
 			otelgrpc.UnaryServerInterceptor(),
-			grpclogrus.UnaryServerInterceptor(logEntry, opts...),
 			grpcrecovery.UnaryServerInterceptor(),
 		)),
 	)
 
 	authServer, err := rpc_api.NewGrpcAuthServer(s.config, s.logger, s.authService)
 	if err != nil {
-		s.logger.Error().Err(err)
+		s.logger.Error().Err(err).Msg("auth:server:new")
 	}
 
 	pb.RegisterAuthServiceServer(grpcServer, authServer)
@@ -81,13 +76,13 @@ func (s GRPC) Run() {
 
 	listener, err := net.Listen("tcp", s.config.Addr)
 	if err != nil {
-		s.logger.Error().Err(err)
+		s.logger.Error().Err(err).Msg("grpc:net:listen")
 	}
 
 	s.logger.Info().Msgf("Starting gRPC server on: %s", s.config.Addr)
 	err = grpcServer.Serve(listener)
 	if err != nil {
-		s.logger.Error().Err(err)
+		s.logger.Error().Err(err).Msg("grpc:server:server")
 	}
 	grpcServer.GracefulStop()
 }

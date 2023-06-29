@@ -43,17 +43,17 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 
 	universalRedisClient, err := redisClient.NewUniversalRedisClient(cfg.Redis)
 	if err != nil {
-		log.Error().Err(err).Msg("redis")
+		log.Error().Err(err).Msg("grpc:run:redis")
 	}
 
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
-		log.Error().Err(err).Msg("rabbitmq")
+		log.Error().Err(err).Msg("grpc:run:rabbitmq")
 	}
 
 	ormDB, err := sql.NewGormConnection(cfg.MySQL)
 	if err != nil {
-		log.Error().Err(err).Msg("gorm")
+		log.Error().Err(err).Msg("grpc:run:gorm")
 	}
 	userRepository := repository.NewUserAdapter(ormDB)
 	mongoRepo := repository.NewMongoRepository(mongoClient, cfg.Mongo, log)
@@ -93,11 +93,9 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 	}
 
 	um.VerificationCode = *vcode
-
 	if errDB := s.repository.SingUp(ctx, um); errDB != nil {
 		return nil, errDB
 	}
-
 	if errR := s.redisRepo.PutUser(ctx, *um); errR != nil {
 		return nil, errR
 	}

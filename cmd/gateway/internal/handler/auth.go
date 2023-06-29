@@ -1,18 +1,18 @@
 package handler
 
 import (
-	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/go-playground/validator/v10"
-	"github.com/gorilla/mux"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"net/http"
+    "encoding/json"
+    "github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "github.com/go-playground/validator/v10"
+    "github.com/gorilla/mux"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/codes"
+    "net/http"
 )
 
 type AuthHandler interface {
@@ -61,9 +61,7 @@ func (a authHandler) SignUpUser() HandlerFunc {
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-
 		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: signUpReq})
-
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -71,7 +69,6 @@ func (a authHandler) SignUpUser() HandlerFunc {
 			responses.RespondInternalServerError(w)
 			return
 		}
-
 		responses.RespondOk(w)
 	}
 }

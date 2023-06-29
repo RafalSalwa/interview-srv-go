@@ -18,6 +18,6 @@ func main() {
 	srv := server.NewServerGRPC(cfg, l)
 
 	if errSrv := srv.Run(); errSrv != nil {
-		log.Fatal(err)
+		l.Error().Err(err).Msg("srv:run")
 	}
 }
