@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/pkg/cache"
 	"time"
 
 	"gorm.io/gorm"
@@ -23,7 +22,6 @@ type UserDBModel struct {
 	UpdatedAt        *time.Time `gorm:"column:updated_at"`
 	LastLogin        *time.Time `gorm:"column:last_login"`
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
-	cache.Cacheable
 }
 
 type UserMongoModel struct {
@@ -101,7 +99,6 @@ type UserResponse struct {
 	UpdatedAt        time.Time `json:"updated_at,omitempty"`
 	LastLogin        time.Time `json:"last_login,omitempty"`
 	DeletedAt        time.Time `json:"deleted_at,omitempty"`
-	*cache.Cacheable
 }
 
 type UpdateUserRequest struct {

@@ -26,7 +26,7 @@ type ICacheable interface {
 	Set(expire time.Duration) error
 }
 type Cacheable struct {
-	LastUpdated time.Time `json:"last_updated"`
+	LastUpdated time.Time `json:"last_updated,omitempty"`
 	prefix      string
 	cacheId     string
 	parent      ICacheable
