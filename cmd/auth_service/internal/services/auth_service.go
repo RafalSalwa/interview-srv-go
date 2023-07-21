@@ -1,27 +1,27 @@
 package services
 
 import (
-	"context"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rabbit"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"github.com/RafalSalwa/interview-app-srv/pkg/query"
-	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
-	"go.opentelemetry.io/otel"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/internal/generator"
+    "github.com/RafalSalwa/interview-app-srv/internal/password"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "github.com/RafalSalwa/interview-app-srv/pkg/query"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
 	repository      repository.UserRepository
 	mongoRepo       *repository.Mongo
 	redisRepo       *repository.Redis
-	rabbitPublisher *rabbit.Publisher
+	rabbitPublisher *rabbitmq.Publisher
 	logger          *logger.Logger
 	config          jwt.JWTConfig
 }
@@ -46,7 +46,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 		log.Error().Err(err).Msg("grpc:run:redis")
 	}
 
-	publisher, errP := rabbit.NewPublisher(cfg.Rabbit)
+	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
 		log.Error().Err(err).Msg("grpc:run:rabbitmq")
 	}
