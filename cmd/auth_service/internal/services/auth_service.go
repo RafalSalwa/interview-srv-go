@@ -1,27 +1,27 @@
 package services
 
 import (
-    "context"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rabbitmq"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-    "github.com/RafalSalwa/interview-app-srv/internal/generator"
-    "github.com/RafalSalwa/interview-app-srv/internal/password"
-    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-    "github.com/RafalSalwa/interview-app-srv/pkg/query"
-    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
-    "go.opentelemetry.io/otel"
+	"context"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rabbit"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+	"github.com/RafalSalwa/interview-app-srv/pkg/query"
+	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
+	"go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
 	repository      repository.UserRepository
 	mongoRepo       *repository.Mongo
 	redisRepo       *repository.Redis
-	rabbitPublisher *rabbitmq.Publisher
+	rabbitPublisher *rabbit.Publisher
 	logger          *logger.Logger
 	config          jwt.JWTConfig
 }
@@ -46,7 +46,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 		log.Error().Err(err).Msg("grpc:run:redis")
 	}
 
-	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
+	publisher, errP := rabbit.NewPublisher(cfg.Rabbit)
 	if errP != nil {
 		log.Error().Err(err).Msg("grpc:run:rabbitmq")
 	}
@@ -69,7 +69,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
-func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
+func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
 	defer span.End()
 
@@ -93,16 +93,16 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 	}
 
 	um.VerificationCode = *vcode
-	if errDB := s.repository.SingUp(ctx, um); errDB != nil {
+	if errDB := a.repository.SingUp(ctx, um); errDB != nil {
 		return nil, errDB
 	}
-	if errR := s.redisRepo.PutUser(ctx, *um); errR != nil {
+	if errR := a.redisRepo.PutUser(ctx, *um); errR != nil {
 		return nil, errR
 	}
-	if err = s.rabbitPublisher.Publish(ctx, um.AMQP()); err != nil {
+	if err = a.rabbitPublisher.Publish(ctx, um.AMQP()); err != nil {
 		return nil, err
 	}
-	if err = s.mongoRepo.CreateUser(ctx, um); err != nil {
+	if err = a.mongoRepo.CreateUser(ctx, um); err != nil {
 		return nil, err
 	}
 
@@ -115,8 +115,8 @@ func (s *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 	return ur, nil
 }
 
-func (s *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.UserResponse, error) {
-	q := query.Use(s.repository.GetConnection()).UserDBModel
+func (a *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.UserResponse, error) {
+	q := query.Use(a.repository.GetConnection()).UserDBModel
 	dbu, errDB := q.FilterWithUsernameOrEmail(user.Username, user.Email)
 	if errDB != nil {
 		return nil, errDB
@@ -128,7 +128,7 @@ func (s *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.Use
 		return nil, err
 	}
 
-	tp, err := jwt.GenerateTokenPair(s.config, dbu.Id)
+	tp, err := jwt.GenerateTokenPair(a.config, dbu.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -153,24 +153,24 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	return ur, nil
 }
 
-func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
+func (a *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
 	ctx := context.Background()
-	dbUser, err := s.repository.Load(user)
+	dbUser, err := a.repository.Load(user)
 	if err != nil {
 		return nil, err
 	}
 	if dbUser == nil {
 		return nil, nil
 	}
-	dbUser, err = s.repository.UpdateLastLogin(ctx, dbUser)
+	dbUser, err = a.repository.UpdateLastLogin(ctx, dbUser)
 	if err != nil {
 		return nil, err
 	}
 
-	tp, err := jwt.GenerateTokenPair(s.config, dbUser.Id)
-	_, _ = jwt.DecodeToken(tp.AccessToken, s.config.Access.PublicKey)
+	tp, err := jwt.GenerateTokenPair(a.config, dbUser.Id)
+	_, _ = jwt.DecodeToken(tp.AccessToken, a.config.Access.PublicKey)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("token_pair")
+		a.logger.Error().Err(err).Msg("token_pair")
 		return nil, err
 	}
 
@@ -184,16 +184,16 @@ func (s *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, 
 	return ur, nil
 }
 
-func (s *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
+func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 	udb := &models.UserDBModel{
 		VerificationCode: vCode,
 	}
-	dbUser, err := s.repository.Load(udb)
+	dbUser, err := a.repository.Load(udb)
 	if err != nil {
 		return err
 	}
 
-	if errV := s.repository.ConfirmVerify(ctx, udb); errV != nil {
+	if errV := a.repository.ConfirmVerify(ctx, udb); errV != nil {
 		return errV
 	}
 	ur := &models.UserResponse{}
@@ -204,9 +204,9 @@ func (s *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 	return nil
 }
 
-func (s *AuthServiceImpl) FindUserById(uid int64) (*models.UserDBModel, error) {
+func (a *AuthServiceImpl) FindUserById(uid int64) (*models.UserDBModel, error) {
 	ctx := context.Background()
-	dbUser, err := s.repository.ById(ctx, uid)
+	dbUser, err := a.repository.ById(ctx, uid)
 	if err != nil {
 		return nil, err
 	}
