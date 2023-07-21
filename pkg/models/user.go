@@ -23,6 +23,7 @@ type UserDBModel struct {
 	UpdatedAt        *time.Time `gorm:"column:updated_at"`
 	LastLogin        *time.Time `gorm:"column:last_login"`
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
+	cache.Cacheable
 }
 
 type UserMongoModel struct {
