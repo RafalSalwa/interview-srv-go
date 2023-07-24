@@ -38,7 +38,6 @@ func initStructs() usersModels {
 		UpdatedAt:        timeNow,
 		LastLogin:        timeNow,
 		DeletedAt:        timeNow,
-		Cacheable:        nil,
 	}
 	ureq := UserRequest{
 		Id:       uid,

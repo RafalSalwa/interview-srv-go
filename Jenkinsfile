@@ -2,7 +2,7 @@
 
 pipeline {
   agent any
-  tools { go '1.20.5' }
+  tools { go '1.20' }
   environment {
       GO111MODULE = 'on'
       CGO_ENABLED = 0 
@@ -25,7 +25,7 @@ pipeline {
         }
     }
 
-    stage("Deploy back end") {
+    stage("Build back end") {
         steps {
             echo 'Compiling gateway'
             sh 'go build -o gateway cmd/gateway/main.go'
