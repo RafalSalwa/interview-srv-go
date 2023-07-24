@@ -10,9 +10,8 @@ pipeline {
   }
 
   stages {
-    stage('Build') {
+    stage('Install') {
         steps {
-          // Output will be something like "go version go1.19 darwin/arm64"
           sh 'go version'
           sh 'go get -u golang.org/x/lint/golint'
           sh 'go mod download'
