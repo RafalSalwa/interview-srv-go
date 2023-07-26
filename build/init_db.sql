@@ -36,6 +36,7 @@ create table user
     is_verified       tinyint(1) default 0                 not null,
     is_active         tinyint(1) default 0                 not null,
     created_at        datetime   default CURRENT_TIMESTAMP not null,
+    last_updated      datetime                             null,
     updated_at        datetime                             null,
     last_login        datetime                             null,
     deleted_at        datetime                             null
