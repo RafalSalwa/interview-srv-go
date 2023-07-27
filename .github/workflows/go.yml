@@ -18,7 +18,8 @@ jobs:
         run: go mod download
 
       - name: Build
-        run: go build -o server ./cmd/server/main.go
+        run: go build -gcflags \"all=-N -l\" -o gateway ./cmd/gateway/main.go
+        
 
       - name: Test
         run: go test -v -cover -race ./internal/... ./pkg/... ./cmd/... -json > TestResults.json
