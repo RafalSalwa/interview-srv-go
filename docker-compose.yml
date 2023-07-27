@@ -14,7 +14,6 @@ services:
       - ./build/keys/server.key:/etc/ssl/private/server.key
     depends_on:
       - jaeger
-      - prometheus
       - auth_service
       - user_service
     networks:
@@ -41,8 +40,6 @@ services:
         condition: service_started
       jaeger:
         condition: service_started
-      prometheus:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     networks:
@@ -113,9 +110,9 @@ services:
       - RABBITMQ_DEFAULT_PASS=interview
       - RABBITMQ_DEFAULT_VHOST=interview
     ports:
-      - 5672:5672
-      - 15672:15672
-      - 15692:15692
+      - "5672:5672"
+      - "15672:15672"
+      - "15692:15692"
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 1s

@@ -39,7 +39,157 @@
           }
         }
       }
-    }
+    },
+      "/auth/signin": {
+          "post": {
+              "description": "Log In account",
+              "tags": [
+                  "Auth"
+              ],
+              "requestBody": {
+                  "required": true,
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "$ref": "#/components/schemas/SignUpRequest"
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "OK",
+                      "content": {
+                          "application/json": {
+                              "example": {
+                                  "status": "ok"
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      },
+      "/auth/verify/{code}": {
+          "get": {
+              "description": "Log In account",
+              "tags": [
+                  "Auth"
+              ],
+              "requestBody": {
+                  "required": true,
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "$ref": "#/components/schemas/SignUpRequest"
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "OK",
+                      "content": {
+                          "application/json": {
+                              "example": {
+                                  "status": "ok"
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      },
+      "/auth/code": {
+          "post": {
+              "description": "Log In account",
+              "tags": [
+                  "Auth"
+              ],
+              "requestBody": {
+                  "required": true,
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "$ref": "#/components/schemas/SignUpRequest"
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "OK",
+                      "content": {
+                          "application/json": {
+                              "example": {
+                                  "status": "ok"
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      },
+      "/user": {
+          "post": {
+              "description": "Log In account",
+              "tags": [
+                  "User"
+              ],
+              "requestBody": {
+                  "required": true,
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "$ref": "#/components/schemas/SignUpRequest"
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "OK",
+                      "content": {
+                          "application/json": {
+                              "example": {
+                                  "status": "ok"
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      },
+      "/user/change_password": {
+          "post": {
+              "description": "Log In account",
+              "tags": [
+                  "User"
+              ],
+              "requestBody": {
+                  "required": true,
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "$ref": "#/components/schemas/SignUpRequest"
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "OK",
+                      "content": {
+                          "application/json": {
+                              "example": {
+                                  "status": "ok"
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
   },
   "security":[{
     "basicAuth" : [],

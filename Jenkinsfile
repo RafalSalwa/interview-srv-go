@@ -3,6 +3,18 @@
 pipeline {
   agent any
   tools { go '1.20.5' }
+  
+  options {
+          timeout(time: 15, unit: 'MINUTES')
+          disableConcurrentBuilds()
+          buildDiscarder(logRotator(numToKeepStr:'10'))
+          skipDefaultCheckout true
+      }
+      
+      triggers {
+          pollSCM('H/5 * * * *')
+  }
+  
   environment {
       GO111MODULE = 'on'
       CGO_ENABLED = 0 
@@ -10,6 +22,13 @@ pipeline {
   }
 
   stages {
+    stage('Pre-Clean') {
+    steps {
+        deleteDir()
+        checkout scm
+      }
+    }
+    
     stage('Install') {
         steps {
           sh 'go version'
@@ -24,7 +43,7 @@ pipeline {
         }
     }
 
-    stage("Build back end") {
+    stage("Build apps") {
         steps {
             echo 'Compiling gateway'
             sh 'go build -o gateway cmd/gateway/main.go'
