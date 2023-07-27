@@ -18,7 +18,7 @@ jobs:
         run: go mod download
 
       - name: Build
-        run: go build -gcflags \"all=-N -l\" -o gateway ./cmd/gateway/main.go
+        run: go build -gcflags all=-N -l -o gateway ./cmd/gateway/main.go
         
 
       - name: Test
