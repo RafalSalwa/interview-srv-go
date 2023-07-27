@@ -110,9 +110,9 @@ services:
       - RABBITMQ_DEFAULT_PASS=interview
       - RABBITMQ_DEFAULT_VHOST=interview
     ports:
-      - 5672:5672
-      - 15672:15672
-      - 15692:15692
+      - "5672:5672"
+      - "15672:15672"
+      - "15692:15692"
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 1s

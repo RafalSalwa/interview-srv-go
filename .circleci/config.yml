@@ -1,0 +1,33 @@
+version: 2.1
+orbs:
+  go: circleci/go@1.7.3
+  codecov: codecov/codecov@3.2.5
+  docker: circleci/docker@2.2.0
+jobs:
+  build:
+    docker:
+      - image: golang:1.17-alpine
+    working_directory: /go/src/interview-app-srv
+      - checkout
+      - go mod download
+  
+  lint:
+    docker:
+      - image: golangci/golangci-lint:v1.37-alpine
+    steps:
+      - checkout
+      - run: golangci-lint run
+  test:
+    docker:
+      - image: golang:1.17
+    working_directory: /go/src/<your-project-name>
+    steps:
+      - checkout
+      - run: go test -v -race ./...
+
+workflows:
+  build_lint_test:
+    jobs:
+      - build
+      - lint
+      - test
