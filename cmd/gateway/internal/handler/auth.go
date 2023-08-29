@@ -1,18 +1,19 @@
 package handler
 
 import (
-    "encoding/json"
-    "github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    "github.com/go-playground/validator/v10"
-    "github.com/gorilla/mux"
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/codes"
-    "net/http"
+	"encoding/json"
+	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"google.golang.org/grpc/status"
+	"net/http"
 )
 
 type AuthHandler interface {
@@ -66,7 +67,11 @@ func (a authHandler) SignUpUser() HandlerFunc {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err).Msg("SignUpUser:create")
-			responses.RespondInternalServerError(w)
+			if e, ok := status.FromError(err); ok {
+				responses.RespondBadRequest(w, e.Message())
+				return
+			}
+			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 		responses.RespondOk(w)

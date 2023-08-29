@@ -1,235 +1,268 @@
 {
-  "openapi": "3.0.0",
-  "info": {
-    "description": "Interview API with usage of REST,gRPC,MySQL,Redis,mongo,AMQP",
-    "title": "Go Interview REST API",
-    "contact": {
-      "name": "RafalSalwa",
-      "url": "https://github.com/RafalSalwa"
-    },
-    "version": "1.0"
-  },
-  "paths": {
-    "/auth/signup": {
-      "post": {
-        "description": "Create account",
-        "tags": [
-          "Auth"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignUpRequest"
-              }
-            }
-          }
+    "openapi": "3.0.0",
+    "info": {
+        "description": "Interview API with usage of REST,gRPC,MySQL,Redis,mongo,AMQP",
+        "title": "Go Interview REST API",
+        "contact": {
+            "name": "RafalSalwa",
+            "url": "https://github.com/RafalSalwa"
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "example": {
-                  "status": "ok"
+        "version": "1.0"
+    },
+    "paths": {
+        "/auth/signup": {
+            "post": {
+                "description": "Create account",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    }
                 }
-              }
             }
-          }
+        },
+        "/auth/signin": {
+            "post": {
+                "description": "Log In account",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignInRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "user": {
+                                        "username": "user1",
+                                        "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTA0NjMxNDMsImlhdCI6MTY5MDQ1OTU0MywibmJmIjoxNjkwNDU5NTQzLCJzdWIiOnsiSUQiOjEsIlVzZXJuYW1lIjoiIn19.Ly1E6KnOmRyCeRd1VhctkNUZs882rR7buG37XHPMqaGIERmYsN2y2nF5QQNyUtkTtV9Agfc10onhX8dSw1eSRg",
+                                        "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTA0ODExNDMsImlhdCI6MTY5MDQ1OTU0MywibmJmIjoxNjkwNDU5NTQzLCJzdWIiOnsiSUQiOjEsIlVzZXJuYW1lIjoiIn19.D3UfrFazNMV6al1Jgz6WGyq9g_NGZpGijTH2YrBMhUHyellXBQgBmt5GtHfDJlcuPdM2cajyhPRJ7pdYf_0Z8Q",
+                                        "created_at": "0001-01-01T00:00:00Z",
+                                        "updated_at": "0001-01-01T00:00:00Z",
+                                        "last_login": "0001-01-01T00:00:00Z",
+                                        "deleted_at": "0001-01-01T00:00:00Z"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/verify/{code}": {
+            "get": {
+                "description": "Log In account",
+                "tags": [
+                    "Auth"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "code",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "verification code obtained from email."
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/code": {
+            "post": {
+                "description": "Log In account",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "post": {
+                "description": "Log In account",
+                "tags": [
+                    "User"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/change_password": {
+            "post": {
+                "description": "Log In account",
+                "tags": [
+                    "User"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "ok"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-      }
     },
-      "/auth/signin": {
-          "post": {
-              "description": "Log In account",
-              "tags": [
-                  "Auth"
-              ],
-              "requestBody": {
-                  "required": true,
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "$ref": "#/components/schemas/SignUpRequest"
-                          }
-                      }
-                  }
-              },
-              "responses": {
-                  "200": {
-                      "description": "OK",
-                      "content": {
-                          "application/json": {
-                              "example": {
-                                  "status": "ok"
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      },
-      "/auth/verify/{code}": {
-          "get": {
-              "description": "Log In account",
-              "tags": [
-                  "Auth"
-              ],
-              "requestBody": {
-                  "required": true,
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "$ref": "#/components/schemas/SignUpRequest"
-                          }
-                      }
-                  }
-              },
-              "responses": {
-                  "200": {
-                      "description": "OK",
-                      "content": {
-                          "application/json": {
-                              "example": {
-                                  "status": "ok"
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      },
-      "/auth/code": {
-          "post": {
-              "description": "Log In account",
-              "tags": [
-                  "Auth"
-              ],
-              "requestBody": {
-                  "required": true,
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "$ref": "#/components/schemas/SignUpRequest"
-                          }
-                      }
-                  }
-              },
-              "responses": {
-                  "200": {
-                      "description": "OK",
-                      "content": {
-                          "application/json": {
-                              "example": {
-                                  "status": "ok"
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      },
-      "/user": {
-          "post": {
-              "description": "Log In account",
-              "tags": [
-                  "User"
-              ],
-              "requestBody": {
-                  "required": true,
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "$ref": "#/components/schemas/SignUpRequest"
-                          }
-                      }
-                  }
-              },
-              "responses": {
-                  "200": {
-                      "description": "OK",
-                      "content": {
-                          "application/json": {
-                              "example": {
-                                  "status": "ok"
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      },
-      "/user/change_password": {
-          "post": {
-              "description": "Log In account",
-              "tags": [
-                  "User"
-              ],
-              "requestBody": {
-                  "required": true,
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "$ref": "#/components/schemas/SignUpRequest"
-                          }
-                      }
-                  }
-              },
-              "responses": {
-                  "200": {
-                      "description": "OK",
-                      "content": {
-                          "application/json": {
-                              "example": {
-                                  "status": "ok"
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      }
-  },
-  "security":[{
-    "basicAuth" : [],
-    "ApiKeyAuth" : [],
-    "BearerAuth" : []
-  }],
-  "components": {
-    "securitySchemes" : {
-      "basicAuth" : {
-        "type" : "http",
-        "scheme": "basic"
-      },
-      "ApiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-KEY"
-      },
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    },
-    "schemas": {
-      "SignUpRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "example": "rafal@interview.com"
-          },
-          "password": {
-            "type": "string",
-            "example": "VeryG00dPass!"
-          },
-          "passwordConfirm": {
-            "type": "string",
-            "example": "VeryG00dPass!"
-          }
+    "security": [
+        {
+            "basicAuth": [],
+            "ApiKeyAuth": [],
+            "BearerAuth": []
         }
-      }
+    ],
+    "components": {
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic"
+            },
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-KEY"
+            },
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "SignUpRequest": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "example": "rafal@interview.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "VeryG00dPass!"
+                    },
+                    "passwordConfirm": {
+                        "type": "string",
+                        "example": "VeryG00dPass!"
+                    }
+                }
+            },
+            "SignInRequest": {
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "rafal@interview.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "VeryG00dPass!"
+                    }
+                }
+            }
+        }
     }
-  }
 }
