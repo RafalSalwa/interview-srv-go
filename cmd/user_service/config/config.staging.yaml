@@ -18,9 +18,9 @@ logger:
   encoder: json
 mysql:
   addr: "80.209.225.237:3306"
-  username: interview
-  password: interview
-  dbName: interview
+  username: interview_go
+  password: interview_go
+  dbName: interview_go
 mongo:
   addr: "mongodb://mongo:27017/?directConnection=true"
   username: interview
