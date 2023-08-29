@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/email"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	"os"
 	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/email"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
@@ -60,14 +61,17 @@ func InitConfig() (*Config, error) {
 
 func getEnvPath() (string, error) {
 	getwd, err := os.Getwd()
+	appEnv := os.Getenv("APP_ENV")
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
+
 	configPath := ""
 	if strings.Contains(getwd, "user_service") {
-		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+		configPath = fmt.Sprintf("%s/config.%s.yaml", getwd, appEnv)
 	} else {
-		configPath = fmt.Sprintf("%s/cmd/user_service/config/config.yaml", getwd)
+		configPath = fmt.Sprintf("%s/cmd/user_service/config/config.%s.yaml", getwd, appEnv)
 	}
+
 	return configPath, nil
 }
