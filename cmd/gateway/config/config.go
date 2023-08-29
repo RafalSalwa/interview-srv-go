@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -71,14 +72,16 @@ func InitConfig() (*Config, error) {
 
 func getEnvPath() (string, error) {
 	getwd, err := os.Getwd()
+	appEnv := os.Getenv("APP_ENV")
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
+
 	configPath := ""
 	if strings.Contains(getwd, "gateway") {
-		configPath = fmt.Sprintf("%s/config.yaml", getwd)
+		configPath = fmt.Sprintf("%s/config.%s.yaml", getwd, appEnv)
 	} else {
-		configPath = fmt.Sprintf("%s/cmd/gateway/config/config.yaml", getwd)
+		configPath = fmt.Sprintf("%s/cmd/gateway/config/config.%s.yaml", getwd, appEnv)
 	}
 	return configPath, nil
 }
