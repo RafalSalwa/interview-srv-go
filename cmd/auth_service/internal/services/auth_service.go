@@ -1,20 +1,21 @@
 package services
 
 import (
-    "context"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-    "github.com/RafalSalwa/interview-app-srv/internal/generator"
-    "github.com/RafalSalwa/interview-app-srv/internal/password"
-    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-    "github.com/RafalSalwa/interview-app-srv/pkg/query"
-    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
-    "go.opentelemetry.io/otel"
+	"context"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+	"github.com/RafalSalwa/interview-app-srv/pkg/query"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
+	"go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
@@ -32,6 +33,7 @@ type AuthService interface {
 	GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error)
 	Verify(ctx context.Context, vCode string) error
 	Load(request *models.UserDBModel) (*models.UserResponse, error)
+	Find(request *models.UserDBModel) (*models.UserResponse, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
 }
 
@@ -105,13 +107,11 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 	if err = a.mongoRepo.CreateUser(ctx, um); err != nil {
 		return nil, err
 	}
-
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(um)
 	if err != nil {
 		return nil, err
 	}
-
 	return ur, nil
 }
 
@@ -144,6 +144,24 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	if err != nil {
 		return nil, err
 	}
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return ur, nil
+}
+
+func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, error) {
+	dbUser, err := a.repository.Load(user)
+	if err != nil {
+		return nil, err
+	}
+	if dbUser == nil {
+		return nil, nil
+	}
+
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(dbUser)
 	if err != nil {

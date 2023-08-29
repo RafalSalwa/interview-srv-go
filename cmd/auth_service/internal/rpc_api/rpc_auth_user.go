@@ -2,12 +2,14 @@ package rpc_api
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"go.opentelemetry.io/otel"
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.SignInUserResponse, error) {
@@ -40,6 +42,14 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		PasswordConfirm: req.GetPasswordConfirm(),
 	}
 
+	um := &models.UserDBModel{}
+	um.Email = req.Email
+	um.Username = req.Email
+	dbUser, _ := authServer.authService.Load(um)
+	if dbUser != nil {
+		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
+	}
+
 	ur, err := authServer.authService.SignUpUser(ctx, signUpUser)
 	if err != nil {
 		span.RecordError(err)
@@ -52,7 +62,7 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		Id:                ur.Id,
 		Username:          ur.Username,
 		VerificationToken: ur.VerificationCode,
-		CreatedAt:         nil,
+		CreatedAt:         timestamppb.New(ur.CreatedAt),
 	}
 	return res, nil
 }

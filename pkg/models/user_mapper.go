@@ -22,6 +22,7 @@ func (r *UserResponse) FromDBResponse(user *UserDBResponse) error {
 
 func (m *UserDBModel) FromCreateUserReq(cur *CreateUserRequest) error {
 	err := copier.Copy(m, &cur)
+	m.Username = cur.Email
 	if err != nil {
 		return fmt.Errorf("from create to db model error: %w", err)
 	}
@@ -31,6 +32,8 @@ func (m *UserDBModel) FromCreateUserReq(cur *CreateUserRequest) error {
 
 func (r *UserResponse) FromDBModel(um *UserDBModel) error {
 	err := copier.Copy(r, &um)
+	r.Username = um.Username
+	r.CreatedAt = um.CreatedAt
 	if err != nil {
 		return fmt.Errorf("from response to db error: %w", err)
 	}
