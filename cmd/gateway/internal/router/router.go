@@ -4,6 +4,10 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/middlewares"
@@ -12,9 +16,6 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	"io"
-	"net/http"
-	"os"
 )
 
 type AppRouter struct {

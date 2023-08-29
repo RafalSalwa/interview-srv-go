@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
@@ -23,6 +24,7 @@ type UserServiceImpl struct {
 }
 
 type UserService interface {
+	GetUser(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error)
 	GetById(ctx context.Context, id int64) (*models.UserDBModel, error)
 	UsernameInUse(user *models.CreateUserRequest) bool
 	StoreVerificationData(ctx context.Context, vCode string) error
@@ -66,6 +68,18 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
+func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error) {
+	userDbModel := &models.UserDBModel{}
+	userDbModel.Username = user.Username
+	userDbModel.Email = user.Email
+	userDbModel.Password = user.Password
+
+	ur, err := s.repository.Load(userDbModel)
+	if err != nil {
+		return nil, err
+	}
+	return ur, nil
+}
 func (s *UserServiceImpl) GetById(ctx context.Context, id int64) (*models.UserDBModel, error) {
 	user, err := s.repository.ById(ctx, id)
 	if err != nil {

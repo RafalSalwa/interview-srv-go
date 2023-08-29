@@ -29,6 +29,10 @@ func (m *UserDBModel) FromCreateUserReq(cur *CreateUserRequest) error {
 
 	return nil
 }
+func (r *UserResponse) FromProtoUserDetails(pbu *intrvproto.UserDetails) {
+	r.Id = pbu.GetId()
+	r.Username = pbu.GetUsername()
+}
 
 func (r *UserResponse) FromDBModel(um *UserDBModel) error {
 	err := copier.Copy(r, &um)
@@ -59,6 +63,9 @@ func (r *UserResponse) FromProtoSignUp(pbu *intrvproto.SignUpUserResponse) error
 
 func (r *UserResponse) FromProtoUserResponse(pu *intrvproto.UserResponse) error {
 	err := copier.Copy(r, &pu)
+	r.Id = pu.User.Id
+	r.Username = pu.User.Username
+
 	if err != nil {
 		return fmt.Errorf("from response to db error: %w", err)
 	}

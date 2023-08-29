@@ -10,4 +10,5 @@ service UserService {
     rpc GetUserDetails(GetUserRequest) returns (UserDetails) {}
     rpc VerifyUser(VerifyUserRequest) returns (VerificationResponse) {}
     rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
+    rpc GetUser(GetUserSignInRequest) returns (UserDetails) {}
 }

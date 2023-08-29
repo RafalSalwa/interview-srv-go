@@ -2,6 +2,7 @@ package cqrs
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
@@ -27,6 +28,7 @@ type Queries struct {
 	UserDetails      query.UserDetailsHandler
 	SignIn           query.SignInHandler
 	VerificationCode query.VerificationCodeHandler
+	FetchUser        query.FetchUserHandler
 }
 
 func NewCQRSService(ctx context.Context, cfg *config.Config) (*Application, error) {
@@ -60,6 +62,7 @@ func newApplication(ctx context.Context, authClient intrvproto.AuthServiceClient
 			UserDetails:      query.NewUserDetailsHandler(userClient),
 			UserBasic:        query.NewUserBasicHandler(userClient),
 			VerificationCode: query.NewVerificationCodeHandler(authClient),
+			FetchUser:        query.NewFetchUserHandler(userClient),
 		},
 	}
 }

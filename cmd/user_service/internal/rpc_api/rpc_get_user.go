@@ -3,6 +3,8 @@ package rpc_api
 import (
 	"context"
 	"errors"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/jinzhu/copier"
 	"google.golang.org/grpc/codes"
@@ -35,10 +37,39 @@ func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (
 func (us *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest) (*pb.VerificationResponse, error) {
 	err := us.userService.StoreVerificationData(ctx, req.GetCode())
 	if err != nil {
+		if err.Error() == "NotFound" {
+			return nil, status.Errorf(codes.NotFound, "verification code not found")
+		}
+		if err.Error() == "AlreadyActivated" {
+			return nil, status.Errorf(codes.AlreadyExists, "User with such code has already active account")
+		}
+
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &pb.VerificationResponse{Success: true}, nil
+}
+
+func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest) (*pb.UserDetails, error) {
+	reqUser := &models.LoginUserRequest{}
+	reqUser.Username = req.Username
+	reqUser.Email = req.Email
+
+	user, err := us.userService.GetUser(ctx, reqUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	if user == nil {
+		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
+	}
+
+	ud := &pb.UserDetails{}
+	err = copier.Copy(ud, user)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return ud, nil
 }
 
 func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {

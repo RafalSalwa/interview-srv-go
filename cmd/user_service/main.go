@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/server"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"log"
 )
 
 func main() {
