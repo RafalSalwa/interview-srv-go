@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
@@ -24,7 +25,6 @@ func (h UserBasicHandler) Handle(ctx context.Context, query UserRequest) (*model
 	if err != nil {
 		return nil, err
 	}
-
 	ur := &models.UserResponse{}
 	err = ur.FromProtoUserResponse(pu)
 	if err != nil {

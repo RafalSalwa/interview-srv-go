@@ -2,6 +2,9 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
@@ -12,8 +15,8 @@ import (
 	"github.com/gorilla/mux"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	grpc_codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net/http"
 )
 
 type AuthHandler interface {
@@ -68,13 +71,17 @@ func (a authHandler) SignUpUser() HandlerFunc {
 			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err).Msg("SignUpUser:create")
 			if e, ok := status.FromError(err); ok {
+				if e.Code() == grpc_codes.AlreadyExists {
+					responses.RespondConflict(w, e.Message())
+					return
+				}
 				responses.RespondBadRequest(w, e.Message())
 				return
 			}
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-		responses.RespondOk(w)
+		responses.RespondCreated(w)
 	}
 }
 
@@ -82,32 +89,57 @@ func (a authHandler) GetVerificationCode() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		decoder := json.NewDecoder(r.Body)
-		signIn := models.VerificationCodeRequest{}
+		signIn := models.LoginUserRequest{}
 
 		if err := decoder.Decode(&signIn); err != nil {
 			a.logger.Error().Err(err).Msg("VerificationCode:decode")
 			responses.RespondBadRequest(w, "wrong parameters")
 			return
 		}
+
 		validate := validator.New()
 		if err := validate.Struct(signIn); err != nil {
 			a.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-		u, err := a.cqrs.Queries.VerificationCode.Handle(ctx, query.VerificationCode{Email: signIn.Email})
+		user, err := a.cqrs.Queries.FetchUser.Handle(ctx, query.FetchUser{User: signIn})
+		if err != nil {
+			a.logger.Error().Err(err).Msg("gRPC:VerificationCode:GetUser")
+		}
+		fmt.Println("user GRPC", user)
+		if user.Id == 0 {
+			responses.RespondNotFound(w)
+			return
+		}
+		uVerification, err := a.cqrs.Queries.VerificationCode.Handle(ctx, query.VerificationCode{Email: signIn.Email})
 		if err != nil {
 			a.logger.Error().Err(err).Msg("gRPC:VerificationCode")
+			if e, ok := status.FromError(err); ok {
+				if e.Code() == grpc_codes.NotFound {
+					responses.RespondNotFound(w)
+					return
+				}
+				if e.Code() == grpc_codes.AlreadyExists {
+					responses.RespondConflict(w, "user already activated")
+					return
+				}
+				responses.RespondBadRequest(w, e.Message())
+				return
+			}
 			responses.RespondInternalServerError(w)
 			return
 		}
-		responses.NewUserResponse(&u, w)
+
+		responses.NewUserResponse(uVerification, w)
 	}
 }
 
 func (a authHandler) SignInUser() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
+		defer span.End()
+
 		decoder := json.NewDecoder(r.Body)
 		signIn := models.LoginUserRequest{}
 
@@ -116,15 +148,27 @@ func (a authHandler) SignInUser() HandlerFunc {
 			responses.RespondBadRequest(w, "wrong parameters")
 			return
 		}
+
 		validate := validator.New()
 		if err := validate.Struct(signIn); err != nil {
 			a.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
+
 		u, err := a.cqrs.Queries.SignIn.Handle(ctx, query.SignInUser{User: signIn})
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err).Msg("gRPC:SignIn")
+			if e, ok := status.FromError(err); ok {
+				if e.Code() == grpc_codes.NotFound {
+					responses.RespondNotFound(w)
+					return
+				}
+				responses.RespondBadRequest(w, e.Message())
+				return
+			}
 			responses.RespondInternalServerError(w)
 			return
 		}
@@ -141,6 +185,18 @@ func (a authHandler) Verify() HandlerFunc {
 		err := a.cqrs.Commands.Verify.Handle(r.Context(), command.VerifyCode{VerificationCode: vCode})
 		if err != nil {
 			a.logger.Error().Err(err).Msg("gRPC:Verify")
+			if e, ok := status.FromError(err); ok {
+				if e.Code() == grpc_codes.NotFound {
+					responses.RespondNotFound(w)
+					return
+				}
+				if e.Code() == grpc_codes.AlreadyExists {
+					responses.RespondConflict(w, "user already activated")
+					return
+				}
+				responses.RespondBadRequest(w, e.Message())
+				return
+			}
 			responses.RespondInternalServerError(w)
 			return
 		}

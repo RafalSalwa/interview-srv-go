@@ -1,8 +1,9 @@
 package models
 
 import (
-    "time"
-    "gorm.io/gorm"
+	"time"
+
+	"gorm.io/gorm"
 )
 
 // swagger:model User
@@ -94,10 +95,10 @@ type UserResponse struct {
 	Active           bool      `json:"is_active,omitempty"`
 	Token            string    `json:"token,omitempty"`
 	RefreshToken     string    `json:"refresh_token,omitempty"`
-	CreatedAt        time.Time `json:"created_at,omitempty"`
-	UpdatedAt        time.Time `json:"updated_at,omitempty"`
-	LastLogin        time.Time `json:"last_login,omitempty"`
-	DeletedAt        time.Time `json:"deleted_at,omitempty"`
+	CreatedAt        time.Time `json:"created_at, omitempty"`
+	UpdatedAt        time.Time `json:"updated_at, omitempty"`
+	LastLogin        time.Time `json:"last_login, omitempty"`
+	DeletedAt        time.Time `json:"deleted_at, omitempty"`
 }
 
 type UpdateUserRequest struct {

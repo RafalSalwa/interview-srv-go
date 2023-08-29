@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
@@ -121,7 +122,7 @@ func (a *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.Use
 	if errDB != nil {
 		return nil, errDB
 	}
-
+	fmt.Println("dbu", dbu)
 	ur := &models.UserResponse{}
 	err := ur.FromDBModel(dbu)
 	if err != nil {

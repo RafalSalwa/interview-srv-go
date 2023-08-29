@@ -21,6 +21,11 @@ func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUser
 	ur, err := authServer.authService.SignInUser(loginUser)
 	if err != nil {
 		authServer.logger.Error().Err(err).Msg("rpc:service:signin")
+
+		if err.Error() == "record not found" {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		}
+
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
