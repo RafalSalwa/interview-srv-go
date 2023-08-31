@@ -122,7 +122,7 @@ func (a *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.Use
 	if errDB != nil {
 		return nil, errDB
 	}
-	fmt.Println("dbu", dbu)
+
 	ur := &models.UserResponse{}
 	err := ur.FromDBModel(dbu)
 	if err != nil {
@@ -133,6 +133,7 @@ func (a *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.Use
 	if err != nil {
 		return nil, err
 	}
+
 	ur.AssignTokenPair(tp)
 	return ur, nil
 }
@@ -150,7 +151,6 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	if err != nil {
 		return nil, err
 	}
-
 	return ur, nil
 }
 
@@ -174,6 +174,7 @@ func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, 
 
 func (a *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
 	ctx := context.Background()
+	fmt.Println(user)
 	dbUser, err := a.repository.Load(user)
 	if err != nil {
 		return nil, err
