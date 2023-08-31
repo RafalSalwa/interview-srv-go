@@ -50,6 +50,7 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 	um := &models.UserDBModel{}
 	um.Email = req.Email
 	um.Username = req.Email
+
 	dbUser, _ := authServer.authService.Load(um)
 	if dbUser != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
@@ -76,7 +77,10 @@ func (authServer *AuthServer) GetVerificationKey(ctx context.Context, in *pb.Ver
 	ur, err := authServer.authService.GetVerificationKey(ctx, in.Email)
 	if err != nil {
 		authServer.logger.Error().Err(err).Msg("rpc:service:getkey")
-		return nil, err
+		if err.Error() == "record not found" {
+			return nil, status.Errorf(codes.NotFound, "user with such credentials was not found")
+		}
+		return nil, status.Errorf(codes.NotFound, err.Error())
 	}
 	return &pb.VerificationCodeResponse{Code: ur.VerificationCode}, nil
 }

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
@@ -103,15 +102,17 @@ func (a authHandler) GetVerificationCode() HandlerFunc {
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
+
 		user, err := a.cqrs.Queries.FetchUser.Handle(ctx, query.FetchUser{User: signIn})
 		if err != nil {
 			a.logger.Error().Err(err).Msg("gRPC:VerificationCode:GetUser")
 		}
-		fmt.Println("user GRPC", user)
+
 		if user.Id == 0 {
 			responses.RespondNotFound(w)
 			return
 		}
+
 		uVerification, err := a.cqrs.Queries.VerificationCode.Handle(ctx, query.VerificationCode{Email: signIn.Email})
 		if err != nil {
 			a.logger.Error().Err(err).Msg("gRPC:VerificationCode")
@@ -120,13 +121,16 @@ func (a authHandler) GetVerificationCode() HandlerFunc {
 					responses.RespondNotFound(w)
 					return
 				}
+
 				if e.Code() == grpc_codes.AlreadyExists {
 					responses.RespondConflict(w, "user already activated")
 					return
 				}
+
 				responses.RespondBadRequest(w, e.Message())
 				return
 			}
+
 			responses.RespondInternalServerError(w)
 			return
 		}
