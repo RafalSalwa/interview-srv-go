@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
-	amqpHandlers "github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/internal/handlers"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
+	amqpHandlers "github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/internal/handlers"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	"github.com/streadway/amqp"
 )
 
 func failOnError(err error, msg string) {
@@ -67,10 +68,12 @@ func NewContextCancellableByOsSignals(parent context.Context) context.Context {
 			fmt.Println("Received Interrupt signal")
 			cancel()
 		case syscall.SIGTERM:
-			fmt.Println("Received sigterm signal")
+			fmt.Println("Received SIGTERM signal")
+			cancel()
+		case syscall.SIGINT:
+			fmt.Println("Received SIGINT signal")
 			cancel()
 		}
 	}()
-
 	return newCtx
 }

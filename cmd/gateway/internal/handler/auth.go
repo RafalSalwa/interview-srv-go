@@ -64,6 +64,7 @@ func (a authHandler) SignUpUser() HandlerFunc {
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
+
 		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: signUpReq})
 		if err != nil {
 			span.RecordError(err)

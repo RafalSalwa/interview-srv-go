@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/streadway/amqp"
 )
 
@@ -42,14 +43,23 @@ func (c *IntrvClient) HandleChannel(ctx context.Context, channelName string, con
 func (c *IntrvClient) handleEvent(data []byte) (isSuccess bool) {
 	// create new event and deserialize it
 	event := Event{}
+
 	_ = json.Unmarshal(data, &event)
 
 	if c.debug {
+		str1 := string(data[:])
+		fmt.Println("String =", str1)
 		fmt.Printf("processing event %s\n %#v\n", event.Name, event)
 	}
 
 	if handler, ok := c.handlers[event.Name]; ok {
-		_ = handler(event)
+		if err := handler(event); err != nil {
+			fmt.Printf("handler error for event %s\n %#v\n", event.Name, err)
+			return false
+		}
+	} else {
+		fmt.Printf("No handler for event %s\n %#v\n", event.Name, event)
+		return true
 	}
 	// we have no handler for that type of event
 	return true

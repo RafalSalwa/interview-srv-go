@@ -2,6 +2,7 @@ package event
 
 import (
 	"encoding/json"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/streadway/amqp"
 )

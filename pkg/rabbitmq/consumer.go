@@ -36,7 +36,7 @@ func (l *Consumer) HandleSingleMessage(ctx context.Context) error {
 				if l.handler(d.Body) {
 					return d.Ack(false)
 				} else {
-					return d.Reject(l.requeueOnError)
+					return d.Reject(true)
 				}
 			}
 		}

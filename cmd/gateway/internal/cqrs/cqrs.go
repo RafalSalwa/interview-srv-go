@@ -2,6 +2,7 @@ package cqrs
 
 import (
 	"context"
+	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
@@ -10,6 +11,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 )
 
 type Application struct {
@@ -36,16 +38,32 @@ func NewCQRSService(ctx context.Context, cfg *config.Config) (*Application, erro
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
 		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                10 * time.Second,
+			Timeout:             time.Second,
+			PermitWithoutStream: false,
+		}),
 	)
 	if err != nil {
 		return nil, err
 	}
 	authClient := intrvproto.NewAuthServiceClient(conn)
-	conn, err = grpc.Dial(cfg.Grpc.UserServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	conn, err = grpc.Dial(cfg.Grpc.UserServicePort,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                10 * time.Second,
+			Timeout:             time.Second,
+			PermitWithoutStream: false,
+		}),
+	)
 	if err != nil {
 		return nil, err
 	}
 	userClient := intrvproto.NewUserServiceClient(conn)
+
 	return newApplication(ctx, authClient, userClient), nil
 }
 
