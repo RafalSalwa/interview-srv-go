@@ -16,12 +16,12 @@ type UserDBModel struct {
 	Email            string     `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
 	Phone            string     `gorm:"column:phone_no;type:varchar(11)"`
 	VerificationCode string     `gorm:"column:verification_code;type:varchar(12)"`
-	Verified         bool       `gorm:"column:is_verified;default:false"`
-	Active           bool       `gorm:"column:is_active;default:false"`
 	CreatedAt        time.Time  `gorm:"column:created_at"`
 	UpdatedAt        *time.Time `gorm:"column:updated_at"`
 	LastLogin        *time.Time `gorm:"column:last_login"`
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
+	Verified         bool       `gorm:"column:is_verified;default:false"`
+	Active           bool       `gorm:"column:is_active;default:false"`
 }
 
 type UserMongoModel struct {
@@ -50,7 +50,6 @@ func (UserDBModel) TableName() string {
 	return "user"
 }
 
-// swagger:model Users
 type Users struct {
 	Users []UserDBModel `json:"users"`
 }
@@ -61,13 +60,13 @@ type UserRequest struct {
 	Email    string `json:"email" `
 }
 
-type CreateUserRequest struct {
+type SignUpUserRequest struct {
 	Email           string `json:"email" validate:"required,email"`
 	Password        string `json:"password" validate:"required,min=8,max=16"`
 	PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,max=16"`
 }
 
-type LoginUserRequest struct {
+type SignInUserRequest struct {
 	Username string `json:"username" validate:"required_without=Email"`
 	Email    string `json:"email" validate:"required_without=Username,omitempty,email"`
 	Password string `json:"password" validate:"required"`
@@ -95,10 +94,10 @@ type UserResponse struct {
 	Active           bool      `json:"is_active,omitempty"`
 	Token            string    `json:"token,omitempty"`
 	RefreshToken     string    `json:"refresh_token,omitempty"`
-	CreatedAt        time.Time `json:"created_at, omitempty"`
-	UpdatedAt        time.Time `json:"updated_at, omitempty"`
-	LastLogin        time.Time `json:"last_login, omitempty"`
-	DeletedAt        time.Time `json:"deleted_at, omitempty"`
+	CreatedAt        time.Time `json:"created_at,omitempty"`
+	UpdatedAt        time.Time `json:"updated_at,omitempty"`
+	LastLogin        time.Time `json:"last_login,omitempty"`
+	DeletedAt        time.Time `json:"deleted_at,omitempty"`
 }
 
 type UpdateUserRequest struct {
@@ -118,15 +117,9 @@ type ChangePasswordRequest struct {
 type User struct {
 	ID int64
 	// Creates a primary key for UserID.
-	UserID int64 `gorm:"primary_key"`
-	// Creates constrains for Username
-	// -> 15 character max limit and not be passed a the blank
-	Username string `sql:"type:VARCHAR(15);not null"`
-	// Creates constraints for FirstName
-	// -> 100 character max limit, Not be passed a the blank, Column name will not be FName, will be FirstName
-	FName string `sql:"size:100;not null" gorm:"column:FirstName"`
-	// Creates consstraints for LastName
-	// -> Unique index/constraint, Not be passed a the blank, Default value is 'Unknown', Column name will not be LName, will be LastName
+	UserID    int64  `gorm:"primary_key"`
+	Username  string `sql:"type:VARCHAR(15);not null"`
+	FName     string `sql:"size:100;not null" gorm:"column:FirstName"`
 	LName     string `sql:"unique;unique_index;not null;DEFAULT:'Unknown'" gorm:"column:LastName"`
 	Count     int    `gorm:"AUTO_INCREMENT"`
 	TempField bool   `sql:"-"` // Ignore a Field

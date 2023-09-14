@@ -11,13 +11,13 @@ import (
 func main() {
 	cfg, err := config.InitConfig()
 	if err != nil {
-		log.Fatal(err) 
+		log.Fatal(err)
 	}
 
 	l := logger.NewConsole(cfg.App.Debug)
 	srv := server.NewServerGRPC(cfg, l)
- 
+
 	if errSrv := srv.Run(); errSrv != nil {
-		l.Error().Err(err).Msg("srv:run") 
+		l.Error().Err(err).Msg("srv:run")
 	}
-} 
+}

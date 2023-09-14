@@ -24,14 +24,14 @@ type UserServiceImpl struct {
 }
 
 type UserService interface {
-	GetUser(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error)
+	GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error)
 	GetById(ctx context.Context, id int64) (*models.UserDBModel, error)
-	UsernameInUse(user *models.CreateUserRequest) bool
+	UsernameInUse(user *models.SignUpUserRequest) bool
 	StoreVerificationData(ctx context.Context, vCode string) error
 	UpdateUser(user *models.UpdateUserRequest) (err error)
-	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
+	LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(userid int64, password string) error
-	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
+	CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error)
 }
 
 func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger) UserServiceImpl {
@@ -68,7 +68,7 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
-func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error) {
+func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
 	userDbModel := &models.UserDBModel{}
 	userDbModel.Username = user.Username
 	userDbModel.Email = user.Email
@@ -88,7 +88,7 @@ func (s *UserServiceImpl) GetById(ctx context.Context, id int64) (*models.UserDB
 	return user, nil
 }
 
-func (s *UserServiceImpl) UsernameInUse(user *models.CreateUserRequest) bool {
+func (s *UserServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
 	//TODO implement me
 	panic("implement me")
 }
@@ -106,7 +106,7 @@ func (s *UserServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error)
 	panic("implement me")
 }
 
-func (s *UserServiceImpl) LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error) {
+func (s *UserServiceImpl) LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -119,7 +119,7 @@ func (s *UserServiceImpl) UpdateUserPassword(userid int64, password string) erro
 	return nil
 }
 
-func (s *UserServiceImpl) CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error) {
+func (s *UserServiceImpl) CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error) {
 
 	panic("implement me")
 }

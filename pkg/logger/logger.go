@@ -146,3 +146,7 @@ func (l *Logger) Printf(format string, v ...interface{}) {
 func (l *Logger) Ctx(ctx context.Context) *Logger {
 	return &Logger{logger: zerolog.Ctx(ctx)}
 }
+
+func (l *Logger) Println(v ...interface{}) {
+	l.Printf("%+v\n", v...)
+}

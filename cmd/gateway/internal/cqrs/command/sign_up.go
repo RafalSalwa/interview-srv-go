@@ -9,7 +9,7 @@ import (
 )
 
 type SignUpUser struct {
-	User models.CreateUserRequest
+	User models.SignUpUserRequest
 }
 
 type SignUpHandler struct {

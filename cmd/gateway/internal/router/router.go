@@ -2,13 +2,11 @@ package router
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	gatewayConfig "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/docs"
@@ -18,19 +16,6 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
-type AppRouter struct {
-	Router  *mux.Router
-	Handler http.Handler
-	Logger  *logger.Logger
-}
-
-type AppRoute struct {
-	Path    string   `json:"path"`
-	Methods []string `json:"methods"`
-}
-
-var appRoutes []AppRoute
-
 func NewApiRouter(cfg *gatewayConfig.Config, l *logger.Logger) *mux.Router {
 	router := mux.NewRouter()
 
@@ -39,9 +24,9 @@ func NewApiRouter(cfg *gatewayConfig.Config, l *logger.Logger) *mux.Router {
 	router.Use(middlewares.CorsMiddleware())
 	router.Use(middlewares.RequestLogMiddleware(l))
 
-	setupIndexPageRoutesInfo(router)
 	setupHealthCheck(router)
 	setupSwagger(router)
+
 	if cfg.App.Debug {
 		setupDebug(router)
 	}
@@ -53,17 +38,6 @@ func setupHealthCheck(router *mux.Router) {
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("Up"))
-	}).Methods(http.MethodGet)
-}
-
-func setupIndexPageRoutesInfo(router *mux.Router) {
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		js, err := json.MarshalIndent(appRoutes, "", "    ")
-		if err != nil {
-			responses.RespondInternalServerError(w)
-		}
-
-		responses.Respond(w, http.StatusOK, js)
 	}).Methods(http.MethodGet)
 }
 

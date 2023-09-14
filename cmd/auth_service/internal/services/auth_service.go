@@ -29,8 +29,8 @@ type AuthServiceImpl struct {
 }
 
 type AuthService interface {
-	SignUpUser(ctx context.Context, request *models.CreateUserRequest) (*models.UserResponse, error)
-	SignInUser(request *models.LoginUserRequest) (*models.UserResponse, error)
+	SignUpUser(ctx context.Context, request *models.SignUpUserRequest) (*models.UserResponse, error)
+	SignInUser(request *models.SignInUserRequest) (*models.UserResponse, error)
 	GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error)
 	Verify(ctx context.Context, vCode string) error
 	Load(request *models.UserDBModel) (*models.UserResponse, error)
@@ -72,7 +72,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
-func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUserRequest) (*models.UserResponse, error) {
+func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUserRequest) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
 	defer span.End()
 
@@ -116,7 +116,7 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.CreateUser
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) SignInUser(user *models.LoginUserRequest) (*models.UserResponse, error) {
+func (a *AuthServiceImpl) SignInUser(user *models.SignInUserRequest) (*models.UserResponse, error) {
 	q := query.Use(a.repository.GetConnection()).UserDBModel
 	dbu, errDB := q.FilterWithUsernameOrEmail(user.Username, user.Email)
 	if errDB != nil {

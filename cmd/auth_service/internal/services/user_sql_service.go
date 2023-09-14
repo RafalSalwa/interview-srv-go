@@ -20,12 +20,12 @@ type SqlServiceImpl struct {
 type UserSqlService interface {
 	GetById(id int) (user *models.UserDBResponse, err error)
 	GetByCode(code string) (user *models.UserDBModel, err error)
-	UsernameInUse(user *models.CreateUserRequest) bool
+	UsernameInUse(user *models.SignUpUserRequest) bool
 	StoreVerificationData(user *models.UserDBModel) bool
 	UpdateUser(user *models.UpdateUserRequest) (err error)
-	LoginUser(user *models.LoginUserRequest) (*models.UserResponse, error)
+	LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(user *models.UpdateUserRequest) (err error)
-	CreateUser(user *models.CreateUserRequest) (*models.UserResponse, error)
+	CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error)
 }
 
 func NewMySqlService(db *mySql.DB, l *logger.Logger) *SqlServiceImpl {
@@ -74,7 +74,7 @@ func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error
 	return user, nil
 }
 
-func (s *SqlServiceImpl) UsernameInUse(user *models.CreateUserRequest) bool {
+func (s *SqlServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
 	dbUser := &models.UserDBResponse{}
 	row := s.db.QueryRow("SELECT id FROM `user` WHERE email = ?", user.Email)
 	err := row.Scan(&dbUser.Id)
@@ -114,7 +114,7 @@ func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) 
 	return nil
 }
 
-func (s *SqlServiceImpl) LoginUser(u *models.LoginUserRequest) (*models.UserResponse, error) {
+func (s *SqlServiceImpl) LoginUser(u *models.SignInUserRequest) (*models.UserResponse, error) {
 	user := models.UserResponse{}
 
 	row := s.db.QueryRow("SELECT id,username,first_name,last_name FROM `user` WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
@@ -157,7 +157,7 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 	return nil
 }
 
-func (s *SqlServiceImpl) CreateUser(newUserRequest *models.CreateUserRequest) (*models.UserResponse, error) {
+func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*models.UserResponse, error) {
 	if err := password.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm); err != nil {
 		return nil, err
 	}

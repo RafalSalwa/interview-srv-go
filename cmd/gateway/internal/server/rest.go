@@ -30,16 +30,17 @@ type REST struct {
 	cfg         *config.Config
 }
 
-func NewRESTServer(c *config.Config, l *logger.Logger) *REST {
+func NewServer(cfg *config.Config, l *logger.Logger) *REST {
+
 	tlsConf := new(tls.Config)
-	r := apiRouter.NewApiRouter(c, l)
+	r := apiRouter.NewApiRouter(cfg, l)
 
 	s := &http.Server{
-		Addr:         c.Http.Addr,
+		Addr:         cfg.Http.Addr,
 		Handler:      r,
-		ReadTimeout:  c.Http.TimeoutRead,
-		WriteTimeout: c.Http.TimeoutWrite,
-		IdleTimeout:  c.Http.TimeoutIdle,
+		ReadTimeout:  cfg.Http.TimeoutRead,
+		WriteTimeout: cfg.Http.TimeoutWrite,
+		IdleTimeout:  cfg.Http.TimeoutIdle,
 		TLSConfig:    tlsConf,
 	}
 
@@ -47,16 +48,18 @@ func NewRESTServer(c *config.Config, l *logger.Logger) *REST {
 		srv:    s,
 		router: r,
 		log:    l,
-		cfg:    c,
+		cfg:    cfg,
 	}
 }
 
-func (s *REST) Run(ctx context.Context) {
+func (s *REST) ServeHTTP(ctx context.Context) {
 	err := s.SetupCQRS(ctx)
 	if err != nil {
 		s.log.Error().Err(err).Msg("REST:cqrs:setup")
 	}
+
 	s.SetupHandlers()
+
 	err = s.SetupRoutes()
 	if err != nil {
 		s.log.Error().Err(err).Msg("REST:routes:setup")
@@ -105,7 +108,7 @@ func (s *REST) Run(ctx context.Context) {
 
 func (s *REST) SetupHandlers() {
 	s.userHandler = handler.NewUserHandler(s.router, s.cqrs, s.log)
-	s.authHandler = handler.NewAuthHandler(s.router, s.cqrs, s.log)
+	s.authHandler = handler.NewAuthHandler(s.cqrs, s.log)
 }
 
 func (s *REST) SetupRoutes() error {

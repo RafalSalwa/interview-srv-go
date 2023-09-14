@@ -4,8 +4,8 @@ app:
   debug: true
 grpc:
   addr: :8012
-  authServicePort: auth_service:8022
-  userServicePort: user_service:8032
+  authServicePort: 0.0.0.0:8022
+  userServicePort: 0.0.0.0:8032
 http:
   addr: :8011
   development: true
@@ -57,7 +57,7 @@ jaeger:
   enable: true
   serviceName: api_gateway_service
   env: dev
-  Addr: "http://jaeger:14268/api/traces"
+  Addr: "http://0.0.0.0:14268/api/traces"
   logSpans: true
   id: 1
 csrf:

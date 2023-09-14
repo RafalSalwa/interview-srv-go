@@ -78,10 +78,11 @@ func getEnvPath() (string, error) {
 	}
 
 	configPath := ""
-	if strings.Contains(getwd, "gateway") {
+	if strings.HasSuffix(getwd, "gateway") {
 		configPath = fmt.Sprintf("%s/config.%s.yaml", getwd, appEnv)
 	} else {
-		configPath = fmt.Sprintf("%s/cmd/gateway/config/config.%s.yaml", getwd, appEnv)
+		splitted := strings.Split(getwd, "gateway")
+		configPath = fmt.Sprintf("%sgateway/config/config.%s.yaml", splitted[0], appEnv)
 	}
 	return configPath, nil
 }

@@ -74,7 +74,7 @@ func (r *UserAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, 
 	return &user, nil
 }
 
-func (r *UserAdapter) ByLogin(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error) {
+func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
 	var dbUser models.UserDBModel
 
 	r.DB.First(&dbUser, "username = ? OR email = ?", user.Username, user.Email)

@@ -60,7 +60,7 @@ func dcCreateUser(cfg *config.Config) User {
 	pUsername, _ := generator.RandomString(12)
 	email := *pUsername + emailDomain
 
-	newUser := &models.CreateUserRequest{
+	newUser := &models.SignUpUserRequest{
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
