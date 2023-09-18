@@ -14,7 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	l := logger.NewConsole(cfg.App.Debug)
+	l := logger.NewConsole()
 	srv := server.NewServerGRPC(cfg, l)
 
 	if errSrv := srv.Run(); errSrv != nil {

@@ -81,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 	ctx := context.Background()
-	l := logger.NewConsole(cfg.App.Debug)
+	l := logger.NewConsole()
 	workers.NewDaisyChain(cfg)
 	runWorkersInOrder(ctx, cfg, l)
 }

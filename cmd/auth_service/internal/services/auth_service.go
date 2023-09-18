@@ -1,69 +1,40 @@
 package services
 
 import (
-    "context"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-    "github.com/RafalSalwa/interview-app-srv/internal/generator"
-    "github.com/RafalSalwa/interview-app-srv/internal/password"
-    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-    "github.com/RafalSalwa/interview-app-srv/pkg/query"
-    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
-    "go.opentelemetry.io/otel"
+	"context"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/query"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	"go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
 	repository      repository.UserRepository
-	mongoRepo       *repository.Mongo
-	redisRepo       *repository.Redis
 	rabbitPublisher *rabbitmq.Publisher
 	logger          *logger.Logger
 	config          jwt.JWTConfig
 }
 
-type AuthService interface {
-	SignUpUser(ctx context.Context, request *models.SignUpUserRequest) (*models.UserResponse, error)
-	SignInUser(request *models.SignInUserRequest) (*models.UserResponse, error)
-	GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error)
-	Verify(ctx context.Context, vCode string) error
-	Load(request *models.UserDBModel) (*models.UserResponse, error)
-	Find(request *models.UserDBModel) (*models.UserResponse, error)
-	FindUserById(uid int64) (*models.UserDBModel, error)
-}
-
 func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger) AuthService {
-	mongoClient, err := apiMongo.NewClient(ctx, cfg.Mongo)
-	if err != nil {
-		log.Error().Err(err).Msg("grpc:run:mongo")
-	}
-
-	universalRedisClient, err := redisClient.NewUniversalRedisClient(cfg.Redis)
-	if err != nil {
-		log.Error().Err(err).Msg("grpc:run:redis")
-	}
 
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
-		log.Error().Err(err).Msg("grpc:run:rabbitmq")
+		log.Error().Err(errP).Msg("grpc:run:rabbitmq")
 	}
 
-	ormDB, err := sql.NewGormConnection(cfg.MySQL)
-	if err != nil {
-		log.Error().Err(err).Msg("grpc:run:gorm")
+	userRepository, errR := repository.NewUserRepository(ctx, cfg.App.RepositoryType, cfg)
+	if errR != nil {
+		log.Error().Err(errR).Msg("grpc:run:rabbitmq")
 	}
-	userRepository := repository.NewUserAdapter(ormDB)
-	mongoRepo := repository.NewMongoRepository(mongoClient, cfg.Mongo, log)
-	redisRepo := repository.NewRedisRepository(universalRedisClient, log)
 
 	return &AuthServiceImpl{
 		repository:      userRepository,
-		mongoRepo:       mongoRepo,
-		redisRepo:       redisRepo,
 		rabbitPublisher: publisher,
 		logger:          log,
 		config:          cfg.JWTToken,
@@ -97,15 +68,11 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUser
 	if errDB := a.repository.SingUp(ctx, um); errDB != nil {
 		return nil, errDB
 	}
-	if errR := a.redisRepo.PutUser(ctx, *um); errR != nil {
-		return nil, errR
-	}
+
 	if err = a.rabbitPublisher.Publish(ctx, um.AMQP()); err != nil {
 		return nil, err
 	}
-	if err = a.mongoRepo.CreateUser(ctx, um); err != nil {
-		return nil, err
-	}
+
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(um)
 	if err != nil {

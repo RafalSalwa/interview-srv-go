@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-type Redis struct {
+type RedisRepository struct {
 	log         *logger.Logger
 	redisClient redis.UniversalClient
 }
@@ -21,12 +21,12 @@ type RedisAdapter struct {
 	DB *redis.UniversalClient
 }
 
-func NewRedisAdapter(db *redis.UniversalClient) UserRepository {
+func newRedisUserRepository(db *redis.UniversalClient) UserRepository {
 	return &RedisAdapter{DB: db}
 }
 
-func NewRedisRepository(redisClient redis.UniversalClient, log *logger.Logger) *Redis {
-	return &Redis{log: log, redisClient: redisClient}
+func NewRedisRepository(redisClient redis.UniversalClient, log *logger.Logger) *RedisRepository {
+	return &RedisRepository{log: log, redisClient: redisClient}
 }
 
 func (r RedisAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
@@ -69,8 +69,8 @@ func (r RedisAdapter) GetConnection() *gorm.DB {
 	panic("implement me")
 }
 
-func (r Redis) PutUser(ctx context.Context, user models.UserDBModel) error {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-redis").Start(ctx, "Redis PutUser")
+func (r RedisRepository) PutUser(ctx context.Context, user models.UserDBModel) error {
+	ctx, span := otel.GetTracerProvider().Tracer("auth_service-redis").Start(ctx, "RedisRepository PutUser")
 	defer span.End()
 
 	key := strconv.FormatInt(user.Id, 10)

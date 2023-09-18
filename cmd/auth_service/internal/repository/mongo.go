@@ -28,7 +28,7 @@ type MongoAdapter struct {
 	DB *mongo.Client
 }
 
-func NewMongoAdapter(db *mongo.Client) UserRepository {
+func newMongoDBUserRepository(db *mongo.Client) UserRepository {
 	return &MongoAdapter{DB: db}
 }
 

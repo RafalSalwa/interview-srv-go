@@ -15,6 +15,10 @@ type UserAdapter struct {
 	DB *gorm.DB
 }
 
+func newMySQLUserRepository(db *gorm.DB) UserRepository {
+	return &UserAdapter{DB: db}
+}
+
 func NewUserAdapter(db *gorm.DB) UserRepository {
 	return &UserAdapter{DB: db}
 }

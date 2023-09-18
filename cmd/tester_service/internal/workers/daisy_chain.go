@@ -112,6 +112,5 @@ func dcTokenUser(inUser User) User {
 		Password: inUser.Password,
 	}
 	_, _ = authClient.SignInUser(ctx, credentials)
-	fmt.Println(inUser.Username)
 	return inUser
 }
