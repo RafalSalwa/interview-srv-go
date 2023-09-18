@@ -1,22 +1,20 @@
 package services
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"github.com/RafalSalwa/interview-app-srv/pkg/query"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
-	"go.opentelemetry.io/otel"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/internal/generator"
+    "github.com/RafalSalwa/interview-app-srv/internal/password"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "github.com/RafalSalwa/interview-app-srv/pkg/query"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
@@ -174,7 +172,6 @@ func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, 
 
 func (a *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
 	ctx := context.Background()
-	fmt.Println(user)
 	dbUser, err := a.repository.Load(user)
 	if err != nil {
 		return nil, err

@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
+	"gorm.io/gorm"
 )
 
 type Mongo struct {
@@ -19,8 +20,60 @@ type Mongo struct {
 	db  *mongo.Client
 }
 
+type MongoRepository struct {
+	DB *mongo.Client
+}
+
+type MongoAdapter struct {
+	DB *mongo.Client
+}
+
+func NewMongoAdapter(db *mongo.Client) UserRepository {
+	return &MongoAdapter{DB: db}
+}
+
 func NewMongoRepository(db *mongo.Client, cfg apiMongo.Config, log *logger.Logger) *Mongo {
 	return &Mongo{log: log, cfg: cfg, db: db}
+}
+
+func (m MongoAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) GetConnection() *gorm.DB {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (r *Mongo) CreateUser(ctx context.Context, user *models.UserDBModel) error {

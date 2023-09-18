@@ -1,16 +1,14 @@
 package rpc_api
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-	"go.opentelemetry.io/otel"
-	otelcodes "go.opentelemetry.io/otel/codes"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+    "go.opentelemetry.io/otel"
+    otelcodes "go.opentelemetry.io/otel/codes"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
+    "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.SignInUserResponse, error) {
@@ -64,7 +62,6 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		authServer.logger.Error().Err(err).Msg("rpc:service:signup")
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-	fmt.Printf("%#v\n", ur)
 	res := &pb.SignUpUserResponse{
 		Id:                ur.Id,
 		Username:          ur.Username,

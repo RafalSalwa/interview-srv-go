@@ -16,6 +16,5 @@ type UserRepository interface {
 	ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error
 	UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error)
 	FindUserById(uid int64) (*models.UserDBModel, error)
-	BeginTx() *gorm.DB
 	GetConnection() *gorm.DB
 }
