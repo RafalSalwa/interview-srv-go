@@ -1,17 +1,17 @@
 package logger
 
 import (
-	"context"
-	"fmt"
-	"go.opentelemetry.io/otel/trace"
-	"io"
-	"os"
-	"strings"
-	"time"
+    "context"
+    "fmt"
+    "go.opentelemetry.io/otel/trace"
+    "io"
+    "os"
+    "strings"
+    "time"
 
-	"github.com/newrelic/go-agent/v3/newrelic"
+    "github.com/newrelic/go-agent/v3/newrelic"
 
-	"github.com/rs/zerolog"
+    "github.com/rs/zerolog"
 )
 
 type Logger struct {
@@ -24,23 +24,9 @@ type Config struct {
 	DevMode  bool   `mapstructure:"devMode"`
 }
 
-func New(isDebug bool) *Logger {
+func NewConsole() *Logger {
 	logLevel := zerolog.InfoLevel
-	if isDebug {
-		logLevel = zerolog.DebugLevel
-	}
-
-	zerolog.SetGlobalLevel(logLevel)
-	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-
-	return &Logger{logger: &logger}
-}
-
-func NewConsole(isDebug bool) *Logger {
-	logLevel := zerolog.InfoLevel
-	if isDebug {
-		logLevel = zerolog.TraceLevel
-	}
+	
 	zerolog.SetGlobalLevel(logLevel)
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 

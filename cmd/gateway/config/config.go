@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"os"
 	"strings"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/pkg/errors"
@@ -51,28 +51,30 @@ type Grpc struct {
 	UserServicePort string `mapstructure:"userServicePort"`
 }
 
-func InitConfig() (*Config, error) {
+func InitConfig() *Config {
 	cfg := &Config{}
 	path, err := getEnvPath()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	viper.SetConfigType("yaml")
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, errors.Wrap(err, "viper.ReadInConfig")
+		fmt.Println("ReadConfig", err)
+		return nil
 	}
 
 	if err := viper.Unmarshal(cfg); err != nil {
-		return nil, errors.Wrap(err, "viper.Unmarshal")
+		fmt.Println("UnmarshalConfig", err)
+		return nil
 	}
-	return cfg, nil
+	return cfg
 }
 
 func getEnvPath() (string, error) {
 	getwd, err := os.Getwd()
-	appEnv := os.Getenv("APP_ENV")
+	appEnv := getEnv("APP_ENV", "dev")
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
@@ -82,7 +84,14 @@ func getEnvPath() (string, error) {
 		configPath = fmt.Sprintf("%s/config.%s.yaml", getwd, appEnv)
 	} else {
 		splitted := strings.Split(getwd, "gateway")
-		configPath = fmt.Sprintf("%sgateway/config/config.%s.yaml", splitted[0], appEnv)
+		configPath = fmt.Sprintf("%s/cmd/gateway/config/config.%s.yaml", splitted[0], appEnv)
 	}
 	return configPath, nil
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }

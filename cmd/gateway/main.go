@@ -6,16 +6,13 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/server"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/fatih/color"
 	"github.com/pkg/profile"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
-	"unsafe"
 )
 
 const profFlag = "--prof"
@@ -26,13 +23,7 @@ const memProf = "mem"
 const blockingProf = "blocking"
 const traceProf = "trace"
 
-func main1() {
-	u := models.UserDBModel{}
-	fmt.Println(unsafe.Sizeof(u))
-}
-
 func main() {
-
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
@@ -40,12 +31,9 @@ func main() {
 }
 
 func run() error {
-	cfg, err := config.InitConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
+	cfg := config.InitConfig()
 	ctx := context.Background()
-	l := logger.NewConsole(cfg.App.Debug)
+	l := logger.NewConsole()
 
 	checkParams(l)
 

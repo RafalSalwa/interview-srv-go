@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
 cmd = "go build -gcflags \"all=-N -l\" -o gateway ./cmd/gateway/main.go"
-#bin = "./gateway"
-full_bin = "APP_ENV=staging dlv  --continue --accept-multiclient --listen=:4000 --headless=true --api-version=2 --log exec ./gateway"
+bin = "./gateway"
+#full_bin = "APP_ENV=staging dlv  --continue --accept-multiclient --listen=:4000 --headless=true --api-version=2 --log exec ./gateway"
 log = "./tmp/air_errors.log"
 
 include_dir = ["cmd/gateway", "pkg"]
@@ -13,7 +13,7 @@ include_ext = ["go", "yaml", "tpl", "tmpl", "html"]
 exclude_dir = ["assets", "tmp", "vendor", "swagger"]
 follow_symlink = true
 exclude_regex = ["_test\\.go"]
-
+ 
 delay = 100 # ms
 kill_delay = 0 # ms
 stop_on_error = true

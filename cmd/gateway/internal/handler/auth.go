@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
@@ -43,10 +44,8 @@ func (a authHandler) SignUpUser() HandlerFunc {
 		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
 		defer span.End()
 
-		decoder := json.NewDecoder(r.Body)
-
-		if err := decoder.Decode(&req); err != nil {
-			span.RecordError(err)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
 			a.logger.Error().Err(err).Msg("SignUpUser: decode")
 			responses.RespondBadRequest(w, "wrong input parameters")
@@ -60,12 +59,9 @@ func (a authHandler) SignUpUser() HandlerFunc {
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-<<<<<<< Updated upstream
 
-		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: signUpReq})
-=======
 		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: req})
->>>>>>> Stashed changes
+
 		if err != nil {
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
@@ -141,32 +137,35 @@ func (a authHandler) GetVerificationCode() HandlerFunc {
 }
 
 func (a authHandler) SignInUser() HandlerFunc {
+	req := models.SignInUserRequest{}
+	reqValidator := validator.New()
+
+	res := models.UserResponse{}
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
 		defer span.End()
 
 		decoder := json.NewDecoder(r.Body)
-		signIn := models.SignInUserRequest{}
 
-		if err := decoder.Decode(&signIn); err != nil {
+		if err := decoder.Decode(&req); err != nil {
 			a.logger.Error().Err(err).Msg("SignInUser: decode")
 			responses.RespondBadRequest(w, "wrong parameters")
 			return
 		}
 
-		validate := validator.New()
-		if err := validate.Struct(signIn); err != nil {
+		if err := reqValidator.Struct(req); err != nil {
 			a.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
+		var errQuery error
+		res, errQuery = a.cqrs.Queries.SignIn.Handle(ctx, query.SignInUser{User: req})
 
-		u, err := a.cqrs.Queries.SignIn.Handle(ctx, query.SignInUser{User: signIn})
-		if err != nil {
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("gRPC:SignIn")
-			if e, ok := status.FromError(err); ok {
+		if errQuery != nil {
+			span.RecordError(errQuery)
+			span.SetStatus(codes.Error, errQuery.Error())
+			a.logger.Error().Err(errQuery).Msg("gRPC:SignIn")
+			if e, ok := status.FromError(errQuery); ok {
 				if e.Code() == grpc_codes.NotFound {
 					responses.RespondNotFound(w)
 					return
@@ -177,17 +176,20 @@ func (a authHandler) SignInUser() HandlerFunc {
 			responses.RespondInternalServerError(w)
 			return
 		}
-		responses.NewUserResponse(&u, w)
+		responses.NewUserResponse(&res, w)
 	}
 }
 
 func (a authHandler) Verify() HandlerFunc {
+	var req string
 	return func(w http.ResponseWriter, r *http.Request) {
-		vCode := mux.Vars(r)["code"]
-		if vCode == "" {
+		req = mux.Vars(r)["code"]
+		if req == "" {
 			responses.RespondBadRequest(w, "code param is missing")
 		}
-		err := a.cqrs.Commands.Verify.Handle(r.Context(), command.VerifyCode{VerificationCode: vCode})
+
+		err := a.cqrs.Commands.Verify.Handle(r.Context(), command.VerifyCode{VerificationCode: req})
+
 		if err != nil {
 			a.logger.Error().Err(err).Msg("gRPC:Verify")
 			if e, ok := status.FromError(err); ok {
