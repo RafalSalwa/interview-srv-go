@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"go.opentelemetry.io/otel"
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"time"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"gorm.io/gorm"
 )
@@ -63,7 +63,7 @@ func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserReques
 	var dbUser models.UserDBModel
 
 	r.DB.First(&dbUser, "username = ? OR email = ?", user.Username, user.Email)
-	if password.CheckPasswordHash(user.Password, dbUser.Password) {
+	if hashing.CheckPasswordHash(user.Password, dbUser.Password) {
 		return &dbUser, nil
 	}
 	return nil, nil

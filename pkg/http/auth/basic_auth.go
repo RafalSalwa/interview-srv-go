@@ -1,11 +1,10 @@
 package auth
 
 import (
-	"crypto/sha256"
-	"crypto/subtle"
-	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
-	"net/http"
-	"os"
+    "crypto/sha256"
+    "crypto/subtle"
+    "github.com/RafalSalwa/interview-app-srv/pkg/responses"
+    "net/http"
 )
 
 type basicAuth struct {
@@ -16,9 +15,8 @@ type basicAuth struct {
 func (a *basicAuth) Middleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
-		authUsername := os.Getenv("AUTH_USERNAME")
-		authPassword := os.Getenv("AUTH_PASSWORD")
-
+		authUsername := a.username
+		authPassword := a.password
 		if ok {
 			usernameHash := sha256.Sum256([]byte(username))
 			passwordHash := sha256.Sum256([]byte(password))

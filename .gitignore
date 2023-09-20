@@ -50,3 +50,11 @@ go.work
 .vscode
 .DS_Store
 .swagger
+/gateway
+/main.go
+/server
+/tester_service
+/user_service
+/auth_service
+/client
+/consumer_service

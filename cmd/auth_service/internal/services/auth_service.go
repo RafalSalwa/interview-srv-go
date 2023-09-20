@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
@@ -30,7 +30,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 
 	userRepository, errR := repository.NewUserRepository(ctx, cfg.App.RepositoryType, cfg)
 	if errR != nil {
-		log.Error().Err(errR).Msg("grpc:run:rabbitmq")
+		log.Error().Err(errR).Msg("auth:service:repository")
 	}
 
 	return &AuthServiceImpl{
@@ -44,22 +44,18 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUserRequest) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
 	defer span.End()
-
-	if err := password.Validate(cur.Password, cur.PasswordConfirm); err != nil {
+	if err := hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
-
 	um := &models.UserDBModel{}
 	if err := um.FromCreateUserReq(cur); err != nil {
 		return nil, err
 	}
-
 	vcode, err := generator.RandomString(12)
 	if err != nil {
 		return nil, err
 	}
-
-	um.Password, err = password.HashPassword(um.Password)
+	um.Password, err = hashing.Argon2ID(um.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +64,9 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUser
 	if errDB := a.repository.SingUp(ctx, um); errDB != nil {
 		return nil, errDB
 	}
-
 	if err = a.rabbitPublisher.Publish(ctx, um.AMQP()); err != nil {
 		return nil, err
 	}
-
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(um)
 	if err != nil {
