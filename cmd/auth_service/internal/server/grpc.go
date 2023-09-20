@@ -1,6 +1,9 @@
 package server
 
 import (
+	"net"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rpc_api"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
 	grpcconfig "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
@@ -14,13 +17,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
-	"net"
-	"time"
 )
 
 const (
 	maxConnectionIdle = 5
-	gRPCTimeout       = 15
+	gRPCTimeout       = 1
 	maxConnectionAge  = 5
 	gRPCTime          = 10
 )

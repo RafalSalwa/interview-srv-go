@@ -8,20 +8,69 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.opentelemetry.io/otel"
 	otelcodes "go.opentelemetry.io/otel/codes"
+	"gorm.io/gorm"
 	"strconv"
 )
 
-type Redis struct {
+type RedisRepository struct {
 	log         *logger.Logger
 	redisClient redis.UniversalClient
 }
 
-func NewRedisRepository(redisClient redis.UniversalClient, log *logger.Logger) *Redis {
-	return &Redis{log: log, redisClient: redisClient}
+type RedisAdapter struct {
+	DB *redis.UniversalClient
 }
 
-func (r Redis) PutUser(ctx context.Context, user models.UserDBModel) error {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-redis").Start(ctx, "Redis PutUser")
+func newRedisUserRepository(db *redis.UniversalClient) UserRepository {
+	return &RedisAdapter{DB: db}
+}
+
+func NewRedisRepository(redisClient redis.UniversalClient, log *logger.Logger) *RedisRepository {
+	return &RedisRepository{log: log, redisClient: redisClient}
+}
+
+func (r RedisAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) GetConnection() *gorm.DB {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisRepository) PutUser(ctx context.Context, user models.UserDBModel) error {
+	ctx, span := otel.GetTracerProvider().Tracer("auth_service-redis").Start(ctx, "RedisRepository PutUser")
 	defer span.End()
 
 	key := strconv.FormatInt(user.Id, 10)

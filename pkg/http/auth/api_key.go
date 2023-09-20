@@ -1,17 +1,15 @@
 package auth
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	simpleHandler "github.com/RafalSalwa/interview-app-srv/pkg/simple_handler"
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 	"net/http"
 )
 
 type apiKeyAuth struct {
-	h      simpleHandler.HandlerFunc
 	apiKey string
 }
 
-func (a *apiKeyAuth) middleware(h simpleHandler.HandlerFunc) http.HandlerFunc {
+func (a *apiKeyAuth) Middleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		key := r.Header.Get("x-api-key")
 		if key == "" {
@@ -26,9 +24,8 @@ func (a *apiKeyAuth) middleware(h simpleHandler.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func newApiKeyMiddleware(h simpleHandler.HandlerFunc, apiKey string) *apiKeyAuth {
+func newApiKeyMiddleware(apiKey string) *apiKeyAuth {
 	return &apiKeyAuth{
-		h:      h,
 		apiKey: apiKey,
 	}
 }

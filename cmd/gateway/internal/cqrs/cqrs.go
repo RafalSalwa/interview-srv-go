@@ -1,15 +1,11 @@
 package cqrs
 
 import (
-	"context"
-
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/rpc_client"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Application struct {
@@ -31,25 +27,21 @@ type Queries struct {
 	FetchUser        query.FetchUserHandler
 }
 
-func NewCQRSService(ctx context.Context, cfg *config.Config) (*Application, error) {
-	conn, err := grpc.Dial(cfg.Grpc.AuthServicePort,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()),
-	)
+func NewCQRSService(cfg config.Grpc) (*Application, error) {
+	authClient, err := rpc_client.NewAuthClient(cfg.AuthServicePort)
 	if err != nil {
 		return nil, err
 	}
-	authClient := intrvproto.NewAuthServiceClient(conn)
-	conn, err = grpc.Dial(cfg.Grpc.UserServicePort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	userClient, err := rpc_client.NewUserClient(cfg.UserServicePort)
 	if err != nil {
 		return nil, err
 	}
-	userClient := intrvproto.NewUserServiceClient(conn)
-	return newApplication(ctx, authClient, userClient), nil
+
+	return newApplication(authClient, userClient), nil
 }
 
-func newApplication(ctx context.Context, authClient intrvproto.AuthServiceClient, userClient intrvproto.UserServiceClient) *Application {
+func newApplication(authClient intrvproto.AuthServiceClient, userClient intrvproto.UserServiceClient) *Application {
 
 	return &Application{
 		Commands: Commands{

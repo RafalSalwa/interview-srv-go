@@ -11,7 +11,7 @@ type SignInHandler struct {
 	authClient intrvproto.AuthServiceClient
 }
 type SignInUser struct {
-	User models.LoginUserRequest
+	User models.SignInUserRequest
 }
 
 func NewSignInHandler(authClient intrvproto.AuthServiceClient) SignInHandler {

@@ -11,7 +11,7 @@ type FetchUserHandler struct {
 	userClient intrvproto.UserServiceClient
 }
 type FetchUser struct {
-	User models.LoginUserRequest
+	User models.SignInUserRequest
 }
 
 func NewFetchUserHandler(userClient intrvproto.UserServiceClient) FetchUserHandler {

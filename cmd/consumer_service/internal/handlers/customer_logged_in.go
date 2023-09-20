@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -21,6 +22,10 @@ type CustomerLoggedInEvent struct {
 
 func WrapHandleCustomerLoggedIn(event rabbitmq.Event) error {
 	var data CustomerLoggedInEvent
+	if event.Content == "" {
+		fmt.Println("Empty content, skipping")
+		return nil
+	}
 	err := json.Unmarshal([]byte(event.Content), &data)
 	if err != nil {
 		return err

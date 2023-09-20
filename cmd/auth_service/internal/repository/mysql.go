@@ -15,6 +15,14 @@ type UserAdapter struct {
 	DB *gorm.DB
 }
 
+func newMySQLUserRepository(db *gorm.DB) UserRepository {
+	return &UserAdapter{DB: db}
+}
+
+func NewUserAdapter(db *gorm.DB) UserRepository {
+	return &UserAdapter{DB: db}
+}
+
 func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
 	if err := r.DB.Where(&user).First(&user).Error; err != nil {
 		return nil, err
@@ -45,17 +53,13 @@ func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) erro
 	return nil
 }
 
-func NewUserAdapter(db *gorm.DB) UserRepository {
-	return &UserAdapter{DB: db}
-}
-
 func (r *UserAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
 	var user models.UserDBModel
 	r.DB.First(&user, "id = ?", id)
 	return &user, nil
 }
 
-func (r *UserAdapter) ByLogin(ctx context.Context, user *models.LoginUserRequest) (*models.UserDBModel, error) {
+func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
 	var dbUser models.UserDBModel
 
 	r.DB.First(&dbUser, "username = ? OR email = ?", user.Username, user.Email)
@@ -71,9 +75,7 @@ func (r *UserAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel
 	u.LastLogin = &now
 	return u, nil
 }
-func (r *UserAdapter) BeginTx() *gorm.DB {
-	return r.DB.Begin().Begin()
-}
+
 func (r *UserAdapter) GetConnection() *gorm.DB {
 	return r.DB
 }

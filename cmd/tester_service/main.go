@@ -81,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 	ctx := context.Background()
-	l := logger.NewConsole(cfg.App.Debug)
+	l := logger.NewConsole()
 	workers.NewDaisyChain(cfg)
 	runWorkersInOrder(ctx, cfg, l)
 }
@@ -92,7 +92,7 @@ func createUser(cfg *config.Config, created chan User, failed chan User) {
 	pUsername, _ := generator.RandomString(12)
 	email := *pUsername + emailDomain
 
-	newUser := &models.CreateUserRequest{
+	newUser := &models.SignUpUserRequest{
 		Email:           email,
 		Password:        password,
 		PasswordConfirm: password,
@@ -189,7 +189,7 @@ func tokenUser(cfg *config.Config, activated chan User, failed chan User) {
 
 	select {
 	case user := <-activated:
-		credentials := &models.LoginUserRequest{
+		credentials := &models.SignInUserRequest{
 			Username: user.Username,
 			Password: user.Password,
 		}

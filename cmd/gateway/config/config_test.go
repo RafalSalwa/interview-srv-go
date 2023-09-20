@@ -2,10 +2,12 @@ package config
 
 import (
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
 func TestInitConfig(t *testing.T) {
+	os.Setenv("APP_ENV", "staging")
 	path, err := getEnvPath()
 	assert.NoError(t, err)
 	assert.NotEmpty(t, path)

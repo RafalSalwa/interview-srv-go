@@ -20,7 +20,7 @@ func (r *UserResponse) FromDBResponse(user *UserDBResponse) error {
 	return nil
 }
 
-func (m *UserDBModel) FromCreateUserReq(cur *CreateUserRequest) error {
+func (m *UserDBModel) FromCreateUserReq(cur *SignUpUserRequest) error {
 	err := copier.Copy(m, &cur)
 	m.Username = cur.Email
 	if err != nil {
@@ -86,7 +86,7 @@ func (r *UserDBResponse) FromProtoUserDetails(pw *intrvproto.UserDetails) error 
 	}
 	return nil
 }
-func (r CreateUserRequest) ToProto() *intrvproto.SignUpUserInput {
+func (r SignUpUserRequest) ToProto() *intrvproto.SignUpUserInput {
 	u := &intrvproto.SignUpUserInput{}
 
 	u.Email = r.Email

@@ -2,9 +2,9 @@ package auth
 
 import (
 	"errors"
+	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
 	"net/http"
 
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	apiHandler "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
 )
 
@@ -26,18 +26,18 @@ var types = map[string]interface{}{
 	"bearer_token": bearerToken,
 }
 
-func NewAuthMethod(h apiHandler.AuthHandler, cfg *config.Config) (IAuthType, error) {
-	val, ok := types[cfg.Auth.AuthMethod]
+func NewAuthMethod(h apiHandler.AuthHandler, cfg *auth.Auth) (IAuthType, error) {
+	val, ok := types[cfg.AuthMethod]
 	if !ok {
 		return nil, errors.New("wrong auth type")
 	}
 	switch val {
 	case apiKey:
-		return newApiKeyMiddleware(h, cfg.Auth.APIKey), nil
+		return newApiKeyMiddleware(h, cfg.APIKey), nil
 	case basic:
-		return newBasicAuthMiddleware(h, cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password), nil
+		return newBasicAuthMiddleware(h, cfg.BasicAuth.Username, cfg.BasicAuth.Password), nil
 	case bearerToken:
-		return newBearerTokenMiddleware(h, cfg.Auth.BearerToken), nil
+		return newBearerTokenMiddleware(h, cfg.BearerToken), nil
 	}
 	return nil, nil
 }

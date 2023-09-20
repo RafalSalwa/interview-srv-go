@@ -3,6 +3,7 @@ module github.com/RafalSalwa/interview-app-srv
 go 1.20
 
 require (
+	github.com/fatih/color v1.13.0
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -19,6 +20,7 @@ require (
 	github.com/newrelic/go-agent/v3 v3.21.1
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
+	github.com/pkg/profile v1.7.0
 	github.com/rs/zerolog v1.29.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.16.0
@@ -34,6 +36,7 @@ require (
 	go.opentelemetry.io/otel/exporters/jaeger v1.16.0
 	go.opentelemetry.io/otel/sdk v1.16.0
 	go.opentelemetry.io/otel/trace v1.16.0
+	go.uber.org/fx v1.20.0
 	golang.org/x/crypto v0.9.0
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
@@ -49,6 +52,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
@@ -62,6 +66,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -77,9 +82,9 @@ require (
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_golang v1.16.0 // indirect
+	github.com/prometheus/client_golang v1.7.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.42.0 // indirect
+	github.com/prometheus/common v0.10.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
@@ -93,6 +98,10 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/dig v1.17.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect

@@ -2,32 +2,42 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
+	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
+	"github.com/RafalSalwa/interview-app-srv/pkg/http/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
+	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 type UserHandler interface {
 	GetUserById() HandlerFunc
 	PasswordChange() HandlerFunc
 	ValidateCode() HandlerFunc
+	RegisterRoutes(r *mux.Router, cfg auth.JWTConfig)
 }
 
 type userHandler struct {
-	router *mux.Router
 	cqrs   *cqrs.Application
 	logger *logger.Logger
 }
 
-func NewUserHandler(r *mux.Router, cqrs *cqrs.Application, l *logger.Logger) UserHandler {
-	return userHandler{r, cqrs, l}
+func (uh userHandler) RegisterRoutes(r *mux.Router, cfg auth.JWTConfig) {
+	s := r.PathPrefix("/user").Subrouter()
+	s.Use(middlewares.ValidateJWTAccessToken(cfg))
+
+	s.Methods(http.MethodGet).Path("").HandlerFunc(uh.GetUserById())
+	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(uh.PasswordChange())
+	s.Methods(http.MethodPost).Path("/validate/{code}").HandlerFunc(uh.ValidateCode())
+}
+
+func NewUserHandler(cqrs *cqrs.Application, l *logger.Logger) UserHandler {
+	return userHandler{cqrs, l}
 }
 
 func (uh userHandler) GetUserById() HandlerFunc {
