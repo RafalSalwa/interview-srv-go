@@ -1,9 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/server"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/fatih/color"
@@ -32,18 +34,34 @@ func main() {
 
 func run() error {
 	cfg := config.InitConfig()
-	ctx := context.Background()
 	l := logger.NewConsole()
 
 	checkParams(l)
 
-	srv := server.NewServer(cfg, l)
-	srv.ServeHTTP(ctx)
+	service, err := cqrs.NewCQRSService(cfg.Grpc)
+	if err != nil {
+		return err
+	}
+
+	r := router.NewHTTPRouter(l)
+
+	authHandler := handler.NewAuthHandler(service, l)
+	err = authHandler.RegisterRoutes(r, cfg.Auth)
+	if err != nil {
+		return err
+	}
+
+	userHandler := handler.NewUserHandler(service, l)
+	userHandler.RegisterRoutes(r, cfg.Auth.JWTToken)
+
+	srv := server.NewServer(cfg, r, l)
+
+	srv.ServeHTTP()
 
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 	<-sigint
-
+	srv.Shutdown()
 	return nil
 }
 

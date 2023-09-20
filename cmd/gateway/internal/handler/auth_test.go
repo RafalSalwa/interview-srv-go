@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
@@ -20,13 +19,10 @@ import (
 
 func TestSignUpUser(t *testing.T) {
 	os.Setenv("APP_ENV", "staging")
-	cfg, err := config.InitConfig()
-	if err != nil {
-		fmt.Println("err:", err)
-	}
-	ctx := context.Background()
-	service, _ := cqrs.NewCQRSService(ctx, cfg)
-	l := logger.NewConsole(cfg.App.Debug)
+	cfg := config.InitConfig()
+
+	service, _ := cqrs.NewCQRSService(cfg.Grpc)
+	l := logger.NewConsole()
 
 	signUpHandler := NewAuthHandler(service, l)
 	handler := http.HandlerFunc(signUpHandler.SignUpUser())
@@ -36,7 +32,7 @@ func TestSignUpUser(t *testing.T) {
 		PasswordConfirm: "VeryG00dPass!",
 	}
 	var buf bytes.Buffer
-	err = json.NewEncoder(&buf).Encode(req)
+	err := json.NewEncoder(&buf).Encode(req)
 	assert.NoError(t, err)
 
 	r := httptest.NewRequest(http.MethodPost, "/auth/signup", &buf)
@@ -56,13 +52,9 @@ func TestSignUpUser(t *testing.T) {
 
 func TestSignInUser(t *testing.T) {
 	os.Setenv("APP_ENV", "staging")
-	cfg, err := config.InitConfig()
-	if err != nil {
-		fmt.Println("err:", err)
-	}
-	ctx := context.Background()
-	service, _ := cqrs.NewCQRSService(ctx, cfg)
-	l := logger.NewConsole(cfg.App.Debug)
+	cfg := config.InitConfig()
+	service, _ := cqrs.NewCQRSService(cfg.Grpc)
+	l := logger.NewConsole()
 
 	authHandler := NewAuthHandler(service, l)
 	handler := http.HandlerFunc(authHandler.SignInUser())
@@ -71,7 +63,7 @@ func TestSignInUser(t *testing.T) {
 		Password: "password",
 	}
 	var buf bytes.Buffer
-	err = json.NewEncoder(&buf).Encode(req)
+	err := json.NewEncoder(&buf).Encode(req)
 	assert.NoError(t, err)
 
 	r := httptest.NewRequest(http.MethodPost, "/auth/signup", &buf)

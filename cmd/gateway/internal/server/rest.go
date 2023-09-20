@@ -5,9 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
-	apiRouter "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/gorilla/mux"
@@ -15,26 +12,17 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
-type REST struct {
-	srv         *http.Server
-	userHandler handler.UserHandler
-	authHandler handler.AuthHandler
-	router      *mux.Router
-	cqrs        *cqrs.Application
-	log         *logger.Logger
-	cfg         *config.Config
+type Server struct {
+	srv *http.Server
+	log *logger.Logger
+	cfg *config.Config
 }
 
-func NewServer(cfg *config.Config, l *logger.Logger) *REST {
+func NewServer(cfg *config.Config, r *mux.Router, l *logger.Logger) *Server {
 
 	tlsConf := new(tls.Config)
-	r := apiRouter.NewApiRouter(cfg, l)
-
 	s := &http.Server{
 		Addr:         cfg.Http.Addr,
 		Handler:      r,
@@ -44,87 +32,47 @@ func NewServer(cfg *config.Config, l *logger.Logger) *REST {
 		TLSConfig:    tlsConf,
 	}
 
-	return &REST{
-		srv:    s,
-		router: r,
-		log:    l,
-		cfg:    cfg,
+	return &Server{
+		srv: s,
+		log: l,
+		cfg: cfg,
 	}
 }
 
-func (s *REST) ServeHTTP(ctx context.Context) {
-	err := s.SetupCQRS(ctx)
-	if err != nil {
-		s.log.Error().Err(err).Msg("REST:cqrs:setup")
-	}
-
-	s.SetupHandlers()
-
-	err = s.SetupRoutes()
-	if err != nil {
-		s.log.Error().Err(err).Msg("REST:routes:setup")
-	}
-
+func (srv *Server) ServeHTTP() {
 	go func() {
-		s.log.Info().Msgf("Starting REST server on: %v", s.srv.Addr)
-		if s.cfg.App.Env == "dev" {
-			if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				s.log.Error().Err(err).Msg("REST:Listen")
+		srv.log.Info().Msgf("Starting server server on: %v [auth method: %s]", srv.srv.Addr, srv.cfg.Auth.AuthMethod)
+		if srv.cfg.App.Env == "dev" {
+			if err := srv.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				srv.log.Error().Err(err).Msg("server:Listen")
 			}
 		} else {
-			if err := s.srv.ListenAndServeTLS(
+			if err := srv.srv.ListenAndServeTLS(
 				"/etc/ssl/certs/server.crt",
 				"/etc/ssl/private/server.key"); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				s.log.Error().Err(err).Msg("REST:ListenTLS")
+				srv.log.Error().Err(err).Msg("server:ListenTLS")
 			}
 		}
 	}()
 
-	if s.cfg.Jaeger.Enable {
-		tp, err := tracing.NewJaegerTracer(*s.cfg.Jaeger)
+	if srv.cfg.Jaeger.Enable {
+		tp, err := tracing.NewJaegerTracer(*srv.cfg.Jaeger)
 		if err != nil {
-			s.log.Error().Err(err).Msg("REST:jaeger:register")
+			srv.log.Error().Err(err).Msg("server:jaeger:register")
 		}
 		otel.SetTracerProvider(tp)
 		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
+}
 
+func (srv *Server) Shutdown() {
 	closed := make(chan struct{})
-	go func() {
-		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
-		<-sigint
+	ctx, cancel := context.WithTimeout(context.Background(), srv.srv.IdleTimeout)
+	defer cancel()
 
-		ctx, cancel := context.WithTimeout(context.Background(), s.srv.IdleTimeout)
-		defer cancel()
-
-		if err := s.srv.Shutdown(ctx); err != nil {
-			s.log.Error().Err(err).Msg("REST:shutdown")
-		}
-
-		close(closed)
-	}()
-}
-
-func (s *REST) SetupHandlers() {
-	s.userHandler = handler.NewUserHandler(s.router, s.cqrs, s.log)
-	s.authHandler = handler.NewAuthHandler(s.cqrs, s.log)
-}
-
-func (s *REST) SetupRoutes() error {
-	apiRouter.RegisterUserRouter(s.router, s.userHandler, s.cfg.Auth.JWTToken)
-	err := apiRouter.RegisterAuthRouter(s.router, s.authHandler, s.cfg)
-	if err != nil {
-		return err
+	if err := srv.srv.Shutdown(ctx); err != nil {
+		srv.log.Error().Err(err).Msg("server:shutdown")
 	}
-	return nil
-}
 
-func (s *REST) SetupCQRS(ctx context.Context) error {
-	service, err := cqrs.NewCQRSService(ctx, s.cfg)
-	if err != nil {
-		return err
-	}
-	s.cqrs = service
-	return nil
+	close(closed)
 }

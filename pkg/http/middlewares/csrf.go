@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
 	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 	"github.com/gorilla/mux"
 	"net/http"
 )

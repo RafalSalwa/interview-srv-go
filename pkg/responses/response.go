@@ -75,6 +75,15 @@ func RespondOk(w http.ResponseWriter) {
 	}
 }
 
+func RespondCreated(w http.ResponseWriter) {
+	setHTTPHeaders(w, http.StatusCreated)
+	_, err := w.Write([]byte("{\"status\":\"created\"}"))
+
+	if err != nil {
+		RespondInternalServerError(w)
+	}
+}
+
 func NewUserResponse(u *models.UserResponse, w http.ResponseWriter) {
 	response := &UserResponse{Data: u}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")

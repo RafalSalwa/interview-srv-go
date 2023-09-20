@@ -2,14 +2,13 @@ package config
 
 import (
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
+	"github.com/RafalSalwa/interview-app-srv/pkg/http"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
+	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/pkg/errors"
@@ -20,7 +19,7 @@ type Config struct {
 	ServiceName string                `mapstructure:"serviceName"`
 	App         App                   `mapstructure:"app"`
 	Logger      *logger.Config        `mapstructure:"logger"`
-	Http        Http                  `mapstructure:"http"`
+	Http        http.Config           `mapstructure:"http"`
 	Auth        auth.Auth             `mapstructure:"auth"`
 	Grpc        Grpc                  `mapstructure:"grpc"`
 	Probes      probes.Config         `mapstructure:"probes"`
@@ -31,19 +30,6 @@ type Config struct {
 type App struct {
 	Env   string `mapstructure:"env"`
 	Debug bool   `mapstructure:"debug"`
-}
-
-type Http struct {
-	Addr                string        `mapstructure:"addr"`
-	Development         bool          `mapstructure:"development"`
-	BasePath            string        `mapstructure:"basePath"`
-	DebugHeaders        bool          `mapstructure:"debugHeaders"`
-	HttpClientDebug     bool          `mapstructure:"httpClientDebug"`
-	DebugErrorsResponse bool          `mapstructure:"debugErrorsResponse"`
-	IgnoreLogUrls       []string      `mapstructure:"ignoreLogUrls"`
-	TimeoutRead         time.Duration `mapstructure:"SERVER_TIMEOUT_READ"`
-	TimeoutWrite        time.Duration `mapstructure:"SERVER_TIMEOUT_WRITE"`
-	TimeoutIdle         time.Duration `mapstructure:"SERVER_TIMEOUT_IDLE"`
 }
 
 type Grpc struct {

@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func CorsMiddleware() mux.MiddlewareFunc {
+func CORS() mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Connection", "keep-alive")

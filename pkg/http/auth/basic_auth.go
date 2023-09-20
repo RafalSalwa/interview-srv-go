@@ -3,19 +3,17 @@ package auth
 import (
 	"crypto/sha256"
 	"crypto/subtle"
-	"github.com/RafalSalwa/interview-app-srv/api/resource/responses"
-	simpleHandler "github.com/RafalSalwa/interview-app-srv/pkg/simple_handler"
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 	"net/http"
 	"os"
 )
 
 type basicAuth struct {
-	h        simpleHandler.HandlerFunc
 	username string
 	password string
 }
 
-func (a *basicAuth) middleware(h simpleHandler.HandlerFunc) http.HandlerFunc {
+func (a *basicAuth) Middleware(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, password, ok := r.BasicAuth()
 		authUsername := os.Getenv("AUTH_USERNAME")
@@ -40,9 +38,8 @@ func (a *basicAuth) middleware(h simpleHandler.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func newBasicAuthMiddleware(h simpleHandler.HandlerFunc, username string, password string) *basicAuth {
+func newBasicAuthMiddleware(username string, password string) *basicAuth {
 	return &basicAuth{
-		h:        h,
 		username: username,
 		password: password,
 	}
