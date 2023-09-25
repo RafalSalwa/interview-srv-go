@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/server"
@@ -9,15 +10,25 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	l := logger.NewConsole()
 	cfg, err := config.InitConfig()
 	if err != nil {
-		log.Fatal(err)
+		l.Error().Err(err).Msg("config Init")
+		return err
 	}
 
-	l := logger.NewConsole(cfg.App.Debug)
-	srv := server.NewServerGRPC(cfg, l)
+	srv := server.NewGRPC(cfg, l)
 
 	if errSrv := srv.Run(); errSrv != nil {
-		log.Fatal(err)
+		l.Error().Err(err).Msg("server run")
+		return err
 	}
+	return nil
 }

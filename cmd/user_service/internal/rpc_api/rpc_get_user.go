@@ -1,36 +1,53 @@
 package rpc_api
 
 import (
-	"context"
-	"errors"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-	"github.com/jinzhu/copier"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
+    "context"
+    "errors"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+    "github.com/jinzhu/copier"
+    "go.opentelemetry.io/otel"
+    otelcodes "go.opentelemetry.io/otel/codes"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
+    "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserResponse, error) {
-	user, err := us.userService.GetById(ctx, req.UserId)
-
+func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) (*pb.BoolValue, error) {
+	user := &models.UserDBModel{Email: req.GetValue()}
+	exists, err := us.userService.UsernameInUse(user)
 	if err != nil {
+		return &pb.BoolValue{Value: false}, status.Errorf(codes.Internal, err.Error())
+	}
+	return &pb.BoolValue{Value: exists}, nil
+}
+
+func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserById")
+	defer span.End()
+
+	udb, err := us.userService.GetById(ctx, req.UserId)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(otelcodes.Error, err.Error())
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
-	if user == nil {
+	if udb == nil {
+		span.RecordError(err)
+		span.SetStatus(otelcodes.Error, err.Error())
 		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
 	}
-
-	res := &pb.UserResponse{
-		User: &pb.User{
-			Id:        user.Id,
-			Username:  user.Username,
-			Email:     user.Email,
-			CreatedAt: timestamppb.New(user.CreatedAt),
-		},
+	res := &pb.UserDetails{
+		Id:        udb.Id,
+		Username:  udb.Username,
+		Firstname: udb.Firstname,
+		Lastname:  udb.Lastname,
+		Email:     udb.Email,
+		Verified:  udb.Verified,
+		Active:    udb.Active,
+		CreatedAt: timestamppb.New(udb.CreatedAt),
 	}
+
 	return res, nil
 }
 

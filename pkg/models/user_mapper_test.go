@@ -32,7 +32,7 @@ func initStructs() usersModels {
 		Verified:         true,
 		VerificationCode: "",
 		Active:           true,
-		Token:            "",
+		AccessToken:      "",
 		RefreshToken:     "",
 		CreatedAt:        timeNow,
 		UpdatedAt:        timeNow,
@@ -95,7 +95,7 @@ func TestUserResponseMappers(t *testing.T) {
 	}
 	ur.AssignTokenPair(tp)
 	assert.NoError(t, err)
-	assert.Equal(t, ur.Token, "access")
+	assert.Equal(t, ur.AccessToken, "access")
 	assert.Equal(t, ur.RefreshToken, "refresh")
 
 	ur = UserResponse{}
@@ -105,7 +105,7 @@ func TestUserResponseMappers(t *testing.T) {
 		RefreshToken: "refresh",
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, ur.Token, "access")
+	assert.Equal(t, ur.AccessToken, "access")
 	assert.Equal(t, ur.RefreshToken, "refresh")
 	err = ur.FromProtoSignUp(&intrvproto.SignUpUserResponse{
 		Id:                1,

@@ -1,26 +1,25 @@
 package handler
 
 import (
-    "encoding/json"
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
-    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
-    _ "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
-    "github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    "github.com/RafalSalwa/interview-app-srv/pkg/responses"
-    "github.com/go-playground/validator/v10"
-    "github.com/gorilla/mux"
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/codes"
-    "go.opentelemetry.io/otel/trace"
-    "google.golang.org/grpc/status"
-    "net/http"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
+	_ "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
+	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"github.com/RafalSalwa/interview-app-srv/pkg/validate"
+	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc/status"
+	"net/http"
 )
 
 type AuthHandler interface {
-	RegisterRoutes(r *mux.Router, cfg auth.Auth) error
+	RouteRegisterer
 
 	SignUpUser() http.HandlerFunc
 	SignInUser() http.HandlerFunc
@@ -34,11 +33,9 @@ type authHandler struct {
 	logger *logger.Logger
 }
 
-func (a authHandler) RegisterRoutes(r *mux.Router, cfg auth.Auth) error {
-	authorizer, err := auth.NewAuthorizer(cfg)
-	if err != nil {
-		return err
-	}
+func (a authHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
+	params := cfg.(auth.Auth)
+	authorizer, _ := auth.NewAuthorizer(params)
 
 	sr := r.PathPrefix("/auth/").Subrouter()
 
@@ -47,7 +44,6 @@ func (a authHandler) RegisterRoutes(r *mux.Router, cfg auth.Auth) error {
 
 	sr.Methods(http.MethodGet).Path("/verify/{code}").HandlerFunc(authorizer.Middleware(a.Verify()))
 	sr.Methods(http.MethodPost).Path("/code").HandlerFunc(authorizer.Middleware(a.GetVerificationCode()))
-	return nil
 }
 
 func NewAuthHandler(cqrs *cqrs.Application, l *logger.Logger) AuthHandler {
@@ -55,35 +51,23 @@ func NewAuthHandler(cqrs *cqrs.Application, l *logger.Logger) AuthHandler {
 }
 
 func (a authHandler) SignInUser() http.HandlerFunc {
-	req := models.SignInUserRequest{}
-	reqValidator := validator.New()
+	reqUser := models.SignInUserRequest{}
 
-	res := models.UserResponse{}
+	res := &models.UserResponse{}
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
 		defer span.End()
 
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&req); err != nil {
-			span.RecordError(err, trace.WithStackTrace(true))
-			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("SignInUser: decode")
-
-			responses.RespondBadRequest(w, "wrong parameters")
-			return
-		}
-
-		if err := reqValidator.Struct(req); err != nil {
-			span.RecordError(err, trace.WithStackTrace(true))
-			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("SignInUser: validate")
+		if err := validate.UserInput(r, &reqUser); err != nil {
+			tracing.RecordError(span, err)
+			a.logger.Error().Err(err).Msg("SignUpUser: decode")
 
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 
 		var errQuery error
-		res, errQuery = a.cqrs.Queries.SignIn.Handle(ctx, query.SignInUser{User: req})
+		res, errQuery = a.cqrs.SigninCommand(ctx, reqUser)
 
 		if errQuery != nil {
 			span.RecordError(errQuery)
@@ -97,37 +81,41 @@ func (a authHandler) SignInUser() http.HandlerFunc {
 			responses.RespondInternalServerError(w)
 			return
 		}
-		responses.NewUserResponse(&res, w)
+		responses.NewUserResponse(res, w)
 	}
 }
 
 func (a authHandler) SignUpUser() http.HandlerFunc {
-	req := models.SignUpUserRequest{}
-	reqValidator := validator.New()
+	var reqUser models.SignUpUserRequest
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
 		defer span.End()
 
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			span.RecordError(err, trace.WithStackTrace(true))
-			span.SetStatus(codes.Error, err.Error())
+		if err := validate.UserInput(r, &reqUser); err != nil {
+			tracing.RecordError(span, err)
 			a.logger.Error().Err(err).Msg("SignUpUser: decode")
-
-			responses.RespondBadRequest(w, "wrong input parameters")
-			return
-		}
-
-		if err := reqValidator.StructCtx(ctx, req); err != nil {
-			span.RecordError(err, trace.WithStackTrace(true))
-			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("SignUpUser: validate")
 
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 
-		err := a.cqrs.Commands.SignUp.Handle(ctx, command.SignUpUser{User: req})
+		exists, err := a.cqrs.CheckUserExistsQuery(ctx, reqUser.Email)
+
+		if err != nil {
+			if e, ok := status.FromError(err); ok {
+				responses.FromGRPCError(e, w)
+				return
+			}
+			responses.RespondInternalServerError(w)
+			return
+		}
+		if exists {
+			responses.RespondInternalServerError(w)
+			return
+		}
+
+		err = a.cqrs.SignupUserCommand(ctx, reqUser)
 
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
@@ -146,65 +134,76 @@ func (a authHandler) SignUpUser() http.HandlerFunc {
 }
 
 func (a authHandler) GetVerificationCode() http.HandlerFunc {
+	reqSignIn := models.SignInUserRequest{}
+	resp := models.UserResponse{}
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		decoder := json.NewDecoder(r.Body)
-		signIn := models.SignInUserRequest{}
+		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
+		defer span.End()
 
-		if err := decoder.Decode(&signIn); err != nil {
-			a.logger.Error().Err(err).Msg("VerificationCode:decode")
-			responses.RespondBadRequest(w, "wrong parameters")
-			return
-		}
+		if err := validate.UserInput(r, &reqSignIn); err != nil {
+			tracing.RecordError(span, err)
+			a.logger.Error().Err(err).Msg("SignUpUser: decode")
 
-		validate := validator.New()
-		if err := validate.Struct(signIn); err != nil {
-			a.logger.Error().Err(err)
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 
-		user, err := a.cqrs.Queries.FetchUser.Handle(ctx, query.FetchUser{User: signIn})
+		_, err := a.cqrs.FetchUser(ctx, reqSignIn.Email, reqSignIn.Password)
 		if err != nil {
-			a.logger.Error().Err(err).Msg("gRPC:VerificationCode:GetUser")
-		}
+			span.RecordError(err, trace.WithStackTrace(true))
+			span.SetStatus(codes.Error, err.Error())
+			a.logger.Error().Err(err).Msg("SignUpUser:create")
 
-		if user.Id == 0 {
-			responses.RespondNotFound(w)
-			return
-		}
-
-		uVerification, err := a.cqrs.Queries.VerificationCode.Handle(ctx, query.VerificationCode{Email: signIn.Email})
-		if err != nil {
-			a.logger.Error().Err(err).Msg("gRPC:VerificationCode")
 			if e, ok := status.FromError(err); ok {
 				responses.FromGRPCError(e, w)
 				return
 			}
-			responses.RespondInternalServerError(w)
+			responses.RespondBadRequest(w, err.Error())
 			return
 		}
-		responses.NewUserResponse(uVerification, w)
+
+		resp, err = a.cqrs.GetVerificationCode(ctx, reqSignIn.Email)
+		if err != nil {
+			span.RecordError(err, trace.WithStackTrace(true))
+			span.SetStatus(codes.Error, err.Error())
+			a.logger.Error().Err(err).Msg("SignUpUser:create")
+
+			if e, ok := status.FromError(err); ok {
+				responses.FromGRPCError(e, w)
+				return
+			}
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+		responses.User(w, resp)
 	}
 }
 
 func (a authHandler) Verify() http.HandlerFunc {
-	var req string
+	var vCode string
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		req = mux.Vars(r)["code"]
-		if req == "" {
+		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
+		defer span.End()
+
+		vCode = mux.Vars(r)["code"]
+		if vCode == "" {
 			responses.RespondBadRequest(w, "code param is missing")
 		}
 
-		err := a.cqrs.Commands.Verify.Handle(r.Context(), command.VerifyCode{VerificationCode: req})
+		err := a.cqrs.Commands.VerifyUserByCode.Handle(ctx, command.VerifyCode{VerificationCode: vCode})
 
 		if err != nil {
-			a.logger.Error().Err(err).Msg("gRPC:Verify")
+			span.RecordError(err, trace.WithStackTrace(true))
+			span.SetStatus(codes.Error, err.Error())
+			a.logger.Error().Err(err).Msg("SignUpUser:create")
+
 			if e, ok := status.FromError(err); ok {
 				responses.FromGRPCError(e, w)
 				return
 			}
-			responses.RespondInternalServerError(w)
+			responses.RespondBadRequest(w, err.Error())
 			return
 		}
 		responses.RespondOk(w)

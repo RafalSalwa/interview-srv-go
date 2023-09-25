@@ -2,50 +2,38 @@ package repository
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/mongo"
 	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
 	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
-	"github.com/pkg/errors"
 )
 
 const (
-	MySQL   string = "MySQL"
-	MongoDB string = "MongoDB"
-	Redis   string = "RedisRepository"
+	MySQL   string = "mysql"
+	MongoDB string = "mongodb"
+	Redis   string = "redis"
 )
 
-func NewUserRepository(ctx context.Context, dbType string, params interface{}) (UserRepository, error) {
+func NewUserRepository(ctx context.Context, dbType string, params *config.Config) (UserRepository, error) {
 
 	switch dbType {
 
 	case MySQL:
-		mysqlParams, ok := params.(*sql.MySQL)
-		if !ok {
-			return nil, errors.New("Missing parameters provided for mySQL connection")
-		}
-		con, err := sql.NewGormConnection(*mysqlParams)
+		con, err := sql.NewGormConnection(params.MySQL)
 		if err != nil {
 			return nil, err
 		}
 		return newMySQLUserRepository(con), nil
 
 	case MongoDB:
-		mongoParams, ok := params.(*mongo.Config)
-		if !ok {
-			return nil, errors.New("Missing parameters for MongoDB connection")
-		}
-		mongoClient, err := mongo.NewClient(ctx, *mongoParams)
+		mongoClient, err := mongo.NewClient(ctx, params.Mongo)
 		if err != nil {
 			return nil, err
 		}
 		return newMongoDBUserRepository(mongoClient), nil
 
 	case Redis:
-		redisParams, ok := params.(*redisClient.Config)
-		if !ok {
-			panic("Invalid Redis parameters")
-		}
-		universalRedisClient, err := redisClient.NewUniversalRedisClient(redisParams)
+		universalRedisClient, err := redisClient.NewUniversalRedisClient(params.Redis)
 		if err != nil {
 			return nil, err
 		}
@@ -54,4 +42,5 @@ func NewUserRepository(ctx context.Context, dbType string, params interface{}) (
 	default:
 		panic("Unsupported database type")
 	}
+	return nil, nil
 }

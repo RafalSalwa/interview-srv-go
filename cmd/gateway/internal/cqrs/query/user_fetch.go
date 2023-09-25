@@ -11,7 +11,7 @@ type FetchUserHandler struct {
 	userClient intrvproto.UserServiceClient
 }
 type FetchUser struct {
-	User models.SignInUserRequest
+	models.SignInUserRequest
 }
 
 func NewFetchUserHandler(userClient intrvproto.UserServiceClient) FetchUserHandler {
@@ -19,16 +19,18 @@ func NewFetchUserHandler(userClient intrvproto.UserServiceClient) FetchUserHandl
 }
 
 func (h FetchUserHandler) Handle(ctx context.Context, q FetchUser) (models.UserResponse, error) {
+
 	credentials := &intrvproto.GetUserSignInRequest{
-		Username: q.User.Username,
-		Password: q.User.Password,
+		Username: q.Username,
+		Password: q.Password,
 	}
+
 	resp, err := h.userClient.GetUser(ctx, credentials)
 	if err != nil {
 		return models.UserResponse{}, err
 	}
 	u := models.UserResponse{
-		Username: q.User.Username,
+		Username: q.Username,
 	}
 	u.FromProtoUserDetails(resp)
 	return u, nil

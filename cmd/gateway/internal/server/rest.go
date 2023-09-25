@@ -64,7 +64,6 @@ func (srv *Server) ServeHTTP() {
 		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
 }
-
 func (srv *Server) Shutdown() {
 	closed := make(chan struct{})
 	ctx, cancel := context.WithTimeout(context.Background(), srv.srv.IdleTimeout)

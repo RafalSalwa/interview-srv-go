@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"time"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +28,7 @@ func (r *UserAdapter) ChangePassword(userid int64, password string) error {
 }
 
 func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
-	if err := r.DB.Where(&user).First(&user).Error; err != nil {
+	if err := r.DB.Where(&user).Limit(1).Find(&user).Error; err != nil {
 		return nil, err
 	}
 	return user, nil
@@ -78,7 +78,7 @@ func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserReques
 	var dbUser models.UserDBModel
 
 	r.DB.First(&dbUser, "username = ? OR email = ?", user.Username, user.Email)
-	if password.CheckPasswordHash(user.Password, dbUser.Password) {
+	if hashing.CheckPasswordHash(user.Password, dbUser.Password) {
 		return &dbUser, nil
 	}
 	return nil, nil

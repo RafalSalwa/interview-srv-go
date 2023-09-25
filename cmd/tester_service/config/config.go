@@ -3,7 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/auth"
+	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"

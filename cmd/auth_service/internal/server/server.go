@@ -13,42 +13,39 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/go-playground/validator/v10"
 )
 
-type server struct {
+type Server struct {
 	log *logger.Logger
 	cfg *config.Config
-	v   *validator.Validate
 }
 
-func NewServerGRPC(cfg *config.Config, log *logger.Logger) *server {
-	return &server{log: log, cfg: cfg, v: validator.New()}
+func NewGRPC(cfg *config.Config, log *logger.Logger) *Server {
+	return &Server{log: log, cfg: cfg}
 }
 
-func (srv *server) Run() error {
+func (srv *Server) Run() error {
 	ctx, rejectContext := context.WithCancel(NewContextCancellableByOsSignals(context.Background()))
+
+	authService := services.NewAuthService(ctx, srv.cfg, srv.log)
+	s := NewGrpcServer(srv.cfg.GRPC, srv.log, srv.cfg.Probes, authService)
+
+	go func() {
+		s.Run()
+	}()
 
 	if srv.cfg.Jaeger.Enable {
 		tp, err := tracing.NewJaegerTracer(srv.cfg.Jaeger)
 		if err != nil {
-			srv.log.Error().Err(err).Msg("REST:jaeger:register")
+			srv.log.Error().Err(err).Msg("Auth:jaeger:register")
 		}
 		otel.SetTracerProvider(tp)
 		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
 
-	authService := services.NewAuthService(ctx, srv.cfg, srv.log)
-	grpcServer, err := NewGrpcServer(srv.cfg.GRPC, srv.log, authService)
-	if err != nil {
-		srv.log.Error().Err(err).Msg("grpc:server:new")
-	}
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		grpcServer.Run()
-	}()
 	<-shutdown
 	rejectContext()
 	return nil

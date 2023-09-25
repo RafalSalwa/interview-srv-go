@@ -6,9 +6,12 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/go-playground/validator/v10"
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,7 +25,7 @@ type server struct {
 	redisClient redis.UniversalClient
 }
 
-func NewServerGRPC(cfg *config.Config, log *logger.Logger) *server {
+func NewGRPC(cfg *config.Config, log *logger.Logger) *server {
 	return &server{log: log, cfg: cfg, v: validator.New()}
 }
 
@@ -31,7 +34,7 @@ func (srv *server) Run() error {
 
 	userService := services.NewUserService(ctx, srv.cfg, srv.log)
 
-	grpcServer, err := NewGrpcServer(srv.cfg.GRPC, srv.log, &userService)
+	grpcServer, err := NewGrpcServer(srv.cfg.GRPC, srv.cfg.Probes, &userService)
 	if err != nil {
 		srv.log.Error().Err(err)
 	}
@@ -41,6 +44,15 @@ func (srv *server) Run() error {
 	go func() {
 		grpcServer.Run()
 	}()
+
+	if srv.cfg.Jaeger.Enable {
+		tp, err := tracing.NewJaegerTracer(srv.cfg.Jaeger)
+		if err != nil {
+			srv.log.Error().Err(err).Msg("User:jaeger:register")
+		}
+		otel.SetTracerProvider(tp)
+		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	}
 	<-shutdown
 	rejectContext()
 	return nil

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 	"os"
 	"strings"
 
@@ -21,18 +22,18 @@ import (
 )
 
 type Config struct {
-	ServiceName string                `mapstructure:"serviceName"`
-	App         App                   `mapstructure:"app"`
-	Logger      *logger.Config        `mapstructure:"logger"`
-	GRPC        grpc.Config           `mapstructure:"grpc"`
-	JWTToken    jwt.JWTConfig         `mapstructure:"jwt"`
-	MySQL       sql.MySQL             `mapstructure:"mysql"`
-	Mongo       mongodb.Config        `mapstructure:"mongo"`
-	Redis       *redis.Config         `mapstructure:"redis"`
-	Rabbit      rabbitmq.Config       `mapstructure:"rabbitmq"`
-	Probes      probes.Config         `mapstructure:"probes"`
-	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
-	Mail        email.Config          `mapstructure:"email"`
+	ServiceName string               `mapstructure:"serviceName"`
+	App         App                  `mapstructure:"app"`
+	Logger      *logger.Config       `mapstructure:"logger"`
+	GRPC        grpc.Config          `mapstructure:"grpc"`
+	JWTToken    jwt.JWTConfig        `mapstructure:"jwt"`
+	MySQL       sql.MySQL            `mapstructure:"mysql"`
+	Mongo       mongodb.Config       `mapstructure:"mongo"`
+	Redis       *redis.Config        `mapstructure:"redis"`
+	Rabbit      rabbitmq.Config      `mapstructure:"rabbitmq"`
+	Probes      probes.Config        `mapstructure:"probes"`
+	Jaeger      tracing.JaegerConfig `mapstructure:"jaeger"`
+	Mail        email.Config         `mapstructure:"email"`
 }
 
 type App struct {
@@ -42,7 +43,7 @@ type App struct {
 
 func InitConfig() (*Config, error) {
 	cfg := &Config{}
-	path, err := getEnvPath()
+	path, err := env.GetPath("user_service")
 	if err != nil {
 		return nil, err
 	}

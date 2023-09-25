@@ -15,7 +15,7 @@ import (
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
 )
 
 const (

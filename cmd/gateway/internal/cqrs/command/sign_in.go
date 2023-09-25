@@ -1,8 +1,7 @@
-package query
+package command
 
 import (
 	"context"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
@@ -10,26 +9,22 @@ import (
 type SignInHandler struct {
 	authClient intrvproto.AuthServiceClient
 }
-type SignInUser struct {
-	User models.SignInUserRequest
-}
 
 func NewSignInHandler(authClient intrvproto.AuthServiceClient) SignInHandler {
 	return SignInHandler{authClient: authClient}
 }
 
-func (h SignInHandler) Handle(ctx context.Context, q SignInUser) (models.UserResponse, error) {
+func (h SignInHandler) Handle(ctx context.Context, req models.SignInUserRequest) (*models.UserResponse, error) {
 	credentials := &intrvproto.SignInUserInput{
-		Username: q.User.Username,
-		Password: q.User.Password,
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
 	}
 	resp, err := h.authClient.SignInUser(ctx, credentials)
 	if err != nil {
-		return models.UserResponse{}, err
+		return nil, err
 	}
-	u := models.UserResponse{
-		Username: q.User.Username,
-	}
+	u := &models.UserResponse{}
 	u.FromProtoSignIn(resp)
 	return u, nil
 }

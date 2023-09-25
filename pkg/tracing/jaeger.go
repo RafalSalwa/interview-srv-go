@@ -27,11 +27,13 @@ func NewJaegerTracer(cfg JaegerConfig) (*tracesdk.TracerProvider, error) {
 		return nil, err
 	}
 	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithSampler(tracesdk.AlwaysSample()),
 		tracesdk.WithBatcher(exp),
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceName(cfg.ServiceName),
 			attribute.String("environment", cfg.Env),
+			attribute.String("service-instance", cfg.ServiceName),
 			attribute.Int64("ID", cfg.Id),
 		)),
 	)

@@ -22,7 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	GetUserById(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	CheckUserExists(ctx context.Context, in *StringValue, opts ...grpc.CallOption) (*BoolValue, error)
+	GetUserById(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserDetails, error)
 	GetUserDetails(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserDetails, error)
 	VerifyUser(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerificationResponse, error)
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
@@ -37,8 +38,17 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 	return &userServiceClient{cc}
 }
 
-func (c *userServiceClient) GetUserById(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *userServiceClient) CheckUserExists(ctx context.Context, in *StringValue, opts ...grpc.CallOption) (*BoolValue, error) {
+	out := new(BoolValue)
+	err := c.cc.Invoke(ctx, "/intrvproto.UserService/CheckUserExists", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetUserById(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserDetails, error) {
+	out := new(UserDetails)
 	err := c.cc.Invoke(ctx, "/intrvproto.UserService/GetUserById", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -86,7 +96,8 @@ func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserSignInReques
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
-	GetUserById(context.Context, *GetUserRequest) (*UserResponse, error)
+	CheckUserExists(context.Context, *StringValue) (*BoolValue, error)
+	GetUserById(context.Context, *GetUserRequest) (*UserDetails, error)
 	GetUserDetails(context.Context, *GetUserRequest) (*UserDetails, error)
 	VerifyUser(context.Context, *VerifyUserRequest) (*VerificationResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
@@ -98,7 +109,10 @@ type UserServiceServer interface {
 type UnimplementedUserServiceServer struct {
 }
 
-func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetUserRequest) (*UserResponse, error) {
+func (UnimplementedUserServiceServer) CheckUserExists(context.Context, *StringValue) (*BoolValue, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckUserExists not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetUserRequest) (*UserDetails, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
 }
 func (UnimplementedUserServiceServer) GetUserDetails(context.Context, *GetUserRequest) (*UserDetails, error) {
@@ -124,6 +138,24 @@ type UnsafeUserServiceServer interface {
 
 func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
 	s.RegisterService(&UserService_ServiceDesc, srv)
+}
+
+func _UserService_CheckUserExists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StringValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CheckUserExists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intrvproto.UserService/CheckUserExists",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CheckUserExists(ctx, req.(*StringValue))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _UserService_GetUserById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -223,6 +255,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "intrvproto.UserService",
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CheckUserExists",
+			Handler:    _UserService_CheckUserExists_Handler,
+		},
 		{
 			MethodName: "GetUserById",
 			Handler:    _UserService_GetUserById_Handler,

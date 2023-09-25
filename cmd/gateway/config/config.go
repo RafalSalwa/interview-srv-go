@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
+	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 	"github.com/RafalSalwa/interview-app-srv/pkg/http"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"os"
@@ -37,33 +38,32 @@ type Grpc struct {
 	UserServicePort string `mapstructure:"userServicePort"`
 }
 
-func InitConfig() *Config {
-	cfg := &Config{}
-	path, err := getEnvPath()
+func InitConfig() (*Config, error) {
+	path, err := env.GetPath("gateway")
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	viper.SetConfigType("yaml")
 	viper.SetConfigFile(path)
 
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("ReadConfig", err)
-		return nil
+	if err = viper.ReadInConfig(); err != nil {
+		return nil, err
 	}
 
-	if err := viper.Unmarshal(cfg); err != nil {
-		fmt.Println("UnmarshalConfig", err)
-		return nil
+	cfg := &Config{}
+	if err = viper.Unmarshal(cfg); err != nil {
+		return nil, err
 	}
-	return cfg
+
+	return cfg, nil
 }
 
 func getEnvPath() (string, error) {
 	getwd, err := os.Getwd()
-	appEnv := getEnv("APP_ENV", "dev")
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
+	appEnv := getEnv("APP_ENV", "dev")
 
 	configPath := ""
 	if strings.HasSuffix(getwd, "gateway") {

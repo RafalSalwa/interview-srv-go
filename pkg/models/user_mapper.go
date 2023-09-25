@@ -29,9 +29,19 @@ func (m *UserDBModel) FromCreateUserReq(cur *SignUpUserRequest) error {
 
 	return nil
 }
+
 func (r *UserResponse) FromProtoUserDetails(pbu *intrvproto.UserDetails) {
 	r.Id = pbu.GetId()
 	r.Username = pbu.GetUsername()
+	r.Firstname = pbu.GetFirstname()
+	r.Lastname = pbu.GetLastname()
+	r.Email = pbu.GetEmail()
+	r.Verified = pbu.GetVerified()
+	r.Active = pbu.GetActive()
+	r.CreatedAt = pbu.GetCreatedAt().AsTime()
+
+	ll := pbu.GetLastLogin().AsTime()
+	r.LastLogin = &ll
 }
 
 func (r *UserResponse) FromDBModel(um *UserDBModel) error {
@@ -45,12 +55,12 @@ func (r *UserResponse) FromDBModel(um *UserDBModel) error {
 }
 
 func (r *UserResponse) AssignTokenPair(tp *jwt.TokenPair) {
-	r.Token = tp.AccessToken
+	r.AccessToken = tp.AccessToken
 	r.RefreshToken = tp.RefreshToken
 }
 
 func (r *UserResponse) FromProtoSignIn(pbu *intrvproto.SignInUserResponse) {
-	r.Token = pbu.AccessToken
+	r.AccessToken = pbu.AccessToken
 	r.RefreshToken = pbu.RefreshToken
 }
 func (r *UserResponse) FromProtoSignUp(pbu *intrvproto.SignUpUserResponse) error {

@@ -33,10 +33,13 @@ func main() {
 }
 
 func run() error {
-	cfg := config.InitConfig()
+	cfg, err := config.InitConfig()
+	if err != nil {
+		return err
+	}
 	l := logger.NewConsole()
 
-	checkParams(l)
+	checkFlags(l)
 
 	service, err := cqrs.NewCQRSService(cfg.Grpc)
 	if err != nil {
@@ -46,10 +49,7 @@ func run() error {
 	r := router.NewHTTPRouter(l)
 
 	authHandler := handler.NewAuthHandler(service, l)
-	err = authHandler.RegisterRoutes(r, cfg.Auth)
-	if err != nil {
-		return err
-	}
+	authHandler.RegisterRoutes(r, cfg.Auth)
 
 	userHandler := handler.NewUserHandler(service, l)
 	userHandler.RegisterRoutes(r, cfg.Auth.JWTToken)
@@ -65,7 +65,7 @@ func run() error {
 	return nil
 }
 
-func checkParams(l *logger.Logger) {
+func checkFlags(l *logger.Logger) {
 	args := os.Args[1:]
 
 	if len(args) > 0 {

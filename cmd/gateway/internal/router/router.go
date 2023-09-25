@@ -8,6 +8,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"io"
 	"net/http"
@@ -17,15 +18,17 @@ import (
 func NewHTTPRouter(l *logger.Logger) *mux.Router {
 	router := mux.NewRouter()
 
+	promMiddleware := middlewares.NewPrometheusMiddleware()
+
 	router.Use(
 		middlewares.ContentTypeJson(),
 		middlewares.CorrelationID(),
 		middlewares.CORS(),
 		middlewares.RequestLog(l),
+		promMiddleware.Prometheus(),
 	)
-
+	router.Handle("/metrics", promhttp.Handler())
 	setupSwagger(router)
-
 	return router
 }
 

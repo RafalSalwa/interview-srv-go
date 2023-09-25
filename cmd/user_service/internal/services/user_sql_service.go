@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
-	"github.com/RafalSalwa/interview-app-srv/internal/password"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
@@ -158,7 +158,7 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 }
 
 func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*models.UserResponse, error) {
-	if err := password.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm); err != nil {
+	if err := hashing.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm); err != nil {
 		return nil, err
 	}
 
@@ -171,7 +171,7 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*
 		return nil, err
 	}
 
-	newUserRequest.Password, err = password.HashPassword(newUserRequest.Password)
+	newUserRequest.Password, err = hashing.HashPassword(newUserRequest.Password)
 	if err != nil {
 		return nil, err
 	}
