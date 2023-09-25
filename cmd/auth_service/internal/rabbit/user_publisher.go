@@ -3,7 +3,7 @@ package rabbit
 import (
 	"context"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	otelcodes "go.opentelemetry.io/otel/codes"
 )

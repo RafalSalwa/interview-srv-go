@@ -12,7 +12,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
 	amqpHandlers "github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/internal/handlers"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func failOnError(err error, msg string) {

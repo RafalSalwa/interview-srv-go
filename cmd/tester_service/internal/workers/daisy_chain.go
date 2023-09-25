@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
-	"github.com/RafalSalwa/interview-app-srv/internal/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"google.golang.org/grpc"

@@ -26,7 +26,7 @@ type UserServiceImpl struct {
 type UserService interface {
 	GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error)
 	GetById(ctx context.Context, id int64) (*models.UserDBModel, error)
-	UsernameInUse(user *models.SignUpUserRequest) bool
+	UsernameInUse(user *models.UserDBModel) (bool, error)
 	StoreVerificationData(ctx context.Context, vCode string) error
 	UpdateUser(user *models.UpdateUserRequest) (err error)
 	LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error)
@@ -88,9 +88,12 @@ func (s *UserServiceImpl) GetById(ctx context.Context, id int64) (*models.UserDB
 	return user, nil
 }
 
-func (s *UserServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
-	//TODO implement me
-	panic("implement me")
+func (s *UserServiceImpl) UsernameInUse(user *models.UserDBModel) (bool, error) {
+	ur, err := s.repository.Load(user)
+	if err != nil {
+		return false, err
+	}
+	return ur == nil, nil
 }
 
 func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode string) error {

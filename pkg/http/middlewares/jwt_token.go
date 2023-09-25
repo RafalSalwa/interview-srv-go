@@ -28,6 +28,7 @@ func ValidateJWTAccessToken(c auth.JWTConfig) mux.MiddlewareFunc {
 				}
 			} else {
 				responses.RespondNotAuthorized(w, "An authorization header is required")
+				return
 			}
 			h.ServeHTTP(w, r)
 		})

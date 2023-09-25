@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
@@ -19,15 +18,16 @@ func main() {
 func run() error {
 	cfg, err := config.InitConfig()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	l := logger.NewConsole()
 
-	srv := server.NewServerGRPC(cfg, l)
+	srv := server.NewGRPC(cfg, l)
 
 	if errSrv := srv.Run(); errSrv != nil {
 		l.Error().Err(err).Msg("srv:run")
+		return err
 	}
 	return nil
 }

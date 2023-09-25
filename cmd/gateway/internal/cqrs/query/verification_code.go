@@ -18,16 +18,16 @@ func NewVerificationCodeHandler(authClient intrvproto.AuthServiceClient) Verific
 	return VerificationCodeHandler{authClient: authClient}
 }
 
-func (h VerificationCodeHandler) Handle(ctx context.Context, q VerificationCode) (*models.UserResponse, error) {
-	email := &intrvproto.VerificationCodeRequest{
-		Email: q.Email,
+func (h VerificationCodeHandler) Handle(ctx context.Context, email string) (models.UserResponse, error) {
+	req := &intrvproto.VerificationCodeRequest{
+		Email: email,
 	}
-	resp, err := h.authClient.GetVerificationKey(ctx, email)
+	resp, err := h.authClient.GetVerificationKey(ctx, req)
 	if err != nil {
-		return nil, err
+		return models.UserResponse{}, err
 	}
 	u := models.UserResponse{
 		VerificationCode: resp.Code,
 	}
-	return &u, nil
+	return u, nil
 }

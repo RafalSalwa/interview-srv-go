@@ -25,7 +25,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
-		log.Error().Err(errP).Msg("grpc:run:rabbitmq")
+		log.Error().Err(errP).Msg("auth:service:publisher")
 	}
 
 	userRepository, errR := repository.NewUserRepository(ctx, cfg.App.RepositoryType, cfg)

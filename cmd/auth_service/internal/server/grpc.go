@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"net"
 	"time"
 
@@ -29,21 +31,24 @@ const (
 type GRPC struct {
 	pb.UnimplementedAuthServiceServer
 	config      grpcconfig.Config
+	probesCfg   probes.Config
 	logger      *logger.Logger
 	authService services.AuthService
 }
 
-func NewGrpcServer(config grpcconfig.Config,
+func NewGrpcServer(
+	config grpcconfig.Config,
 	logger *logger.Logger,
-	authService services.AuthService) (*GRPC, error) {
+	probesCfg probes.Config,
+	authService services.AuthService) *GRPC {
 
 	srv := &GRPC{
 		config:      config,
 		logger:      logger,
+		probesCfg:   probesCfg,
 		authService: authService,
 	}
-
-	return srv, nil
+	return srv
 }
 
 func (s GRPC) Run() {
@@ -74,7 +79,7 @@ func (s GRPC) Run() {
 
 	pb.RegisterAuthServiceServer(grpcServer, authServer)
 	reflection.Register(grpcServer)
-
+	tracing.RegisterMetricsEndpoint(s.probesCfg.Port)
 	listener, err := net.Listen("tcp", s.config.Addr)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("grpc:net:listen")

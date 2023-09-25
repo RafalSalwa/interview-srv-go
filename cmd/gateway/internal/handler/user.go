@@ -1,115 +1,128 @@
 package handler
 
 import (
-	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"
-	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
-	"github.com/RafalSalwa/interview-app-srv/pkg/http/middlewares"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
-	"github.com/gorilla/mux"
-	"net/http"
-	"strconv"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+    "github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+    "github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
+    "github.com/RafalSalwa/interview-app-srv/pkg/http/middlewares"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "github.com/RafalSalwa/interview-app-srv/pkg/responses"
+    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+    "github.com/RafalSalwa/interview-app-srv/pkg/validate"
+    "github.com/gorilla/mux"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/codes"
+    "go.opentelemetry.io/otel/trace"
+    "google.golang.org/grpc/status"
+    "net/http"
+    "strconv"
 )
 
 type UserHandler interface {
-	GetUserById() HandlerFunc
-	PasswordChange() HandlerFunc
-	ValidateCode() HandlerFunc
-	RegisterRoutes(r *mux.Router, cfg auth.JWTConfig)
+    RouteRegisterer
+    GetUserById() HandlerFunc
+    PasswordChange() HandlerFunc
 }
 
 type userHandler struct {
-	cqrs   *cqrs.Application
-	logger *logger.Logger
-}
-
-func (uh userHandler) RegisterRoutes(r *mux.Router, cfg auth.JWTConfig) {
-	s := r.PathPrefix("/user").Subrouter()
-	s.Use(middlewares.ValidateJWTAccessToken(cfg))
-
-	s.Methods(http.MethodGet).Path("").HandlerFunc(uh.GetUserById())
-	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(uh.PasswordChange())
-	s.Methods(http.MethodPost).Path("/validate/{code}").HandlerFunc(uh.ValidateCode())
+    cqrs   *cqrs.Application
+    logger *logger.Logger
 }
 
 func NewUserHandler(cqrs *cqrs.Application, l *logger.Logger) UserHandler {
-	return userHandler{cqrs, l}
+    return userHandler{cqrs, l}
+}
+
+func (uh userHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
+    params := cfg.(auth.JWTConfig)
+    s := r.PathPrefix("/user").Subrouter()
+    s.Use(middlewares.ValidateJWTAccessToken(params))
+
+    s.Methods(http.MethodGet).Path("").HandlerFunc(uh.GetUserById())
+    s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(uh.PasswordChange())
 }
 
 func (uh userHandler) GetUserById() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		userId, _ := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
-		user, err := uh.cqrs.Queries.UserBasic.Handle(ctx, query.UserRequest{UserId: userId})
-		if err != nil {
-			uh.logger.Error().Err(err).Msg("rest:handler:getUser")
-			responses.RespondInternalServerError(w)
-			return
-		}
-		if user == nil {
-			responses.RespondNotFound(w)
-			return
-		}
+    return func(w http.ResponseWriter, r *http.Request) {
+        ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserById")
+        defer span.End()
 
-		responses.NewUserResponse(user, w)
-	}
+        userId, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+        if err != nil {
+            span.RecordError(err, trace.WithStackTrace(true))
+            span.SetStatus(codes.Error, err.Error())
+            uh.logger.Error().Err(err).Msg("GetUserById:header:getId")
+        }
+ 
+        user, err := uh.cqrs.GetUser(ctx, userId)
+        if err != nil {
+            span.RecordError(err, trace.WithStackTrace(true))
+            span.SetStatus(codes.Error, err.Error())
+            uh.logger.Error().Err(err).Msg("GetUserById:grpc:getUser")
+
+            if e, ok := status.FromError(err); ok {
+                responses.FromGRPCError(e, w)
+                return
+            }
+            responses.RespondBadRequest(w, err.Error())
+            return
+        }
+        responses.User(w, user)
+    }
 }
 
 func (uh userHandler) PasswordChange() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		pcr := &models.ChangePasswordRequest{}
+    req := &models.ChangePasswordRequest{}
 
-		if err := json.NewDecoder(r.Body).Decode(pcr); err != nil {
-			uh.logger.Error().Err(err).Msg("Decode")
-			responses.RespondBadRequest(w, "Invalid JSON")
-			return
-		}
+    return func(w http.ResponseWriter, r *http.Request) {
+        ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "PasswordChange")
+        defer span.End()
 
-		//if err := password.Validate(pcr.Password, pcr.PasswordConfirm); err != nil {
-		//	uh.logger.Error().Err(err).Msg("Validate")
-		//	responses.RespondBadRequest(w, err.Error())
-		//	return
-		//}
-		user, err := uh.cqrs.Queries.UserDetails.Handle(ctx, query.UserRequest{UserId: pcr.Id})
-		if err != nil {
-			uh.logger.Error().Err(err).Msg("cqrs:user:details:get")
-			responses.RespondInternalServerError(w)
-			return
-		}
+        userId, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+        if err != nil {
+            tracing.RecordError(span, err)
+            uh.logger.Error().Err(err).Msg("GetUserById:header:getId")
+            responses.RespondBadRequest(w, err.Error())
+            return
+        }
 
-		if user == nil {
-			responses.RespondNotFound(w)
-			return
-		}
-		err = uh.cqrs.Commands.ChangePassword.Handle(ctx, command.ChangePassword{
-			Id:              pcr.Id,
-			OldPassword:     user.Password,
-			Password:        pcr.Password,
-			PasswordConfirm: pcr.PasswordConfirm,
-		})
-		if err != nil {
-			uh.logger.Error().Err(err).Msg("cqrs:changePassword")
-			responses.RespondInternalServerError(w)
-			return
-		}
+        if err = validate.UserInput(r, &req); err != nil {
+            tracing.RecordError(span, err)
+            uh.logger.Error().Err(err).Msg("PasswordChange: decode")
+            responses.RespondBadRequest(w, err.Error())
+            return
+        }
 
-		responses.RespondOk(w)
-	}
-}
+        if err = hashing.Validate(req.Password, req.PasswordConfirm); err != nil {
+            tracing.RecordError(span, err)
+            uh.logger.Error().Err(err).Msg("PasswordChange:validateInputPasswords")
+            responses.RespondBadRequest(w, err.Error())
+            return
+        }
 
-func (uh userHandler) ValidateCode() HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		//code := mux.Vars(r)["code"]
-		//um := models.UserDBModel{VerificationCode: code}
-		//status := uh.service.StoreVerificationData(&um)
-		//if !status {
-		//	responses.RespondInternalServerError(w)
-		//}
-		//responses.RespondOk(w)
-	}
+        _, err = uh.cqrs.GetUser(ctx, userId)
+        if err != nil {
+            tracing.RecordError(span, err)
+            uh.logger.Error().Err(err).Msg("PasswordChange:grpc:GetUser")
+            responses.RespondBadRequest(w, err.Error())
+            return
+        }
+
+        err = uh.cqrs.ChangePassword(ctx, req)
+        if err != nil {
+            span.RecordError(err, trace.WithStackTrace(true))
+            span.SetStatus(codes.Error, err.Error())
+            uh.logger.Error().Err(err).Msg("PasswordChange:grpc:ChangePassword")
+
+            if e, ok := status.FromError(err); ok {
+                responses.FromGRPCError(e, w)
+                return
+            }
+            responses.RespondBadRequest(w, err.Error())
+            return
+        }
+
+        responses.RespondOk(w)
+    }
 }

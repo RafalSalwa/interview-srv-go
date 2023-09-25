@@ -2,9 +2,8 @@ package responses
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"net/http"
 )
 
 // sample data struct with additional eror details
@@ -22,7 +21,7 @@ type ConflictResponse struct {
 }
 
 type UserResponse struct {
-	Data *models.UserResponse `json:"user"`
+	*models.UserResponse `json:"user"`
 }
 
 func RespondInternalServerError(w http.ResponseWriter) {
@@ -84,8 +83,22 @@ func RespondCreated(w http.ResponseWriter) {
 	}
 }
 
+func User(w http.ResponseWriter, u models.UserResponse) {
+	if u.LastLogin.Unix() == 0 {
+		u.LastLogin = nil
+	}
+	response := &UserResponse{&u}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	js, err := json.MarshalIndent(response, "", "   ")
+	if err != nil {
+		RespondInternalServerError(w)
+	}
+
+	Respond(w, http.StatusOK, js)
+}
+
 func NewUserResponse(u *models.UserResponse, w http.ResponseWriter) {
-	response := &UserResponse{Data: u}
+	response := &UserResponse{u}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	js, err := json.MarshalIndent(response, "", "   ")
 	if err != nil {

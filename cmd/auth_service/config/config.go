@@ -62,7 +62,7 @@ func InitConfig() (*Config, error) {
 
 func getEnvPath() (string, error) {
 	getwd, err := os.Getwd()
-	appEnv := os.Getenv("APP_ENV")
+	appEnv := getEnv("APP_ENV", "dev")
 	if err != nil {
 		return "", errors.Wrap(err, "os.Getwd")
 	}
@@ -73,4 +73,12 @@ func getEnvPath() (string, error) {
 		configPath = fmt.Sprintf("%s/cmd/auth_service/config/config.%s.yaml", getwd, appEnv)
 	}
 	return configPath, nil
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	fmt.Fprintf(os.Stderr, " env %s missing setting fallback val %s \n", key, fallback)
+	return fallback
 }

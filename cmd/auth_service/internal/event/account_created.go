@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func Prepare(ue models.UserEvent) amqp.Publishing {

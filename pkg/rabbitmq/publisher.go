@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Publisher struct {
@@ -14,7 +14,7 @@ type Publisher struct {
 func NewPublisher(cfg Config) (*Publisher, error) {
 	con := NewConnection(cfg)
 	if err := con.Connect(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("rabbitmq connect failed: %w", err)
 	}
 	return &Publisher{Connection: con, Exchange: cfg.Exchange}, nil
 }

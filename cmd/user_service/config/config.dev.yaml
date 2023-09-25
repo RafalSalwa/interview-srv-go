@@ -7,7 +7,7 @@ grpc:
 probes:
   readinessPath: /ready
   livenessPath: /live
-  port: :3001
+  port: :8031
   pprof: :6001
   prometheusPath: /metrics
   prometheusPort: :8001
@@ -34,9 +34,10 @@ redis:
   poolSize: 300
 jaeger: 
   enable: true
-  serviceName: auth_service
-  hostPort: "jaeger:6831"
-  logSpans: false
+  serviceName: user_service
+  addr: "http://jaeger:14268/api/traces"
+  logSpans: true
+  id: 3
 rabbitmq:
   addr: "rabbitmq:5672"
   username: interview
