@@ -17,15 +17,15 @@ import (
 )
 
 type Config struct {
-	ServiceName string                `mapstructure:"serviceName"`
-	App         App                   `mapstructure:"app"`
-	Logger      *logger.Config        `mapstructure:"logger"`
-	Http        http.Config           `mapstructure:"http"`
-	Auth        auth.Auth             `mapstructure:"auth"`
-	Grpc        Grpc                  `mapstructure:"grpc"`
-	Probes      probes.Config         `mapstructure:"probes"`
-	Jaeger      *tracing.JaegerConfig `mapstructure:"jaeger"`
-	CSRF        csrf.Config           `mapstructure:"csrf"`
+	ServiceName string               `mapstructure:"serviceName"`
+	App         App                  `mapstructure:"app"`
+	Logger      *logger.Config       `mapstructure:"logger"`
+	Http        http.Config          `mapstructure:"http"`
+	Auth        auth.Auth            `mapstructure:"auth"`
+	Grpc        Grpc                 `mapstructure:"grpc"`
+	Probes      probes.Config        `mapstructure:"probes"`
+	Jaeger      tracing.JaegerConfig `mapstructure:"jaeger"`
+	CSRF        csrf.Config          `mapstructure:"csrf"`
 }
 
 type App struct {

@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"log"
 	"net/http"
 	_ "net/http/pprof"
 )
@@ -56,9 +57,12 @@ func (srv *Server) ServeHTTP() {
 	}()
 
 	if srv.cfg.Jaeger.Enable {
-		tp, err := tracing.NewJaegerTracer(*srv.cfg.Jaeger)
+		//if err := tracing.OTELGRPCProvider(srv.cfg.ServiceName, srv.cfg.Jaeger); err != nil {
+		//	srv.log.Error().Err(err).Msg("server:jaeger:register")
+		//}
+		tp, err := tracing.NewOTELTracerProvider(srv.cfg.ServiceName, srv.cfg.ServiceName)
 		if err != nil {
-			srv.log.Error().Err(err).Msg("server:jaeger:register")
+			log.Fatalf("failed to create a tracer: %v", err)
 		}
 		otel.SetTracerProvider(tp)
 		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))

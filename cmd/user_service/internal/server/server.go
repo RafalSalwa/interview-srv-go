@@ -1,20 +1,18 @@
 package server
 
 import (
-	"context"
-	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	"github.com/go-playground/validator/v10"
-	"github.com/go-redis/redis/v8"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	"os"
-	"os/signal"
-	"syscall"
+    "context"
+    "fmt"
+    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+    "github.com/go-playground/validator/v10"
+    "github.com/go-redis/redis/v8"
+    "go.mongodb.org/mongo-driver/mongo"
+    "os"
+    "os/signal"
+    "syscall"
 )
 
 type server struct {
@@ -46,12 +44,9 @@ func (srv *server) Run() error {
 	}()
 
 	if srv.cfg.Jaeger.Enable {
-		tp, err := tracing.NewJaegerTracer(srv.cfg.Jaeger)
-		if err != nil {
-			srv.log.Error().Err(err).Msg("User:jaeger:register")
+		if err := tracing.OTELGRPCProvider(srv.cfg.ServiceName, srv.cfg.Jaeger); err != nil {
+			srv.log.Error().Err(err).Msg("server:jaeger:register")
 		}
-		otel.SetTracerProvider(tp)
-		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
 	<-shutdown
 	rejectContext()

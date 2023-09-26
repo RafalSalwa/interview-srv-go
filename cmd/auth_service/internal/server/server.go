@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
 	"os"
 	"os/signal"
 	"syscall"
@@ -35,12 +33,9 @@ func (srv *Server) Run() error {
 	}()
 
 	if srv.cfg.Jaeger.Enable {
-		tp, err := tracing.NewJaegerTracer(srv.cfg.Jaeger)
-		if err != nil {
-			srv.log.Error().Err(err).Msg("Auth:jaeger:register")
+		if err := tracing.OTELGRPCProvider(srv.cfg.ServiceName, srv.cfg.Jaeger); err != nil {
+			srv.log.Error().Err(err).Msg("server:jaeger:register")
 		}
-		otel.SetTracerProvider(tp)
-		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
 
 	shutdown := make(chan os.Signal, 1)

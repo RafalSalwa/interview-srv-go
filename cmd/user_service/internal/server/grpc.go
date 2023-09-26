@@ -125,7 +125,7 @@ func (s GRPC) Run() {
 
 	userServer, err := rpc_api.NewGrpcUserServer(s.config, s.userService)
 	if err != nil {
-		//s.logger.Error().Err(err)
+		logger.Log(err)
 	}
 	pb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
@@ -133,12 +133,13 @@ func (s GRPC) Run() {
 	listener, err := net.Listen("tcp", s.config.Addr)
 
 	if err != nil {
+		logger.Log(err)
 		//s.logger.Error().Err(err)
 	}
 
-	//s.logger.Info().Msgf("Starting gRPC server on: %s", s.config.Addr)
-	err = grpcServer.Serve(listener)
-	if err != nil {
+	logger.Log("Starting gRPC server on: %s", s.config.Addr)
+	if err = grpcServer.Serve(listener); err != nil {
+		logger.Log("serve:", err)
 		//s.logger.Error().Err(err)
 	}
 	grpcServer.GracefulStop()

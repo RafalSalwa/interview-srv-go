@@ -29,7 +29,7 @@ mongo:
     connectTimeout: 10s
 redis:
   addr: "cache:6379"
-  password: ""
+  password: "" 
   db: 0
   poolSize: 300
 jaeger: 
