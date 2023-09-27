@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 )
 
 type apiKeyAuth struct {
@@ -24,7 +25,7 @@ func (a *apiKeyAuth) Middleware(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func newApiKeyMiddleware(apiKey string) *apiKeyAuth {
+func newAPIKeyMiddleware(apiKey string) *apiKeyAuth {
 	return &apiKeyAuth{
 		apiKey: apiKey,
 	}

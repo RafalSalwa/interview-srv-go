@@ -26,7 +26,7 @@ func TestVerificationCode(t *testing.T) {
 				t.Error("verification code can contain only letters")
 				return
 			}
-			code, err = RandomString(4)
+			_, err = RandomString(4)
 			if err == nil {
 				t.Errorf("cannot generate too short codes")
 				return

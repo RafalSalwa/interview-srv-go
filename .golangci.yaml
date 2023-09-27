@@ -647,7 +647,7 @@ linters:
     - govet
     - exportloopref
     - forbidigo
-#    - depguard
+    - depguard
     - dogsled
     - dupl
     - errcheck

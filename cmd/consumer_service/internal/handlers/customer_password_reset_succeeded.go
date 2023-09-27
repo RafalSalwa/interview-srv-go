@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
@@ -23,7 +24,6 @@ func WrapHandleCustomerPasswordResetRequestedSuccessed(event rabbitmq.Event) err
 }
 
 func CustomerPasswordResetSuccessEmail(payload CustomerPasswordResetSucceeded) error {
-
 	fmt.Println("CustomerPasswordResetSuccessEmail", payload)
 	return nil
 }

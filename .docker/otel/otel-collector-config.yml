@@ -17,7 +17,7 @@ exporters:
     enable_open_metrics: true
     resource_to_telemetry_conversion:
       enabled: true
-  
+  logging:
   otlp:
     endpoint: jaeger:4317
     tls:
@@ -26,9 +26,11 @@ exporters:
 connectors:
   spanmetrics:
     namespace: span.metrics
-
+  
 processors:
   batch:
+  spanmetrics:
+    metrics_exporter: prometheus
 
 service:
   telemetry:
@@ -41,5 +43,6 @@ service:
       exporters: [spanmetrics, otlp]
 
     metrics:
-      receivers: [spanmetrics]
+      receivers: [ otlp, spanmetrics]
+      processors: [ batch ]
       exporters: [prometheus]

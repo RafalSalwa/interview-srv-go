@@ -2,6 +2,8 @@ package tracing
 
 import (
 	"context"
+	"log"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -10,7 +12,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"google.golang.org/grpc"
-	"log"
 )
 
 func OTELGRPCProvider(serviceName string, cfg JaegerConfig) error {
@@ -30,7 +31,6 @@ func OTELGRPCProvider(serviceName string, cfg JaegerConfig) error {
 		resource.WithTelemetrySDK(),
 		resource.WithHost(),
 		resource.WithAttributes(
-			// Specify the service name displayed on the backend of Tracing Analysis.
 			semconv.ServiceNameKey.String(serviceName),
 		),
 	)
@@ -41,7 +41,6 @@ func OTELGRPCProvider(serviceName string, cfg JaegerConfig) error {
 		sdktrace.WithResource(res),
 		sdktrace.WithSpanProcessor(bsp),
 	)
-	// Set the global propagator to tracecontext. The global propagator is not specified by default.
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	otel.SetTracerProvider(tracerProvider)
 	return nil

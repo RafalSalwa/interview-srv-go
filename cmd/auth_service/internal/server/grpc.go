@@ -1,10 +1,11 @@
 package server
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"net"
 	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rpc_api"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
@@ -41,7 +42,6 @@ func NewGrpcServer(
 	logger *logger.Logger,
 	probesCfg probes.Config,
 	authService services.AuthService) *GRPC {
-
 	srv := &GRPC{
 		config:      config,
 		logger:      logger,

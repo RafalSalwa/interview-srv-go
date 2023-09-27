@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
@@ -13,7 +14,6 @@ type CustomerPasswordResetRequested struct {
 }
 
 func WrapHandleCustomerPasswordResetRequestedEmail(event rabbitmq.Event) error {
-
 	var data CustomerPasswordResetRequested
 	err := json.Unmarshal([]byte(event.Content), &data)
 

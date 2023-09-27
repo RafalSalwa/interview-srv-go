@@ -3,11 +3,12 @@ package config
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"os"
 )
 
 var configPath string
@@ -20,7 +21,7 @@ type Config struct {
 	ServiceName string         `mapstructure:"serviceName"`
 	App         App            `mapstructure:"app"`
 	Logger      *logger.Config `mapstructure:"logger"`
-	Http        Http           `mapstructure:"http"`
+	HTTP        HTTP           `mapstructure:"http"`
 	Auth        auth.Auth      `mapstructure:"auth"`
 }
 
@@ -29,7 +30,7 @@ type App struct {
 	Debug bool   `mapstructure:"debug"`
 }
 
-type Http struct {
+type HTTP struct {
 	Addr                string `mapstructure:"addr"`
 	Development         bool   `mapstructure:"development"`
 	BasePath            string `mapstructure:"basePath"`

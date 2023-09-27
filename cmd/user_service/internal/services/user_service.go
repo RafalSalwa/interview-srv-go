@@ -105,12 +105,12 @@ func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode strin
 }
 
 func (s *UserServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *UserServiceImpl) LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
@@ -123,6 +123,5 @@ func (s *UserServiceImpl) UpdateUserPassword(userid int64, password string) erro
 }
 
 func (s *UserServiceImpl) CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error) {
-
 	panic("implement me")
 }

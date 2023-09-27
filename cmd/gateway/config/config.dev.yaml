@@ -57,7 +57,7 @@ jaeger:
   enable: true
   serviceName: api_gateway_service
   env: dev
-  Addr: "http://jaeger:14268/api/traces"
+  Addr: "http://otel_collector:14278/api/traces"
   logSpans: true
   id: 1
 csrf:

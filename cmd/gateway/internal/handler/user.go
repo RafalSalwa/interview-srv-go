@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
@@ -46,7 +45,6 @@ func (uh userHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("otel:tp:", otel.GetTracerProvider())
 		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserById")
 		defer span.End()
 
@@ -55,6 +53,8 @@ func (uh userHandler) GetUserById() HandlerFunc {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
 			uh.logger.Error().Err(err).Msg("GetUserById:header:getId")
+			responses.RespondBadRequest(w, err.Error())
+			return
 		}
 
 		user, err := uh.cqrs.GetUser(ctx, userId)

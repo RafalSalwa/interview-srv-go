@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 	"net/http"
 	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 )
 
 type bearerTokenHandler struct {

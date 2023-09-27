@@ -1,12 +1,13 @@
 package jwt
 
 import (
-    "github.com/mitchellh/mapstructure"
-    "testing"
-    "time"
+	"testing"
+	"time"
 
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
+	"github.com/mitchellh/mapstructure"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func initConfig() JWTConfig {
@@ -48,7 +49,6 @@ func TestGenerateTokenPair(t *testing.T) {
 	assert.Equal(t, exp, token)
 	expiredAt := time.Now()
 	require.WithinDuration(t, issuedAt, expiredAt, time.Second)
-
 }
 
 func TestCreateToken(t *testing.T) {
@@ -59,7 +59,6 @@ func TestCreateToken(t *testing.T) {
 	if len(at) < 180 {
 		t.Error("token not valid")
 	}
-
 }
 
 func TestDecodeToken(t *testing.T) {

@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"fmt"
+
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
@@ -18,9 +19,7 @@ func HTTPProvider(serviceName string, cfg JaegerConfig) error {
 
 func newTracerProvider(serviceName, addr string) (*tracesdk.TracerProvider, error) {
 	// Create the Jaeger exporter
-	addr = "http://otel_collector:14278/api/traces"
 	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(addr)))
-	fmt.Println("JaegerCollectorURL", addr)
 	if err != nil {
 		return nil, err
 	}

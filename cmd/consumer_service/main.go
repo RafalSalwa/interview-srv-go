@@ -57,7 +57,7 @@ func main() {
 }
 
 func NewContextCancellableByOsSignals(parent context.Context) context.Context {
-	signalChannel := make(chan os.Signal)
+	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 	newCtx, cancel := context.WithCancel(parent)
 

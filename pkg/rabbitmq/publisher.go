@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -24,8 +25,8 @@ func (p *Publisher) Disconnect() error {
 }
 
 func (p *Publisher) Publish(ctx context.Context, mes amqp.Publishing) error {
-
-	err := p.Connection.Channel.Publish(
+	err := p.Connection.Channel.PublishWithContext(
+		ctx,
 		p.Exchange.Name,
 		p.Exchange.RoutingKey,
 		false,

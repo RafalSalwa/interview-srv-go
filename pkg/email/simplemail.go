@@ -3,11 +3,12 @@ package email
 import (
 	"bytes"
 	"fmt"
-	mail "github.com/xhit/go-simple-mail/v2"
 	"log"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	mail "github.com/xhit/go-simple-mail/v2"
 )
 
 type Config struct {

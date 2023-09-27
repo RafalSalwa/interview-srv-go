@@ -1,18 +1,19 @@
 package server
 
 import (
-    "context"
-    "fmt"
-    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-    "github.com/go-playground/validator/v10"
-    "github.com/go-redis/redis/v8"
-    "go.mongodb.org/mongo-driver/mongo"
-    "os"
-    "os/signal"
-    "syscall"
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-redis/redis/v8"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type server struct {
@@ -54,7 +55,7 @@ func (srv *server) Run() error {
 }
 
 func NewContextCancellableByOsSignals(parent context.Context) context.Context {
-	signalChannel := make(chan os.Signal)
+	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 	newCtx, cancel := context.WithCancel(parent)
 

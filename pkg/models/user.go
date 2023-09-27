@@ -133,5 +133,5 @@ type Roles struct {
 }
 
 type VerificationCodeRequest struct {
-	Email string
+	Email string `json:"code"`
 }

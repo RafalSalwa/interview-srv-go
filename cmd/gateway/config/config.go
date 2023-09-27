@@ -2,12 +2,13 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 	"github.com/RafalSalwa/interview-app-srv/pkg/http"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"os"
-	"strings"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
@@ -20,7 +21,7 @@ type Config struct {
 	ServiceName string               `mapstructure:"serviceName"`
 	App         App                  `mapstructure:"app"`
 	Logger      *logger.Config       `mapstructure:"logger"`
-	Http        http.Config          `mapstructure:"http"`
+	HTTP        http.Config          `mapstructure:"http"`
 	Auth        auth.Auth            `mapstructure:"auth"`
 	Grpc        Grpc                 `mapstructure:"grpc"`
 	Probes      probes.Config        `mapstructure:"probes"`

@@ -1,23 +1,23 @@
 package middlewares
 
 import (
-    "log"
-    "net/http"
-    "strconv"
-    "strings"
-    "time"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/gorilla/mux"
-    "github.com/prometheus/client_golang/prometheus"
-)
-
-var (
-	dflBuckets = []float64{0.3, 1.0, 2.5, 5.0}
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
 	requestName = "http_requests_total"
 	latencyName = "http_request_duration_seconds"
+)
+
+var (
+	dflBuckets = []float64{0.3, 1.0, 2.5, 5.0}
 )
 
 type PrometheusMiddleware struct {

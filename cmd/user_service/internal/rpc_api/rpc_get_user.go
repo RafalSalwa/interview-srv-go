@@ -1,16 +1,17 @@
 package rpc_api
 
 import (
-    "context"
-    "errors"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-    "github.com/jinzhu/copier"
-    "go.opentelemetry.io/otel"
-    otelcodes "go.opentelemetry.io/otel/codes"
-    "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/status"
-    "google.golang.org/protobuf/types/known/timestamppb"
+	"context"
+	"errors"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+	"github.com/jinzhu/copier"
+	"go.opentelemetry.io/otel"
+	otelcodes "go.opentelemetry.io/otel/codes"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) (*pb.BoolValue, error) {

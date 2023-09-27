@@ -2,17 +2,17 @@ package config
 
 import (
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"regexp"
 	"time"
 
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"github.com/joho/godotenv"
+
 	"github.com/spf13/viper"
 
 	"github.com/joeshaw/envdecode"
-	_ "github.com/joho/godotenv"
 )
 
 type Conf struct {

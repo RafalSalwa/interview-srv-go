@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"

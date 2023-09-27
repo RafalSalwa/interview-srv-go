@@ -1,8 +1,9 @@
 package redis
 
 import (
-    "context"
-    "github.com/go-redis/redis/v8"
+	"context"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type Config struct {

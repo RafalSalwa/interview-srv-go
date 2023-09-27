@@ -35,7 +35,7 @@ func (l *Connection) Connect() error {
 	}
 	l.Connection = c
 	l.Channel = ch
-	//if l.credentials.Exchange != nil {
+	// if l.credentials.Exchange != nil {
 	//	if err := ch.ExchangeDeclare(
 	//		l.credentials.Exchange.Name,
 	//		l.credentials.Exchange.Type,

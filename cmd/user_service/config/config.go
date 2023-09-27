@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 	"os"
 	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"

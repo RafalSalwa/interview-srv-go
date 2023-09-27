@@ -2,6 +2,7 @@ package rabbit
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
@@ -28,7 +29,8 @@ func (p *Publisher) Disconnect() error {
 func (p *Publisher) Publish(ctx context.Context, mes amqp.Publishing) error {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-rabbit").Start(ctx, "AMQP Publish user SignUp")
 	defer span.End()
-	err := p.Connection.Channel.Publish(
+	err := p.Connection.Channel.PublishWithContext(
+		ctx,
 		p.Exchange.Name,
 		p.Exchange.RoutingKey,
 		false,

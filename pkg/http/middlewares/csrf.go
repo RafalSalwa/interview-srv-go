@@ -1,10 +1,11 @@
 package middlewares
 
 import (
+	"net/http"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/csrf"
 	"github.com/RafalSalwa/interview-app-srv/pkg/responses"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 func CSRFMiddleware(cfg csrf.Config) mux.MiddlewareFunc {

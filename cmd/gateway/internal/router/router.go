@@ -3,16 +3,16 @@ package router
 import (
 	_ "embed"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+
 	"github.com/RafalSalwa/interview-app-srv/docs"
-	_ "github.com/RafalSalwa/interview-app-srv/docs"
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/middlewares"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
-	"io"
-	"net/http"
-	"os"
 )
 
 func NewHTTPRouter(l *logger.Logger) *mux.Router {

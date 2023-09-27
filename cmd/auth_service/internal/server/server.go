@@ -3,10 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
@@ -47,7 +48,7 @@ func (srv *Server) Run() error {
 }
 
 func NewContextCancellableByOsSignals(parent context.Context) context.Context {
-	signalChannel := make(chan os.Signal)
+	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 	newCtx, cancel := context.WithCancel(parent)
 

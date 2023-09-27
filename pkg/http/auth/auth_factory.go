@@ -30,7 +30,7 @@ func NewAuthMethod(cfg Auth) (IAuthType, error) {
 	}
 	switch val {
 	case apiKey:
-		return newApiKeyMiddleware(cfg.APIKey), nil
+		return newAPIKeyMiddleware(cfg.APIKey), nil
 	case basic:
 		return newBasicAuthMiddleware(cfg.BasicAuth.Username, cfg.BasicAuth.Password), nil
 	case bearerToken:

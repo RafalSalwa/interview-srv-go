@@ -3,15 +3,16 @@ package validate
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func UserInput(r *http.Request, req interface{}) error {
 	reqValidator := validator.New()
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return fmt.Errorf("Cannot decode request data")
+		return fmt.Errorf("cannot decode request data")
 	}
 
 	if err := reqValidator.Struct(req); err != nil {

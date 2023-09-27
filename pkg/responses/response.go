@@ -2,8 +2,9 @@ package responses
 
 import (
 	"encoding/json"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"net/http"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 
 // sample data struct with additional eror details
@@ -84,7 +85,7 @@ func RespondCreated(w http.ResponseWriter) {
 }
 
 func User(w http.ResponseWriter, u models.UserResponse) {
-	if u.LastLogin.Unix() == 0 {
+	if u.LastLogin != nil && u.LastLogin.Unix() == 0 {
 		u.LastLogin = nil
 	}
 	response := &UserResponse{&u}

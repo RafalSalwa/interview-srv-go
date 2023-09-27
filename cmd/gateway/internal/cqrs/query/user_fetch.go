@@ -19,7 +19,6 @@ func NewFetchUserHandler(userClient intrvproto.UserServiceClient) FetchUserHandl
 }
 
 func (h FetchUserHandler) Handle(ctx context.Context, q FetchUser) (models.UserResponse, error) {
-
 	credentials := &intrvproto.GetUserSignInRequest{
 		Username: q.Username,
 		Password: q.Password,

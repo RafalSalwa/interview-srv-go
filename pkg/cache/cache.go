@@ -37,7 +37,7 @@ func (tag Tags) key(key string) string {
 }
 func NewCachable(prefix string, id string, parentPtr ICacheable) (*Cacheable, error) {
 	if reflect.ValueOf(parentPtr).Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("Parent field in cachable must be a pointer")
+		return nil, fmt.Errorf("parent field in cachable must be a pointer")
 	}
 	return &Cacheable{prefix: prefix, cacheId: id, parent: parentPtr}, nil
 }

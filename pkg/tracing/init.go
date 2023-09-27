@@ -16,7 +16,6 @@ import (
 
 // InitTracer creates a new tracer for a service.
 func InitTracer(serviceName, instanceName string) (trace.Tracer, func(), error) {
-
 	tp, err := NewOTELTracerProvider(serviceName, instanceName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("couldn't initialize tracer provider: %w", err)
@@ -27,7 +26,7 @@ func InitTracer(serviceName, instanceName string) (trace.Tracer, func(), error) 
 		// Do not make the application hang when it is shutdown.
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
-		if err := tp.Shutdown(ctx); err != nil {
+		if err = tp.Shutdown(ctx); err != nil {
 			log.Fatal(err)
 		}
 	}

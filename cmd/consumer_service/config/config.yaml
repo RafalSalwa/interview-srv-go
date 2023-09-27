@@ -9,7 +9,7 @@ logger:
 jaeger:
   enable: true
   serviceName: auth_service
-  hostPort: "jaeger:6831"
+  hostPort: "http://otel_collector:14278/api/traces"
   logSpans: false
 email:
   host: mailhog

@@ -9,16 +9,16 @@ import (
 )
 
 type CustomerLoggedInEvent struct {
-	UserId          int    `json:"customer_id"`
-	UserUuid        string `json:"customer_uuid"`
-	DeviceId        string `json:"device_id"`
+	UserID          int    `json:"customer_id"`
+	UserUUID        string `json:"customer_uuid"`
+	DeviceID        string `json:"device_id"`
 	ApplicationType string `json:"application_type"`
 	LoginType       string `json:"login_type"`
 }
 
-//var logBuffer []CustomerLoggedInEvent
-//var logTmpBuffer []CustomerLoggedInEvent
-//var dbClient *sql.DB
+// var logBuffer []CustomerLoggedInEvent
+// var logTmpBuffer []CustomerLoggedInEvent
+// var dbClient *sql.DB
 
 func WrapHandleCustomerLoggedIn(event rabbitmq.Event) error {
 	var data CustomerLoggedInEvent
@@ -37,8 +37,8 @@ func WrapHandleCustomerLoggedIn(event rabbitmq.Event) error {
 func HandleCustomerLoggedIn(payload CustomerLoggedInEvent) error {
 	fmt.Println("HandleCustomerAccountConfirmEmail", payload)
 	return nil
-	//logBuffer = append(logBuffer, payload)
-	//if len(logBuffer) >= 500 {
+	// logBuffer = append(logBuffer, payload)
+	// if len(logBuffer) >= 500 {
 	//	var mutex = &sync.Mutex{}
 	//	mutex.Lock()
 	//	logTmpBuffer = logBuffer
@@ -46,10 +46,10 @@ func HandleCustomerLoggedIn(payload CustomerLoggedInEvent) error {
 	//	mutex.Unlock()
 	//	go SaveToDb()
 	//}
-	//return nil
+	// return nil
 }
 
-//func SaveToDb() {
+// func SaveToDb() {
 //	dbClient, _ = tools.SetupWriteDB()
 //	defer dbClient.Disconnect()
 //
@@ -59,7 +59,7 @@ func HandleCustomerLoggedIn(payload CustomerLoggedInEvent) error {
 //
 //	for _, event := range logTmpBuffer {
 //		sqlStr += "(?, ?, ?, ?),"
-//		vals = append(vals, event.UserId, currentTime.Format("2006-01-02"), event.LoginType, event.ApplicationType)
+//		vals = append(vals, event.UserID, currentTime.Format("2006-01-02"), event.LoginType, event.ApplicationType)
 //	}
 //
 //	sqlStr = sqlStr[0 : len(sqlStr)-1]

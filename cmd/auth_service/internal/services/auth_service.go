@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
 	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
@@ -22,7 +24,6 @@ type AuthServiceImpl struct {
 }
 
 func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger) AuthService {
-
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
 		log.Error().Err(errP).Msg("auth:service:publisher")
@@ -75,20 +76,32 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUser
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) SignInUser(user *models.SignInUserRequest) (*models.UserResponse, error) {
+func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignInUserRequest) (*models.UserResponse, error) {
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "AuthService SignInUser")
+	defer span.End()
+
 	q := query.Use(a.repository.GetConnection()).UserDBModel
-	dbu, errDB := q.FilterWithUsernameOrEmail(user.Username, user.Email)
+
+	u, errDB := q.FilterWithUsernameOrEmail(reqUser.Username, reqUser.Email)
 	if errDB != nil {
 		return nil, errDB
 	}
-
-	ur := &models.UserResponse{}
-	err := ur.FromDBModel(dbu)
+	dbUser, err := a.repository.Load(u)
 	if err != nil {
 		return nil, err
 	}
 
-	tp, err := jwt.GenerateTokenPair(a.config, dbu.Id)
+	if err = hashing.Argon2IDComparePasswordAndHash(reqUser.Password, dbUser.Password); err != nil {
+		return nil, err
+	}
+
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
+	if err != nil {
+		return nil, err
+	}
+
+	tp, err := jwt.GenerateTokenPair(a.config, dbUser.Id)
 	if err != nil {
 		return nil, err
 	}

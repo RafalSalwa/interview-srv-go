@@ -3,13 +3,14 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/go-redis/redis/v8"
 	"go.opentelemetry.io/otel"
 	otelcodes "go.opentelemetry.io/otel/codes"
 	"gorm.io/gorm"
-	"strconv"
 )
 
 type RedisRepository struct {
@@ -30,42 +31,42 @@ func NewRedisRepository(redisClient redis.UniversalClient, log *logger.Logger) *
 }
 
 func (r RedisAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r RedisAdapter) GetConnection() *gorm.DB {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

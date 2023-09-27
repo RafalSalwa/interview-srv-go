@@ -1,9 +1,10 @@
 package responses
 
 import (
-    grpc_codes "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/status"
-    "net/http"
+	"net/http"
+
+	grpc_codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func FromGRPCError(err *status.Status, w http.ResponseWriter) {
@@ -15,5 +16,4 @@ func FromGRPCError(err *status.Status, w http.ResponseWriter) {
 	default:
 		RespondBadRequest(w, err.Message())
 	}
-
 }

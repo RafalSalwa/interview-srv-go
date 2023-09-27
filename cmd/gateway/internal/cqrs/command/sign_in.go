@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )

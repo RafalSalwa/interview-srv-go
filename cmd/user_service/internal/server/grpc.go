@@ -3,6 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
+	"os"
+	"runtime/debug"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/rpc_api"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
 	grpc_config "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
@@ -28,10 +33,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"net"
-	"os"
-	"runtime/debug"
-	"time"
 )
 
 type GRPC struct {
@@ -45,7 +46,6 @@ type GRPC struct {
 func NewGrpcServer(config grpc_config.Config,
 	probesCfg probes.Config,
 	userService services.UserService) (*GRPC, error) {
-
 	srv := &GRPC{
 		config:      config,
 		probing:     probesCfg,
@@ -134,13 +134,13 @@ func (s GRPC) Run() {
 
 	if err != nil {
 		logger.Log(err)
-		//s.logger.Error().Err(err)
+		// s.logger.Error().Err(err)
 	}
 
 	logger.Log("Starting gRPC server on: %s", s.config.Addr)
 	if err = grpcServer.Serve(listener); err != nil {
 		logger.Log("serve:", err)
-		//s.logger.Error().Err(err)
+		// s.logger.Error().Err(err)
 	}
 	grpcServer.GracefulStop()
 }

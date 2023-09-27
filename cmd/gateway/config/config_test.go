@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInitConfig(t *testing.T) {
@@ -15,7 +16,7 @@ func TestInitConfig(t *testing.T) {
 
 	c, err := InitConfig()
 	assert.NoError(t, err)
-	assert.NotEmpty(t, c.Http)
+	assert.NotEmpty(t, c.HTTP)
 	assert.NotEmpty(t, c.Grpc)
 	assert.NotEmpty(t, c.Auth)
 	assert.NotEmpty(t, c.App)

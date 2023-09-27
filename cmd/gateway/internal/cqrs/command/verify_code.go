@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
 

@@ -26,7 +26,7 @@ func NewClient(ctx context.Context, cfg Config) (*mongo.Client, error) {
 	if err = client.Connect(ctx); err != nil {
 		return nil, err
 	}
-	if err = client.Ping(context.TODO(), readpref.Primary()); err != nil {
+	if err = client.Ping(ctx, readpref.Primary()); err != nil {
 		return nil, err
 	}
 	return client, nil

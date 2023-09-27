@@ -6,35 +6,18 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/argon2"
 	"strings"
+
+	"golang.org/x/crypto/argon2"
 )
 
 var (
-	// ErrInvalidHash in returned by ComparePasswordAndHash if the provided
-	// hash isn't in the expected format.
-	ErrInvalidHash = errors.New("argon2id: hash is not in the correct format")
-
-	// ErrIncompatibleVariant is returned by ComparePasswordAndHash if the
-	// provided hash was created using a unsupported variant of Argon2.
-	// Currently only argon2id is supported by this package.
+	ErrInvalidHash         = errors.New("argon2id: hash is not in the correct format")
 	ErrIncompatibleVariant = errors.New("argon2id: incompatible variant of argon2")
-
-	// ErrIncompatibleVersion is returned by ComparePasswordAndHash if the
-	// provided hash was created using a different version of Argon2.
 	ErrIncompatibleVersion = errors.New("argon2id: incompatible version of argon2")
+	ErrHashesMismatch      = errors.New("argon2id: hashes mismatch")
 )
 
-// DefaultParams provides some sane default parameters for hashing passwords.
-//
-// Follows recommendations given by the Argon2 RFC:
-// "The Argon2id variant with t=1 and maximum available memory is RECOMMENDED as a
-// default setting for all environments. This setting is secure against side-channel
-// attacks and maximizes adversarial costs on dedicated bruteforce hardware.""
-//
-// The default parameters should generally be used for development/testing purposes
-// only. Custom parameters should be set for production applications depending on
-// available memory/CPU resources and business requirements.
 var DefaultParams = &Params{
 	Memory:      64 * 1024,
 	Iterations:  4,
@@ -43,18 +26,6 @@ var DefaultParams = &Params{
 	KeyLength:   32,
 }
 
-// Params describes the input parameters used by the Argon2id algorithm. The
-// Memory and Iterations parameters control the computational cost of hashing
-// the password. The higher these figures are, the greater the cost of generating
-// the hash and the longer the runtime. It also follows that the greater the cost
-// will be for any attacker trying to guess the password. If the code is running
-// on a machine with multiple cores, then you can decrease the runtime without
-// reducing the cost by increasing the Parallelism parameter. This controls the
-// number of threads that the work is spread across. Important note: Changing the
-// value of the Parallelism parameter changes the hash output.
-//
-// For guidance and an outline process for choosing appropriate parameters see
-// https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04#section-4
 type Params struct {
 	// The amount of memory used by the algorithm (in kibibytes).
 	Memory uint32
@@ -98,9 +69,16 @@ func Argon2ID(password string) (hash string, err error) {
 // plain-text password and Argon2id hash, using the parameters and salt
 // contained in the hash. It returns true if they match, otherwise it returns
 // false.
-func ComparePasswordAndHash(password, hash string) (match bool, err error) {
-	match, _, err = CheckHash(password, hash)
-	return match, err
+func Argon2IDComparePasswordAndHash(password, hash string) error {
+	match, _, err := CheckHash(password, hash)
+	if err != nil {
+		return err
+	}
+
+	if !match {
+		return ErrHashesMismatch
+	}
+	return nil
 }
 
 // CheckHash is like ComparePasswordAndHash, except it also returns the params that the hash was

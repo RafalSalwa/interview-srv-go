@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/go-redis/redis/v8"
