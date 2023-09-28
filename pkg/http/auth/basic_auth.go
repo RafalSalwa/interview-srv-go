@@ -1,10 +1,9 @@
 package auth
 
 import (
-    "crypto/sha256"
-    "crypto/subtle"
-    "github.com/RafalSalwa/interview-app-srv/pkg/responses"
-    "net/http"
+	"crypto/sha256"
+	"crypto/subtle"
+	"net/http"
 )
 
 type basicAuth struct {
@@ -31,8 +30,6 @@ func (a *basicAuth) Middleware(h http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 		}
-		responses.RespondNotAuthorized(w, "")
-		return
 	}
 }
 

@@ -1,7 +1,6 @@
 package jwt
 
 func GenerateTokenPair(c JWTConfig, uid int64) (*TokenPair, error) {
-
 	accessClaims := UserClaims{
 		ID: uid,
 	}

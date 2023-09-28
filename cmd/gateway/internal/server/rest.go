@@ -4,14 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/gorilla/mux"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	"net/http"
-	_ "net/http/pprof"
 )
 
 type Server struct {
@@ -21,14 +20,13 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config, r *mux.Router, l *logger.Logger) *Server {
-
 	tlsConf := new(tls.Config)
 	s := &http.Server{
-		Addr:         cfg.Http.Addr,
+		Addr:         cfg.HTTP.Addr,
 		Handler:      r,
-		ReadTimeout:  cfg.Http.TimeoutRead,
-		WriteTimeout: cfg.Http.TimeoutWrite,
-		IdleTimeout:  cfg.Http.TimeoutIdle,
+		ReadTimeout:  cfg.HTTP.TimeoutRead,
+		WriteTimeout: cfg.HTTP.TimeoutWrite,
+		IdleTimeout:  cfg.HTTP.TimeoutIdle,
 		TLSConfig:    tlsConf,
 	}
 
@@ -56,12 +54,9 @@ func (srv *Server) ServeHTTP() {
 	}()
 
 	if srv.cfg.Jaeger.Enable {
-		tp, err := tracing.NewJaegerTracer(*srv.cfg.Jaeger)
-		if err != nil {
+		if err := tracing.OTELGRPCProvider(srv.cfg.ServiceName, srv.cfg.Jaeger); err != nil {
 			srv.log.Error().Err(err).Msg("server:jaeger:register")
 		}
-		otel.SetTracerProvider(tp)
-		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
 }
 func (srv *Server) Shutdown() {

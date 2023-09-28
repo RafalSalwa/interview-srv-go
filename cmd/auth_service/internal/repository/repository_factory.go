@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/mongo"
 	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
@@ -15,9 +16,7 @@ const (
 )
 
 func NewUserRepository(ctx context.Context, dbType string, params *config.Config) (UserRepository, error) {
-
 	switch dbType {
-
 	case MySQL:
 		con, err := sql.NewGormConnection(params.MySQL)
 		if err != nil {
@@ -33,7 +32,7 @@ func NewUserRepository(ctx context.Context, dbType string, params *config.Config
 		return newMongoDBUserRepository(mongoClient), nil
 
 	case Redis:
-		universalRedisClient, err := redisClient.NewUniversalRedisClient(params.Redis)
+		universalRedisClient, err := redisClient.NewUniversalRedisClient(ctx, params.Redis)
 		if err != nil {
 			return nil, err
 		}
@@ -42,5 +41,4 @@ func NewUserRepository(ctx context.Context, dbType string, params *config.Config
 	default:
 		panic("Unsupported database type")
 	}
-	return nil, nil
 }

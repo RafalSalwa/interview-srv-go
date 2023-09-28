@@ -17,7 +17,7 @@ type ErrorResponse struct {
 	Reason  string `json:"reason"`
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
-	Data    Data   `json:"data"`
+	Data    data   `json:"data"`
 }
 
 // swagger:model NotFoundError
@@ -32,7 +32,7 @@ type UnauthorizedResponse struct {
 	Error   string `json:"error,omitempty"`
 }
 
-func NewErrorResponse(statusCode int32, reason string, message string) *ErrorResponse {
+func NewErrorResponse(statusCode int32, reason, message string) *ErrorResponse {
 	return &ErrorResponse{
 		Code:    statusCode,
 		Reason:  reason,

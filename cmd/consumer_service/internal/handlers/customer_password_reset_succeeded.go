@@ -3,12 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
 type CustomerPasswordResetSucceeded struct {
-	CustomerId   int    `json:"customer_id"`
-	CustomerUuid string `json:"customer_uuid"`
+	CustomerID   int    `json:"customer_id"`
+	CustomerUUID string `json:"customer_uuid"`
 }
 
 func WrapHandleCustomerPasswordResetRequestedSuccessed(event rabbitmq.Event) error {
@@ -23,7 +24,6 @@ func WrapHandleCustomerPasswordResetRequestedSuccessed(event rabbitmq.Event) err
 }
 
 func CustomerPasswordResetSuccessEmail(payload CustomerPasswordResetSucceeded) error {
-
 	fmt.Println("CustomerPasswordResetSuccessEmail", payload)
 	return nil
 }

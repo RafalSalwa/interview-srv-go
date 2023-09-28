@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"

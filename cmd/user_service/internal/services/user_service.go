@@ -40,7 +40,7 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 		log.Error().Err(err).Msg("grpc:run:mongo")
 	}
 
-	universalRedisClient, err := redisClient.NewUniversalRedisClient(cfg.Redis)
+	universalRedisClient, err := redisClient.NewUniversalRedisClient(ctx, cfg.Redis)
 	if err != nil {
 		log.Error().Err(err).Msg("redis")
 	}
@@ -105,12 +105,12 @@ func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode strin
 }
 
 func (s *UserServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (s *UserServiceImpl) LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
@@ -123,6 +123,5 @@ func (s *UserServiceImpl) UpdateUserPassword(userid int64, password string) erro
 }
 
 func (s *UserServiceImpl) CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error) {
-
 	panic("implement me")
 }

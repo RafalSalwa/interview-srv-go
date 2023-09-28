@@ -1,8 +1,9 @@
 package redis
 
 import (
-    "context"
-    "github.com/go-redis/redis/v8"
+	"context"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type Config struct {
@@ -12,14 +13,13 @@ type Config struct {
 	PoolSize int    `mapstructure:"poolSize"`
 }
 
-func NewUniversalRedisClient(cfg *Config) (redis.UniversalClient, error) {
+func NewUniversalRedisClient(ctx context.Context, cfg *Config) (redis.UniversalClient, error) {
 	universalClient := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs:    []string{cfg.Addr},
 		Password: cfg.Password,
 		DB:       cfg.DB,
 		PoolSize: cfg.PoolSize,
 	})
-	ctx := context.TODO()
 	if err := universalClient.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}

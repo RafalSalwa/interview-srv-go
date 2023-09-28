@@ -55,7 +55,7 @@ func CreateToken(ttl time.Duration, payload interface{}, privateKey string) (str
 	return token, nil
 }
 
-func DecodeToken(token string, publicKey string) (interface{}, error) {
+func DecodeToken(token, publicKey string) (interface{}, error) {
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode: %w", err)

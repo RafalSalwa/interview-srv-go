@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 	"os"
 	"strings"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
@@ -43,7 +44,7 @@ type App struct {
 
 func InitConfig() (*Config, error) {
 	cfg := &Config{}
-	path, err := env.GetPath("user_service")
+	path, err := env.GetConfigPath("user_service")
 	if err != nil {
 		return nil, err
 	}

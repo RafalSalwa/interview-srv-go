@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"gorm.io/gorm"
@@ -16,15 +17,12 @@ type UserAdapter struct {
 
 func (r *UserAdapter) ChangePassword(userid int64, password string) error {
 	user := models.UserDBModel{Id: userid}
-	if err := r.DB.Model(user).
+	return r.DB.Model(user).
 		Updates(models.UserDBModel{
 			Password: password,
 			Active:   true,
 		}).
-		Error; err != nil {
-		return err
-	}
-	return nil
+		Error
 }
 
 func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
@@ -34,11 +32,11 @@ func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error
 	return user, nil
 }
 
-func (r *UserAdapter) ConfirmVerify(ctx context.Context, vCode string) error {
-
+func (r *UserAdapter) ConfirmVerify(_ context.Context, vCode string) error {
 	user := models.UserDBModel{VerificationCode: vCode}
 	r.Load(&user)
-	var count int64 = 0
+	var count int64
+
 	r.DB.Where(&user).First(&user).Count(&count)
 	if count == 0 {
 		return errors.New("NotFound")
@@ -46,35 +44,29 @@ func (r *UserAdapter) ConfirmVerify(ctx context.Context, vCode string) error {
 	if count == 1 && user.Active && user.Verified {
 		return errors.New("AlreadyActivated")
 	}
-	if err := r.DB.Model(user).Where(&user).
+	return r.DB.Model(user).Where(&user).
 		Updates(models.UserDBModel{
 			Verified: true,
 			Active:   true,
 		}).
-		Error; err != nil {
-		return err
-	}
-	return nil
+		Error
 }
 
 func (r *UserAdapter) SingUp(user *models.UserDBModel) error {
-	if err := r.DB.Create(&user).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.DB.Create(&user).Error
 }
 
 func NewUserAdapter(db *gorm.DB) UserRepository {
 	return &UserAdapter{DB: db}
 }
 
-func (r *UserAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
+func (r *UserAdapter) ById(_ context.Context, id int64) (*models.UserDBModel, error) {
 	var user models.UserDBModel
 	r.DB.First(&user, "id = ?", id)
 	return &user, nil
 }
 
-func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
+func (r *UserAdapter) ByLogin(_ context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
 	var dbUser models.UserDBModel
 
 	r.DB.First(&dbUser, "username = ? OR email = ?", user.Username, user.Email)
@@ -97,6 +89,6 @@ func (r *UserAdapter) GetConnection() *gorm.DB {
 	return r.DB
 }
 
-func (r *UserAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
+func (r *UserAdapter) FindUserByID(uid int64) (*models.UserDBModel, error) {
 	return nil, nil
 }

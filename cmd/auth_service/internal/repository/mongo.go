@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
@@ -37,42 +38,42 @@ func NewMongoRepository(db *mongo.Client, cfg apiMongo.Config, log *logger.Logge
 }
 
 func (m MongoAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
-func (m MongoAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
-	//TODO implement me
+func (m MongoAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m MongoAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m MongoAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m MongoAdapter) ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m MongoAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m MongoAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (m MongoAdapter) GetConnection() *gorm.DB {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

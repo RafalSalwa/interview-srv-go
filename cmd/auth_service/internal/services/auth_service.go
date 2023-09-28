@@ -1,17 +1,19 @@
 package services
 
 import (
-	"context"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
-	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/query"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	"go.opentelemetry.io/otel"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/pkg/generator"
+    "github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    "go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
@@ -22,7 +24,6 @@ type AuthServiceImpl struct {
 }
 
 func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger) AuthService {
-
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
 		log.Error().Err(errP).Msg("auth:service:publisher")
@@ -44,6 +45,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUserRequest) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
 	defer span.End()
+
 	if err := hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -75,21 +77,41 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUser
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) SignInUser(user *models.SignInUserRequest) (*models.UserResponse, error) {
-	q := query.Use(a.repository.GetConnection()).UserDBModel
-	dbu, errDB := q.FilterWithUsernameOrEmail(user.Username, user.Email)
-	if errDB != nil {
-		return nil, errDB
+func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignInUserRequest) (*models.UserResponse, error) {
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "AuthService SignInUser")
+	defer span.End()
+
+	enc, err := encdec.Encrypt(reqUser.Email)
+	if err != nil {
+		tracing.RecordError(span, err)
+		return nil, err
+	}
+	udb := &models.UserDBModel{
+		Email: enc,
+	}
+	if err = udb.Get(); err != nil {
+		udb, err := a.repository.Load(ctx, udb)
+		if err != nil {
+			tracing.RecordError(span, err)
+			return nil, err
+		}
 	}
 
-	ur := &models.UserResponse{}
-	err := ur.FromDBModel(dbu)
-	if err != nil {
+	if err = hashing.Argon2IDComparePasswordAndHash(reqUser.Password, dbUser.Password); err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
 
-	tp, err := jwt.GenerateTokenPair(a.config, dbu.Id)
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(dbUser)
 	if err != nil {
+		tracing.RecordError(span, err)
+		return nil, err
+	}
+
+	tp, err := jwt.GenerateTokenPair(a.config, dbUser.Id)
+	if err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
 
@@ -101,7 +123,7 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	user := &models.UserDBModel{
 		Email: email,
 	}
-	dbUser, err := a.repository.Load(user)
+	dbUser, err := a.repository.Load(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +135,8 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, error) {
-	dbUser, err := a.repository.Load(user)
+func (a *AuthServiceImpl) Find(ctx context.Context, user *models.UserDBModel) (*models.UserResponse, error) {
+	dbUser, err := a.repository.Load(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -131,9 +153,8 @@ func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, 
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
-	ctx := context.Background()
-	dbUser, err := a.repository.Load(user)
+func (a *AuthServiceImpl) Load(ctx context.Context, user *models.UserDBModel) (*models.UserResponse, error) {
+	dbUser, err := a.repository.Load(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +187,7 @@ func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 	udb := &models.UserDBModel{
 		VerificationCode: vCode,
 	}
-	dbUser, err := a.repository.Load(udb)
+	dbUser, err := a.repository.Load(ctx, udb)
 	if err != nil {
 		return err
 	}
@@ -176,13 +197,10 @@ func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 	}
 	ur := &models.UserResponse{}
 
-	if errM := ur.FromDBModel(dbUser); errM != nil {
-		return errM
-	}
-	return nil
+	return ur.FromDBModel(dbUser)
 }
 
-func (a *AuthServiceImpl) FindUserById(uid int64) (*models.UserDBModel, error) {
+func (a *AuthServiceImpl) FindUserByID(uid int64) (*models.UserDBModel, error) {
 	ctx := context.Background()
 	dbUser, err := a.repository.ById(ctx, uid)
 	if err != nil {

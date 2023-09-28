@@ -25,7 +25,7 @@ func NewConnection(cfg Config) *Connection {
 }
 
 func (l *Connection) Connect() error {
-	c, err := amqp.Dial(l.credentials.GetUrl())
+	c, err := amqp.Dial(l.credentials.GetURL())
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (l *Connection) Connect() error {
 	}
 	l.Connection = c
 	l.Channel = ch
-	//if l.credentials.Exchange != nil {
+	// if l.credentials.Exchange != nil {
 	//	if err := ch.ExchangeDeclare(
 	//		l.credentials.Exchange.Name,
 	//		l.credentials.Exchange.Type,

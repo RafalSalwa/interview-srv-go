@@ -49,7 +49,7 @@ func (c *userServiceClient) CheckUserExists(ctx context.Context, in *StringValue
 
 func (c *userServiceClient) GetUserById(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserDetails, error) {
 	out := new(UserDetails)
-	err := c.cc.Invoke(ctx, "/intrvproto.UserService/GetUserById", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/intrvproto.UserService/GetUserByID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserSignInReques
 // for forward compatibility
 type UserServiceServer interface {
 	CheckUserExists(context.Context, *StringValue) (*BoolValue, error)
-	GetUserById(context.Context, *GetUserRequest) (*UserDetails, error)
+	GetUserByID(context.Context, *GetUserRequest) (*UserDetails, error)
 	GetUserDetails(context.Context, *GetUserRequest) (*UserDetails, error)
 	VerifyUser(context.Context, *VerifyUserRequest) (*VerificationResponse, error)
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
@@ -112,8 +112,8 @@ type UnimplementedUserServiceServer struct {
 func (UnimplementedUserServiceServer) CheckUserExists(context.Context, *StringValue) (*BoolValue, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckUserExists not implemented")
 }
-func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetUserRequest) (*UserDetails, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
+func (UnimplementedUserServiceServer) GetUserByID(context.Context, *GetUserRequest) (*UserDetails, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByID not implemented")
 }
 func (UnimplementedUserServiceServer) GetUserDetails(context.Context, *GetUserRequest) (*UserDetails, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserDetails not implemented")
@@ -164,14 +164,14 @@ func _UserService_GetUserById_Handler(srv interface{}, ctx context.Context, dec 
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserById(ctx, in)
+		return srv.(UserServiceServer).GetUserByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/intrvproto.UserService/GetUserById",
+		FullMethod: "/intrvproto.UserService/GetUserByID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserById(ctx, req.(*GetUserRequest))
+		return srv.(UserServiceServer).GetUserByID(ctx, req.(*GetUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -260,7 +260,7 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_CheckUserExists_Handler,
 		},
 		{
-			MethodName: "GetUserById",
+			MethodName: "GetUserByID",
 			Handler:    _UserService_GetUserById_Handler,
 		},
 		{

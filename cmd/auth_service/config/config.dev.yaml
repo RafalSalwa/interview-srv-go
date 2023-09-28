@@ -1,4 +1,4 @@
-serviceName: auth_service
+serviceName: Auth Service
 app:
   env: dev
   debug: true
@@ -33,14 +33,14 @@ mongoCollections:
   users: users
   logs: logs
 redis:
-  addr: "cache:6379"
+  addr: "cacheable:6379"
   password: ""
   db: 0
   poolSize: 300
 jaeger: 
   enable: true
-  serviceName: auth_service
-  addr: "http://jaeger:14268/api/traces"
+  serviceName: Auth Service
+  addr: "http://otel_collector:14278/api/traces"
   logSpans: true
   id: 2
 email:

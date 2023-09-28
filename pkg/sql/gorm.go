@@ -19,7 +19,9 @@ func NewGormConnection(cfg MySQL) (*gorm.DB, error) {
 		return nil, err
 	}
 	sqlDB, err := db.DB()
-
+	if err != nil {
+		return nil, err
+	}
 	err = sqlDB.Ping()
 	if err != nil {
 		return nil, err

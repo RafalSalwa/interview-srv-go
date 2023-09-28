@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -11,13 +12,13 @@ import (
 	mySql "github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
-type SqlServiceImpl struct {
+type SQLServiceImpl struct {
 	db     *mySql.DB
 	logger *logger.Logger
 }
 
-type UserSqlService interface {
-	GetById(id int) (user *models.UserDBResponse, err error)
+type UserSQLService interface {
+	GetByID(id int) (user *models.UserDBResponse, err error)
 	GetByCode(code string) (user *models.UserDBModel, err error)
 	UsernameInUse(user *models.SignUpUserRequest) bool
 	StoreVerificationData(user *models.UserDBModel) bool
@@ -27,11 +28,7 @@ type UserSqlService interface {
 	CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error)
 }
 
-func NewMySqlService(db *mySql.DB, l *logger.Logger) *SqlServiceImpl {
-	return &SqlServiceImpl{db, l}
-}
-
-func (s SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
+func (s SQLServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 	user := &models.UserDBModel{}
 
 	row := s.db.QueryRow("SELECT id,verification_code FROM `user` WHERE verification_code = ?", code)
@@ -49,7 +46,7 @@ func (s SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 	return user, nil
 }
 
-func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error) {
+func (s *SQLServiceImpl) GetByID(id int) (user *models.UserDBResponse, err error) {
 	user = &models.UserDBResponse{}
 
 	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
@@ -73,7 +70,7 @@ func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error
 	return user, nil
 }
 
-func (s *SqlServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
+func (s *SQLServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
 	dbUser := &models.UserDBResponse{}
 	row := s.db.QueryRow("SELECT id FROM `user` WHERE email = ?", user.Email)
 	err := row.Scan(&dbUser.Id)
@@ -89,9 +86,9 @@ func (s *SqlServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
 	return true
 }
 
-func (s *SqlServiceImpl) StoreVerificationData(user *models.UserDBModel) bool {
+func (s *SQLServiceImpl) StoreVerificationData(user *models.UserDBModel) bool {
 	_, err := s.db.Exec("UPDATE `user` SET is_verified = 1, is_active=1 WHERE id = ?", user.Id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return false
 	}
 
@@ -102,7 +99,7 @@ func (s *SqlServiceImpl) StoreVerificationData(user *models.UserDBModel) bool {
 	return true
 }
 
-func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {
+func (s *SQLServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {
 	sqlStatement := "UPDATE user SET first_name=?, last_name=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, &user.Firstname, &user.Lastname, user.Id)
 
@@ -113,10 +110,11 @@ func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) 
 	return nil
 }
 
-func (s *SqlServiceImpl) LoginUser(u *models.SignInUserRequest) (*models.UserResponse, error) {
+func (s *SQLServiceImpl) LoginUser(u *models.SignInUserRequest) (*models.UserResponse, error) {
 	user := models.UserResponse{}
 
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name FROM `user` WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name FROM `user` "+
+		"WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
 	err := row.Scan(&user.Id,
 		&user.Username,
 		&user.Firstname)
@@ -145,7 +143,7 @@ func (s *SqlServiceImpl) LoginUser(u *models.SignInUserRequest) (*models.UserRes
 	return &user, nil
 }
 
-func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err error) {
+func (s *SQLServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err error) {
 	sqlStatement := "UPDATE `user` SET password=? WHERE id=?;"
 	_, err = s.db.ExecContext(getContext(), sqlStatement, user.Password, user.Id)
 
@@ -156,7 +154,7 @@ func (s *SqlServiceImpl) UpdateUserPassword(user *models.UpdateUserRequest) (err
 	return nil
 }
 
-func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*models.UserResponse, error) {
+func (s *SQLServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*models.UserResponse, error) {
 	if err := hashing.Validate(newUserRequest.Password, newUserRequest.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -185,7 +183,12 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	sqlStatement := "INSERT INTO `user` ( `password`, `email`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,0,1);"
+	sqlStatement := "INSERT INTO `user` ( " +
+		"`password`, " +
+		"`email`, " +
+		"`verification_code`, " +
+		"`is_verified`," +
+		"`is_active`) VALUES (?,?,?,0,1);"
 	rows, err := tx.ExecContext(ctx,
 		sqlStatement,
 		dbUser.Password,

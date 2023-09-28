@@ -2,12 +2,13 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"os"
-	"strings"
 )
 
 type Config struct {

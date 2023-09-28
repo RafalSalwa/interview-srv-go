@@ -2,8 +2,9 @@ package tracing
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func RegisterMetricsEndpoint(addr string) {

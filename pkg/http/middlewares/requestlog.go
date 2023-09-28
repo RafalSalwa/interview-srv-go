@@ -57,24 +57,24 @@ func RequestLog(logger *logger.Logger) mux.MiddlewareFunc {
 				le.Status = http.StatusOK
 			}
 			le.ResponseHeaderSize, le.ResponseBodySize = w2.size()
-
-			logger.Info().
-				Time("received_time", le.ReceivedTime).
-				Str("method", le.RequestMethod).
-				Str("url", le.RequestURL).
-				Int64("header_size", le.RequestHeaderSize).
-				Int64("body_size", le.RequestBodySize).
-				Str("agent", le.UserAgent).
-				Str("referer", le.Referer).
-				Str("proto", le.Proto).
-				Str("remote_ip", le.RemoteIP).
-				Str("server_ip", le.ServerIP).
-				Int("status", le.Status).
-				Int64("resp_header_size", le.ResponseHeaderSize).
-				Int64("resp_body_size", le.ResponseBodySize).
-				Dur("latency", le.Latency).
-				Msg("Request")
-
+			if le.RequestURL != "/metrics" {
+				logger.Info().
+					Time("received_time", le.ReceivedTime).
+					Str("method", le.RequestMethod).
+					Str("url", le.RequestURL).
+					Int64("header_size", le.RequestHeaderSize).
+					Int64("body_size", le.RequestBodySize).
+					Str("agent", le.UserAgent).
+					Str("referer", le.Referer).
+					Str("proto", le.Proto).
+					Str("remote_ip", le.RemoteIP).
+					Str("server_ip", le.ServerIP).
+					Int("status", le.Status).
+					Int64("resp_header_size", le.ResponseHeaderSize).
+					Int64("resp_body_size", le.ResponseBodySize).
+					Dur("latency", le.Latency).
+					Msg("Request")
+			}
 			h.ServeHTTP(w2, r2)
 		})
 	}

@@ -21,7 +21,7 @@ type userService struct {
 }
 
 func (s *userService) Load(ctx context.Context, id string) (*models.UserDBModel, error) {
-	uid, err := strconv.ParseInt(id, 10, 64)
+	uid, _ := strconv.ParseInt(id, 10, 64)
 	res, err := s.repository.ById(ctx, uid)
 	if err != nil {
 		return nil, err

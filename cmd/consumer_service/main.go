@@ -15,12 +15,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
-	}
-}
-
 func main() {
 	cfg, err := config.InitConfig()
 	if err != nil {
@@ -57,7 +51,7 @@ func main() {
 }
 
 func NewContextCancellableByOsSignals(parent context.Context) context.Context {
-	signalChannel := make(chan os.Signal)
+	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
 	newCtx, cancel := context.WithCancel(parent)
 

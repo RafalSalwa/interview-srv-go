@@ -2,6 +2,7 @@ package cqrs
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/query"

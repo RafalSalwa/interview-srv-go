@@ -19,5 +19,5 @@ jaeger:
   enable: true
   serviceName: tester_service
   env: dev
-  Addr: "0.0.0.0:6831"
+  Addr: "http://otel_collector:14278/api/traces"
   logSpans: true

@@ -1,9 +1,10 @@
 package responses
 
 import (
-    grpc_codes "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/status"
-    "net/http"
+	"net/http"
+
+	grpc_codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func FromGRPCError(err *status.Status, w http.ResponseWriter) {
@@ -12,8 +13,9 @@ func FromGRPCError(err *status.Status, w http.ResponseWriter) {
 		RespondConflict(w, err.Message())
 	case grpc_codes.NotFound:
 		RespondNotFound(w)
+	case grpc_codes.Unavailable:
+		InternalServerError(w)
 	default:
 		RespondBadRequest(w, err.Message())
 	}
-
 }

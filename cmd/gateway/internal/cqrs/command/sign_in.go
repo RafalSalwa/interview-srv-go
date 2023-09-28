@@ -2,6 +2,8 @@ package command
 
 import (
 	"context"
+	"go.opentelemetry.io/otel"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
@@ -15,6 +17,9 @@ func NewSignInHandler(authClient intrvproto.AuthServiceClient) SignInHandler {
 }
 
 func (h SignInHandler) Handle(ctx context.Context, req models.SignInUserRequest) (*models.UserResponse, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("SignInUser").Start(ctx, "CQRS")
+	defer span.End()
+
 	credentials := &intrvproto.SignInUserInput{
 		Username: req.Username,
 		Email:    req.Email,

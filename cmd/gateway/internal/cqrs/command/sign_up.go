@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
@@ -19,7 +20,6 @@ func NewSignUpHandler(authClient intrvproto.AuthServiceClient) SignUpHandler {
 }
 
 func (h SignUpHandler) Handle(ctx context.Context, req models.SignUpUserRequest) error {
-
 	_, err := h.authClient.SignUpUser(ctx, &intrvproto.SignUpUserInput{
 		Email:           req.Email,
 		Password:        req.Password,

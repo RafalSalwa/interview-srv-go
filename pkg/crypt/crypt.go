@@ -12,8 +12,8 @@ func Encode(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func Encrypt(text, MySecret string) (string, error) {
-	block, err := aes.NewCipher([]byte(MySecret))
+func Encrypt(text, Secret string) (string, error) {
+	block, err := aes.NewCipher([]byte(Secret))
 	if err != nil {
 		return "", err
 	}
@@ -32,8 +32,8 @@ func Decode(s string) []byte {
 	return data
 }
 
-func Decrypt(text, MySecret string) (string, error) {
-	block, err := aes.NewCipher([]byte(MySecret))
+func Decrypt(text, Secret string) (string, error) {
+	block, err := aes.NewCipher([]byte(Secret))
 	if err != nil {
 		return "", err
 	}

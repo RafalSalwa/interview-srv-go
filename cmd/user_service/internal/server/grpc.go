@@ -3,7 +3,12 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/rpc_api"
+	"net"
+	"os"
+	"runtime/debug"
+	"time"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/rpc"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"
 	grpc_config "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -28,10 +33,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"net"
-	"os"
-	"runtime/debug"
-	"time"
 )
 
 type GRPC struct {
@@ -45,7 +46,6 @@ type GRPC struct {
 func NewGrpcServer(config grpc_config.Config,
 	probesCfg probes.Config,
 	userService services.UserService) (*GRPC, error) {
-
 	srv := &GRPC{
 		config:      config,
 		probing:     probesCfg,
@@ -85,8 +85,8 @@ func (s GRPC) Run() {
 		return nil
 	}
 
-	logger := log.NewLogfmtLogger(os.Stderr)
-	rpcLogger := log.With(logger, "service", "gRPC/server", "component", "user_service")
+	l := log.NewLogfmtLogger(os.Stderr)
+	rpcLogger := log.With(l, "service", "gRPC/server", "component", "user_service")
 	logTraceID := func(ctx context.Context) logging.Fields {
 		if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
 			return logging.Fields{"traceID", span.TraceID().String()}
@@ -123,9 +123,9 @@ func (s GRPC) Run() {
 		)),
 	)
 
-	userServer, err := rpc_api.NewGrpcUserServer(s.config, s.userService)
+	userServer, err := rpc.NewGrpcUserServer(s.config, s.userService)
 	if err != nil {
-		//s.logger.Error().Err(err)
+		l.Log(err)
 	}
 	pb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
@@ -133,13 +133,14 @@ func (s GRPC) Run() {
 	listener, err := net.Listen("tcp", s.config.Addr)
 
 	if err != nil {
-		//s.logger.Error().Err(err)
+		l.Log(err)
+		// s.l.Error().Err(err)
 	}
 
-	//s.logger.Info().Msgf("Starting gRPC server on: %s", s.config.Addr)
-	err = grpcServer.Serve(listener)
-	if err != nil {
-		//s.logger.Error().Err(err)
+	l.Log("Starting gRPC server on: %s", s.config.Addr)
+	if err = grpcServer.Serve(listener); err != nil {
+		l.Log("serve:", err)
+		// s.l.Error().Err(err)
 	}
 	grpcServer.GracefulStop()
 }

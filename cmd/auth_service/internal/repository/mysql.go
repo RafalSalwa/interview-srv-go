@@ -2,10 +2,12 @@ package repository
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"go.opentelemetry.io/otel"
 	otelcodes "go.opentelemetry.io/otel/codes"
-	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"gorm.io/gorm"
@@ -23,27 +25,29 @@ func NewUserAdapter(db *gorm.DB) UserRepository {
 	return &UserAdapter{DB: db}
 }
 
-func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+func (r *UserAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(ctx, "Handler SignUpUser")
+	defer span.End()
+
 	if err := r.DB.Where(&user).First(&user).Error; err != nil {
 		return nil, err
 	}
+	user.Cacheable, _ = cacheable.NewCachable("user_", user.Email, user)
 	return user, nil
 }
 
 func (r *UserAdapter) ConfirmVerify(ctx context.Context, user *models.UserDBModel) error {
-	if err := r.DB.Model(user).
-		Updates(models.UserDBModel{
-			Verified: true,
-			Active:   true,
-		}).
-		Error; err != nil {
-		return err
-	}
-	return nil
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "ConfirmVerify")
+	defer span.End()
+
+	return r.DB.Model(user).Updates(models.UserDBModel{
+		Verified: true,
+		Active:   true,
+	}).Error
 }
 
 func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "MySQL Repository SingUp")
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "MySQL Repository SingUp")
 	defer span.End()
 	if err := r.DB.Create(&user).Error; err != nil {
 		span.RecordError(err)
@@ -54,6 +58,8 @@ func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) erro
 }
 
 func (r *UserAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "ById")
+	defer span.End()
 	var user models.UserDBModel
 	r.DB.First(&user, "id = ?", id)
 	return &user, nil
@@ -70,6 +76,9 @@ func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserReques
 }
 
 func (r *UserAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "UpdateLastLogin")
+	defer span.End()
+
 	now := time.Now()
 	r.DB.Model(u).Update("LastLogin", now)
 	u.LastLogin = &now

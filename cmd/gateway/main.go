@@ -1,29 +1,31 @@
 package main
 
 import (
-	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
-	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/server"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/fatih/color"
-	"github.com/pkg/profile"
-	"net/http"
-	_ "net/http/pprof"
-	"os"
-	"os/signal"
-	"syscall"
+    "fmt"
+    "net/http"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/handler"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/router"
+    "github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/server"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/fatih/color"
+    "github.com/pkg/profile"
 )
 
-const profFlag = "--prof"
-const pprofServerFlag = "--pprof-server"
+const (
+	profFlag        = "--prof"
+	pprofServerFlag = "--pprof-server"
 
-const cpuProf = "cpu"
-const memProf = "mem"
-const blockingProf = "blocking"
-const traceProf = "trace"
+	cpuProf      = "cpu"
+	memProf      = "mem"
+	blockingProf = "blocking"
+	traceProf    = "trace"
+)
 
 func main() {
 	if err := run(); err != nil {

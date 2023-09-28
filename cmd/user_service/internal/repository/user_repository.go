@@ -15,7 +15,7 @@ type UserRepository interface {
 	ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error)
 	ConfirmVerify(ctx context.Context, vCode string) error
 	UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error)
-	FindUserById(uid int64) (*models.UserDBModel, error)
+	FindUserByID(uid int64) (*models.UserDBModel, error)
 	ChangePassword(userid int64, password string) error
 	BeginTx() *gorm.DB
 	GetConnection() *gorm.DB

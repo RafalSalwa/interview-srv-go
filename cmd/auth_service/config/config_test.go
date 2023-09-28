@@ -1,8 +1,11 @@
+//go:build unit
+
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInitConfig(t *testing.T) {
@@ -24,5 +27,5 @@ func TestInitConfig(t *testing.T) {
 	assert.NotEmpty(t, c.Redis)
 	assert.NotEmpty(t, c.GRPC)
 	assert.NotEmpty(t, c.MySQL)
-	assert.Equal(t, "auth_service", c.ServiceName)
+	assert.Equal(t, "Auth Service", c.ServiceName)
 }

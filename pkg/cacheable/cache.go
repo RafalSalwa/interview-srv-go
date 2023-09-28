@@ -1,4 +1,4 @@
-package cache
+package cacheable
 
 import (
 	"context"
@@ -28,22 +28,22 @@ type ICacheable interface {
 type Cacheable struct {
 	LastUpdated time.Time `json:"last_updated,omitempty"`
 	prefix      string
-	cacheId     string
+	cacheID     string
 	parent      ICacheable
 }
 
 func (tag Tags) key(key string) string {
 	return "redis_tags_" + key
 }
-func NewCachable(prefix string, id string, parentPtr ICacheable) (*Cacheable, error) {
+func NewCachable(prefix, id string, parentPtr ICacheable) (*Cacheable, error) {
 	if reflect.ValueOf(parentPtr).Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("Parent field in cachable must be a pointer")
+		return nil, fmt.Errorf("parent field in cachable must be a pointer")
 	}
-	return &Cacheable{prefix: prefix, cacheId: id, parent: parentPtr}, nil
+	return &Cacheable{prefix: prefix, cacheID: id, parent: parentPtr}, nil
 }
 
 func (c *Cacheable) GetKey() string {
-	return KeyPrefix + c.prefix + ":" + c.cacheId
+	return KeyPrefix + c.prefix + ":" + c.cacheID
 }
 
 func (c *Cacheable) Get(ctx context.Context) error {

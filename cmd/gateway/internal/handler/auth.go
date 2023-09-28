@@ -55,12 +55,11 @@ func (a authHandler) SignInUser() http.HandlerFunc {
 
 	res := &models.UserResponse{}
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
+		ctx, span := otel.GetTracerProvider().Tracer("SignInUser").Start(r.Context(), "SignInUser Handler")
 		defer span.End()
 
 		if err := validate.UserInput(r, &reqUser); err != nil {
-			tracing.RecordError(span, err)
-			a.logger.Error().Err(err).Msg("SignUpUser: decode")
+			a.logger.Error().Err(err).Msg("SignIn: decode")
 
 			responses.RespondBadRequest(w, err.Error())
 			return
@@ -70,15 +69,13 @@ func (a authHandler) SignInUser() http.HandlerFunc {
 		res, errQuery = a.cqrs.SigninCommand(ctx, reqUser)
 
 		if errQuery != nil {
-			span.RecordError(errQuery)
-			span.SetStatus(codes.Error, errQuery.Error())
 			a.logger.Error().Err(errQuery).Msg("gRPC:SignIn")
 
 			if e, ok := status.FromError(errQuery); ok {
 				responses.FromGRPCError(e, w)
 				return
 			}
-			responses.RespondInternalServerError(w)
+			responses.InternalServerError(w)
 			return
 		}
 		responses.NewUserResponse(res, w)
@@ -107,11 +104,11 @@ func (a authHandler) SignUpUser() http.HandlerFunc {
 				responses.FromGRPCError(e, w)
 				return
 			}
-			responses.RespondInternalServerError(w)
+			responses.InternalServerError(w)
 			return
 		}
 		if exists {
-			responses.RespondInternalServerError(w)
+			responses.InternalServerError(w)
 			return
 		}
 
@@ -188,8 +185,13 @@ func (a authHandler) Verify() http.HandlerFunc {
 		defer span.End()
 
 		vCode = mux.Vars(r)["code"]
+
 		if vCode == "" {
-			responses.RespondBadRequest(w, "code param is missing")
+			vCode = r.URL.Query().Get("code")
+			if vCode == "" {
+				responses.RespondBadRequest(w, "code param is missing")
+				return
+			}
 		}
 
 		err := a.cqrs.Commands.VerifyUserByCode.Handle(ctx, command.VerifyCode{VerificationCode: vCode})
@@ -197,7 +199,7 @@ func (a authHandler) Verify() http.HandlerFunc {
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("SignUpUser:create")
+			a.logger.Error().Err(err).Msg("Verify")
 
 			if e, ok := status.FromError(err); ok {
 				responses.FromGRPCError(e, w)

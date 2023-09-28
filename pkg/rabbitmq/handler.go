@@ -47,7 +47,7 @@ func (c *IntrvClient) handleEvent(data []byte) (isSuccess bool) {
 	_ = json.Unmarshal(data, &event)
 
 	if c.debug {
-		str1 := string(data[:])
+		str1 := string(data)
 		fmt.Println("String =", str1)
 		fmt.Printf("processing event %s\n %#v\n", event.Name, event)
 	}
