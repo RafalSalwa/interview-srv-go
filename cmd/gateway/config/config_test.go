@@ -1,19 +1,14 @@
+//go:build unit
+
 package config
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInitConfig(t *testing.T) {
-	os.Setenv("APP_ENV", "staging")
-	path, err := getEnvPath()
-	assert.NoError(t, err)
-	assert.NotEmpty(t, path)
-	assert.Contains(t, path, "gateway")
-
 	c, err := InitConfig()
 	assert.NoError(t, err)
 	assert.NotEmpty(t, c.HTTP)

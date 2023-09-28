@@ -1,4 +1,4 @@
-package rpc_api
+package rpc
 
 import (
 	"context"
@@ -15,6 +15,9 @@ import (
 )
 
 func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) (*pb.BoolValue, error) {
+	_, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserByID")
+	defer span.End()
+
 	user := &models.UserDBModel{Email: req.GetValue()}
 	exists, err := us.userService.UsernameInUse(user)
 	if err != nil {
@@ -23,8 +26,8 @@ func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) 
 	return &pb.BoolValue{Value: exists}, nil
 }
 
-func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserById")
+func (us *UserServer) GetUserByID(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserByID")
 	defer span.End()
 
 	udb, err := us.userService.GetById(ctx, req.UserId)
@@ -108,7 +111,9 @@ func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest
 	return ud, nil
 }
 
-func (us *UserServer) ChangePassword(ctx context.Context, req *pb.ChangePasswordRequest) (*pb.ChangePasswordResponse, error) {
+func (us *UserServer) ChangePassword(
+	ctx context.Context,
+	req *pb.ChangePasswordRequest) (*pb.ChangePasswordResponse, error) {
 	err := us.userService.UpdateUserPassword(req.GetId(), req.GetPassword())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())

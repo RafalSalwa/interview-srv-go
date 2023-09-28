@@ -1,4 +1,4 @@
-package rpc_api
+package rpc
 
 import (
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/services"

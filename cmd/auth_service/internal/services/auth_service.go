@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
@@ -11,7 +12,6 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/query"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	"go.opentelemetry.io/otel"
 )
@@ -45,6 +45,7 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUserRequest) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
 	defer span.End()
+
 	if err := hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -80,29 +81,32 @@ func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignIn
 	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "AuthService SignInUser")
 	defer span.End()
 
-	q := query.Use(a.repository.GetConnection()).UserDBModel
-
-	u, errDB := q.FilterWithUsernameOrEmail(reqUser.Username, reqUser.Email)
-	if errDB != nil {
-		return nil, errDB
+	udb := &models.UserDBModel{
+		Username: reqUser.Username,
+		Email:    reqUser.Email,
 	}
-	dbUser, err := a.repository.Load(u)
+	//err := dbUser.Get()
+	dbUser, err := a.repository.Load(ctx, udb)
 	if err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
-
+	dbUser.Cacheable, _ = cacheable.NewCachable("user_", dbUser.Id, dbUser)
 	if err = hashing.Argon2IDComparePasswordAndHash(reqUser.Password, dbUser.Password); err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
 
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(dbUser)
 	if err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
 
 	tp, err := jwt.GenerateTokenPair(a.config, dbUser.Id)
 	if err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
 
@@ -114,7 +118,7 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	user := &models.UserDBModel{
 		Email: email,
 	}
-	dbUser, err := a.repository.Load(user)
+	dbUser, err := a.repository.Load(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +130,8 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, error) {
-	dbUser, err := a.repository.Load(user)
+func (a *AuthServiceImpl) Find(ctx context.Context, user *models.UserDBModel) (*models.UserResponse, error) {
+	dbUser, err := a.repository.Load(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -144,9 +148,8 @@ func (a *AuthServiceImpl) Find(user *models.UserDBModel) (*models.UserResponse, 
 	return ur, nil
 }
 
-func (a *AuthServiceImpl) Load(user *models.UserDBModel) (*models.UserResponse, error) {
-	ctx := context.Background()
-	dbUser, err := a.repository.Load(user)
+func (a *AuthServiceImpl) Load(ctx context.Context, user *models.UserDBModel) (*models.UserResponse, error) {
+	dbUser, err := a.repository.Load(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +182,7 @@ func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 	udb := &models.UserDBModel{
 		VerificationCode: vCode,
 	}
-	dbUser, err := a.repository.Load(udb)
+	dbUser, err := a.repository.Load(ctx, udb)
 	if err != nil {
 		return err
 	}
@@ -189,13 +192,10 @@ func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 	}
 	ur := &models.UserResponse{}
 
-	if errM := ur.FromDBModel(dbUser); errM != nil {
-		return errM
-	}
-	return nil
+	return ur.FromDBModel(dbUser)
 }
 
-func (a *AuthServiceImpl) FindUserById(uid int64) (*models.UserDBModel, error) {
+func (a *AuthServiceImpl) FindUserByID(uid int64) (*models.UserDBModel, error) {
 	ctx := context.Background()
 	dbUser, err := a.repository.ById(ctx, uid)
 	if err != nil {

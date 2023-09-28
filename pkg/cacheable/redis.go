@@ -1,8 +1,6 @@
-package cache
+package cacheable
 
 import (
-	"strings"
-
 	"github.com/go-redis/redis/v8"
 )
 
@@ -10,7 +8,7 @@ type cache struct {
 	client redis.Cmdable
 }
 
-func SetUpRedis(Db int, Cluster int) {
+func SetUpRedis(db int, Cluster int) {
 
 }
 
@@ -23,13 +21,4 @@ func SetUpRedisCluster(nodes []string) error {
 	//	return fmt.Errorf("redisCluster: nil")
 	//}
 	return nil
-}
-
-func formatRedisClusterAddress(list string) []string {
-	var returnList []string
-
-	hosts := strings.Split(list, ",")
-
-	returnList = append(returnList, hosts...)
-	return returnList
 }

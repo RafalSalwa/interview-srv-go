@@ -193,6 +193,10 @@ services:
     command: --config /etc/otelcol/otel-collector-config.yml
     depends_on:
       - jaeger
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       interview-net:
         aliases:
@@ -211,13 +215,13 @@ services:
           - imongo
 
   cache:
-    container_name: cache
+    container_name: cacheable
     image: redis:7-alpine
     ports:
       - '6379:6379'
     command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - cache:/data
+      - cacheable:/data
     networks:
       interview-net:
         aliases:

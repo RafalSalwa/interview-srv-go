@@ -27,7 +27,10 @@ func (srv *Server) Run() error {
 	ctx, rejectContext := context.WithCancel(NewContextCancellableByOsSignals(context.Background()))
 
 	authService := services.NewAuthService(ctx, srv.cfg, srv.log)
-	s := NewGrpcServer(srv.cfg.GRPC, srv.log, srv.cfg.Probes, authService)
+	s := NewGrpcServer(srv.cfg.GRPC, srv.log, &srv.cfg.Probes, authService)
+
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		s.Run()
@@ -39,10 +42,8 @@ func (srv *Server) Run() error {
 		}
 	}
 
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
 	<-shutdown
+	fmt.Println("got signal")
 	rejectContext()
 	return nil
 }

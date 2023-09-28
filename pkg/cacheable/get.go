@@ -1,4 +1,4 @@
-package cache
+package cacheable
 
 import "context"
 
@@ -48,7 +48,7 @@ func GetKeys(ctx context.Context, tag string) []string {
 	tagsKey := tags.key(tag)
 	tags, err = GetList(ctx, tagsKey, 0, 10)
 	if err != nil {
-
+		return nil
 	}
 	return tags
 }

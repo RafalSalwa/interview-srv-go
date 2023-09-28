@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func ContentTypeJson() mux.MiddlewareFunc {
+func ContentTypeJSON() mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// if r.Header.Get("Content-type") != "application/json" {

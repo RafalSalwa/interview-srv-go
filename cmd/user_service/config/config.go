@@ -44,7 +44,7 @@ type App struct {
 
 func InitConfig() (*Config, error) {
 	cfg := &Config{}
-	path, err := env.GetPath("user_service")
+	path, err := env.GetConfigPath("user_service")
 	if err != nil {
 		return nil, err
 	}

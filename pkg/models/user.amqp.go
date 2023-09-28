@@ -24,8 +24,8 @@ func (um *UserDBModel) AMQP() amqp.Publishing {
 	data, _ := json.Marshal(&ue)
 	event := rabbitmq.Event{
 		Name:       "customer_account_confirmation_requested",
-		Id:         "",
-		SequenceId: "",
+		ID:         "",
+		SequenceID: "",
 		Content:    string(data),
 	}
 	body, _ := json.Marshal(event)

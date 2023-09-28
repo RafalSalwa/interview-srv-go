@@ -1,4 +1,4 @@
-package cache
+package cacheable
 
 func Has(key string) bool {
 	// cmd := redisSlave.Exists(key)

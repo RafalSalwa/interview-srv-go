@@ -8,8 +8,8 @@ import (
 )
 
 type CustomerPasswordResetSucceeded struct {
-	CustomerId   int    `json:"customer_id"`
-	CustomerUuid string `json:"customer_uuid"`
+	CustomerID   int    `json:"customer_id"`
+	CustomerUUID string `json:"customer_uuid"`
 }
 
 func WrapHandleCustomerPasswordResetRequestedSuccessed(event rabbitmq.Event) error {

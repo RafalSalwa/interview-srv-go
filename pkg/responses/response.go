@@ -7,28 +7,26 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 )
 
-// sample data struct with additional eror details
-type Data struct {
+type data struct {
 	Success bool    `json:"success"`
 	Message *string `json:"message"`
-}
-
-type SuccessResponse struct {
-	Data Data `json:"data"`
-}
-
-type ConflictResponse struct {
-	Data Data `json:"conflict"`
 }
 
 type UserResponse struct {
 	*models.UserResponse `json:"user"`
 }
 
-func RespondInternalServerError(w http.ResponseWriter) {
-	_ = NewErrorBuilder().
+func InternalServerError(w http.ResponseWriter) {
+	NewErrorBuilder().
 		SetResponseCode(http.StatusInternalServerError).
 		SetReason("Internal server error").
+		SetWriter(w).
+		Respond()
+}
+func NotFound(w http.ResponseWriter) {
+	NewErrorBuilder().
+		SetResponseCode(http.StatusNotFound).
+		SetReason("Not found").
 		SetWriter(w).
 		Respond()
 }
@@ -71,7 +69,7 @@ func RespondOk(w http.ResponseWriter) {
 	_, err := w.Write([]byte("{\"status\":\"ok\"}"))
 
 	if err != nil {
-		RespondInternalServerError(w)
+		InternalServerError(w)
 	}
 }
 
@@ -80,7 +78,7 @@ func RespondCreated(w http.ResponseWriter) {
 	_, err := w.Write([]byte("{\"status\":\"created\"}"))
 
 	if err != nil {
-		RespondInternalServerError(w)
+		InternalServerError(w)
 	}
 }
 
@@ -92,7 +90,7 @@ func User(w http.ResponseWriter, u models.UserResponse) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	js, err := json.MarshalIndent(response, "", "   ")
 	if err != nil {
-		RespondInternalServerError(w)
+		InternalServerError(w)
 	}
 
 	Respond(w, http.StatusOK, js)
@@ -103,7 +101,7 @@ func NewUserResponse(u *models.UserResponse, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	js, err := json.MarshalIndent(response, "", "   ")
 	if err != nil {
-		RespondInternalServerError(w)
+		InternalServerError(w)
 	}
 
 	Respond(w, http.StatusOK, js)

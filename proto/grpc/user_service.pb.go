@@ -75,13 +75,13 @@ var file_user_service_proto_goTypes = []interface{}{
 }
 var file_user_service_proto_depIdxs = []int32{
 	0, // 0: intrvproto.UserService.CheckUserExists:input_type -> intrvproto.StringValue
-	1, // 1: intrvproto.UserService.GetUserById:input_type -> intrvproto.GetUserRequest
+	1, // 1: intrvproto.UserService.GetUserByID:input_type -> intrvproto.GetUserRequest
 	1, // 2: intrvproto.UserService.GetUserDetails:input_type -> intrvproto.GetUserRequest
 	2, // 3: intrvproto.UserService.VerifyUser:input_type -> intrvproto.VerifyUserRequest
 	3, // 4: intrvproto.UserService.ChangePassword:input_type -> intrvproto.ChangePasswordRequest
 	4, // 5: intrvproto.UserService.GetUser:input_type -> intrvproto.GetUserSignInRequest
 	5, // 6: intrvproto.UserService.CheckUserExists:output_type -> intrvproto.BoolValue
-	6, // 7: intrvproto.UserService.GetUserById:output_type -> intrvproto.UserDetails
+	6, // 7: intrvproto.UserService.GetUserByID:output_type -> intrvproto.UserDetails
 	6, // 8: intrvproto.UserService.GetUserDetails:output_type -> intrvproto.UserDetails
 	7, // 9: intrvproto.UserService.VerifyUser:output_type -> intrvproto.VerificationResponse
 	8, // 10: intrvproto.UserService.ChangePassword:output_type -> intrvproto.ChangePasswordResponse

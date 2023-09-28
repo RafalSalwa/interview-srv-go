@@ -13,6 +13,8 @@ func FromGRPCError(err *status.Status, w http.ResponseWriter) {
 		RespondConflict(w, err.Message())
 	case grpc_codes.NotFound:
 		RespondNotFound(w)
+	case grpc_codes.Unavailable:
+		InternalServerError(w)
 	default:
 		RespondBadRequest(w, err.Message())
 	}

@@ -6,21 +6,23 @@ import (
 	"strings"
 )
 
-func GetPath(suffix string) (string, error) {
-	getwd, err := os.Getwd()
+func GetConfigPath(suffix string) (string, error) {
+	dir, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("get workdir failed: %w", err)
+		return "", err
 	}
 
 	appEnv := getEnv("APP_ENV", "dev")
-	configFile := ""
-	if strings.HasSuffix(getwd, suffix) {
-		configFile = fmt.Sprintf("%s/config.%s.yaml", getwd, appEnv)
+	if strings.HasSuffix(dir, "config") {
+		return fmt.Sprintf("%s/config.%s.yaml", dir, appEnv), nil
+	} else if strings.HasSuffix(dir, suffix) {
+		return fmt.Sprintf("%s/config.%s.yaml", dir, appEnv), nil
+	} else if strings.HasSuffix(dir, "interview") {
+		return fmt.Sprintf("%s/cmd/%s/config/config.%s.yaml", dir, suffix, appEnv), nil
 	} else {
-		splitted := strings.Split(getwd, suffix)
-		configFile = fmt.Sprintf("%s/cmd/%s/config/config.%s.yaml", splitted[0], suffix, appEnv)
+		splitted := strings.Split(dir, suffix)
+		return fmt.Sprintf("%s/%s/config/config.%s.yaml", splitted[0], suffix, appEnv), nil
 	}
-	return configFile, nil
 }
 
 func getEnv(key, fallback string) string {

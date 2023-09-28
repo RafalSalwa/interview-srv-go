@@ -16,6 +16,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+const (
+	emailDomain = "@interview.com"
+	password    = "VeryG00dPass!"
+	numUsers    = 50
+)
+
 var (
 	dcConn, _ = grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 
@@ -23,23 +29,11 @@ var (
 	userClient = pb.NewUserServiceClient(dcConn)
 )
 
-const (
-	emailDomain = "@interview.com"
-	password    = "VeryG00dPass!"
-	numUsers    = 50
-)
-
 type User struct {
 	ValidationCode string
 	Username       string
 	Email          string
 	Password       string
-	Token          *Token
-}
-
-type Token struct {
-	access  string
-	refresh string
 }
 
 func NewDaisyChain(ctx context.Context, cfg *config.Config) {

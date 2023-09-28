@@ -28,7 +28,7 @@ mongo:
   params:
     connectTimeout: 10s
 redis:
-  addr: "cache:6379"
+  addr: "cacheable:6379"
   password: "" 
   db: 0
   poolSize: 300

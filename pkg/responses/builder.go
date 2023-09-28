@@ -1,9 +1,12 @@
 // Package path implements HTTP responses struct features and functions
 package responses
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
-type ErrResponseBuilder struct {
+type Builder struct {
 	Response       ErrResponse
 	ResponseWriter http.ResponseWriter
 }
@@ -14,54 +17,53 @@ type ErrResponse struct {
 	Headers map[string]interface{}
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
-	Data    Data   `json:"data"`
+	Data    data   `json:"data"`
 	Err     error
 }
 
-func NewErrorBuilder() *ErrResponseBuilder {
-	return &ErrResponseBuilder{
+func NewErrorBuilder() *Builder {
+	return &Builder{
 		Response: ErrResponse{},
 	}
 }
 
-func (rb *ErrResponseBuilder) SetResponseCode(statusCode int) *ErrResponseBuilder {
+func (rb *Builder) SetResponseCode(statusCode int) *Builder {
 	rb.Response.Code = statusCode
 	return rb
 }
 
-func (rb *ErrResponseBuilder) SetReason(reason string) *ErrResponseBuilder {
+func (rb *Builder) SetReason(reason string) *Builder {
 	rb.Response.Reason = reason
 	return rb
 }
 
-func (rb *ErrResponseBuilder) AddHeader(key, val string) *ErrResponseBuilder {
+func (rb *Builder) AddHeader(key, val string) *Builder {
 	rb.Response.Headers[key] = val
 	return rb
 }
 
-func (rb *ErrResponseBuilder) SetMessage(msg string) *ErrResponseBuilder {
+func (rb *Builder) SetMessage(msg string) *Builder {
 	rb.Response.Message = msg
 	return rb
 }
 
-func (rb *ErrResponseBuilder) SetWriter(w http.ResponseWriter) *ErrResponseBuilder {
+func (rb *Builder) SetWriter(w http.ResponseWriter) *Builder {
 	rb.ResponseWriter = w
 	return rb
 }
 
-func (rb *ErrResponseBuilder) SetError(err error) *ErrResponseBuilder {
+func (rb *Builder) SetError(err error) *Builder {
 	rb.Response.Err = err
 	return rb
 }
 
-func (rb *ErrResponseBuilder) Respond() error {
+func (rb *Builder) Respond() {
 	body := marshalErrorResponse(rb.Response.Reason)
 
 	rb.ResponseWriter.WriteHeader(rb.Response.Code)
 	_, err := rb.ResponseWriter.Write(body)
 	if err != nil {
 		rb.Response.Err = err
-		return err
+		log.Fatal(err)
 	}
-	return nil
 }

@@ -1,9 +1,11 @@
-package rpc_api
+package rpc
 
 import (
 	"context"
+	"errors"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"gorm.io/gorm"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
@@ -14,7 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.SignInUserResponse, error) {
+func (a *Auth) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.SignInUserResponse, error) {
 	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "GRPC SignInUser")
 	defer span.End()
 
@@ -24,18 +26,15 @@ func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUser
 		Password: req.GetPassword(),
 	}
 
-	ur, err := authServer.authService.SignInUser(ctx, loginUser)
+	ur, err := a.authService.SignInUser(ctx, loginUser)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(otelcodes.Error, err.Error())
-		authServer.logger.Error().Err(err).Msg("rpc:service:signin")
-
-		if err.Error() == "record not found" {
+		a.logger.Error().Err(err).Msg("rpc:service:signin")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, err.Error())
 		}
+
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
 	res := &pb.SignInUserResponse{
 		AccessToken:  ur.AccessToken,
 		RefreshToken: ur.RefreshToken,
@@ -43,7 +42,7 @@ func (authServer *AuthServer) SignInUser(ctx context.Context, req *pb.SignInUser
 	return res, nil
 }
 
-func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.SignUpUserResponse, error) {
+func (a *Auth) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.SignUpUserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-rpc").Start(ctx, "GRPC SignUpUser")
 	defer span.End()
 
@@ -53,20 +52,21 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 		PasswordConfirm: req.GetPasswordConfirm(),
 	}
 
-	um := &models.UserDBModel{}
-	um.Email = req.Email
-	um.Username = req.Email
+	um := &models.UserDBModel{
+		Email:    req.Email,
+		Username: req.Email,
+	}
 
-	dbUser, _ := authServer.authService.Load(um)
+	dbUser, _ := a.authService.Load(ctx, um)
 	if dbUser != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
 	}
 
-	ur, err := authServer.authService.SignUpUser(ctx, userSignUp)
+	ur, err := a.authService.SignUpUser(ctx, userSignUp)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
-		authServer.logger.Error().Err(err).Msg("rpc:service:signup")
+		a.logger.Error().Err(err).Msg("rpc:service:signup")
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	res := &pb.SignUpUserResponse{
@@ -78,10 +78,12 @@ func (authServer *AuthServer) SignUpUser(ctx context.Context, req *pb.SignUpUser
 	return res, nil
 }
 
-func (authServer *AuthServer) GetVerificationKey(ctx context.Context, in *pb.VerificationCodeRequest) (*pb.VerificationCodeResponse, error) {
-	ur, err := authServer.authService.GetVerificationKey(ctx, in.Email)
+func (a *Auth) GetVerificationKey(
+	ctx context.Context,
+	in *pb.VerificationCodeRequest) (*pb.VerificationCodeResponse, error) {
+	ur, err := a.authService.GetVerificationKey(ctx, in.Email)
 	if err != nil {
-		authServer.logger.Error().Err(err).Msg("rpc:service:getkey")
+		a.logger.Error().Err(err).Msg("rpc:service:getkey")
 		if err.Error() == "record not found" {
 			return nil, status.Errorf(codes.NotFound, "user with such credentials was not found")
 		}

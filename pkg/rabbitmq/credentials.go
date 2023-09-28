@@ -9,7 +9,7 @@ type Credentials struct {
 	Exchange *Exchange
 }
 
-func (c *Credentials) GetUrl() string {
+func (c *Credentials) GetURL() string {
 	result := "amqp://"
 	if c.Username != "" && c.Password != "" {
 		result = result + c.Username + ":" + c.Password + "@"

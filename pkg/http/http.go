@@ -7,7 +7,7 @@ type Config struct {
 	Development         bool          `mapstructure:"development"`
 	BasePath            string        `mapstructure:"basePath"`
 	DebugHeaders        bool          `mapstructure:"debugHeaders"`
-	HttpClientDebug     bool          `mapstructure:"httpClientDebug"`
+	HTTPClientDebug     bool          `mapstructure:"httpClientDebug"`
 	DebugErrorsResponse bool          `mapstructure:"debugErrorsResponse"`
 	IgnoreLogUrls       []string      `mapstructure:"ignoreLogUrls"`
 	TimeoutRead         time.Duration `mapstructure:"SERVER_TIMEOUT_READ"`

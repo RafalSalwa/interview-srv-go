@@ -35,7 +35,7 @@ func (r RedisAdapter) SingUp(ctx context.Context, user *models.UserDBModel) erro
 	panic("implement me")
 }
 
-func (r RedisAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+func (r RedisAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
 	// TODO implement me
 	panic("implement me")
 }

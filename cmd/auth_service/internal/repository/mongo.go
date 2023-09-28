@@ -42,7 +42,7 @@ func (m MongoAdapter) SingUp(ctx context.Context, user *models.UserDBModel) erro
 	panic("implement me")
 }
 
-func (m MongoAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+func (m MongoAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
 	// TODO implement me
 	panic("implement me")
 }

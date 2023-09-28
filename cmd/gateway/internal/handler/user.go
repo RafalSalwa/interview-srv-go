@@ -45,14 +45,14 @@ func (uh userHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
 
 func (uh userHandler) GetUserById() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserById")
+		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserByID")
 		defer span.End()
 
 		userId, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
-			uh.logger.Error().Err(err).Msg("GetUserById:header:getId")
+			uh.logger.Error().Err(err).Msg("GetUserByID:header:getId")
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}
@@ -61,7 +61,7 @@ func (uh userHandler) GetUserById() HandlerFunc {
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
-			uh.logger.Error().Err(err).Msg("GetUserById:grpc:getUser")
+			uh.logger.Error().Err(err).Msg("GetUserByID:grpc:getUser")
 
 			if e, ok := status.FromError(err); ok {
 				responses.FromGRPCError(e, w)
@@ -84,7 +84,7 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 		userId, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
 		if err != nil {
 			tracing.RecordError(span, err)
-			uh.logger.Error().Err(err).Msg("GetUserById:header:getId")
+			uh.logger.Error().Err(err).Msg("GetUserByID:header:getId")
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}

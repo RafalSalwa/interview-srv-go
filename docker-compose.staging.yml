@@ -180,14 +180,14 @@ services:
           - imongo
 
   cache:
-    container_name: cache
+    container_name: cacheable
     image: redis:7-alpine
     restart: always
     ports:
       - '6379:6379'
     command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - cache:/data
+      - cacheable:/data
     networks:
       interview-net:
         aliases:

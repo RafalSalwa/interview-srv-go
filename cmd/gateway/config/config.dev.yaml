@@ -1,4 +1,4 @@
-serviceName: api_gateway_service
+serviceName: Gateway
 app:
   env: dev
   debug: true
@@ -55,7 +55,7 @@ redis:
   poolSize: 300
 jaeger:
   enable: true
-  serviceName: api_gateway_service
+  serviceName: Gateway
   env: dev
   Addr: "http://otel_collector:14278/api/traces"
   logSpans: true

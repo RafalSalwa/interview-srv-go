@@ -1,7 +1,6 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -12,10 +11,6 @@ import (
 )
 
 var configPath string
-
-func init() {
-	flag.StringVar(&configPath, "config", "", "API Gateway microservice config path")
-}
 
 type Config struct {
 	ServiceName string         `mapstructure:"serviceName"`
@@ -35,7 +30,7 @@ type HTTP struct {
 	Development         bool   `mapstructure:"development"`
 	BasePath            string `mapstructure:"basePath"`
 	DebugHeaders        bool   `mapstructure:"debugHeaders"`
-	HttpClientDebug     bool   `mapstructure:"httpClientDebug"`
+	HTTPClientDebug     bool   `mapstructure:"httpClientDebug"`
 	DebugErrorsResponse bool   `mapstructure:"debugErrorsResponse"`
 }
 

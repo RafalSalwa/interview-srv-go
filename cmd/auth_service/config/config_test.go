@@ -1,3 +1,5 @@
+//go:build unit
+
 package config
 
 import (
@@ -25,5 +27,5 @@ func TestInitConfig(t *testing.T) {
 	assert.NotEmpty(t, c.Redis)
 	assert.NotEmpty(t, c.GRPC)
 	assert.NotEmpty(t, c.MySQL)
-	assert.Equal(t, "auth_service", c.ServiceName)
+	assert.Equal(t, "Auth Service", c.ServiceName)
 }

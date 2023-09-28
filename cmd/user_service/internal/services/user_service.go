@@ -40,7 +40,7 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 		log.Error().Err(err).Msg("grpc:run:mongo")
 	}
 
-	universalRedisClient, err := redisClient.NewUniversalRedisClient(cfg.Redis)
+	universalRedisClient, err := redisClient.NewUniversalRedisClient(ctx, cfg.Redis)
 	if err != nil {
 		log.Error().Err(err).Msg("redis")
 	}

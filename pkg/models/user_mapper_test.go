@@ -1,3 +1,5 @@
+//go:build unit
+
 package models
 
 import (
@@ -35,9 +37,9 @@ func initStructs() usersModels {
 		AccessToken:      "",
 		RefreshToken:     "",
 		CreatedAt:        timeNow,
-		UpdatedAt:        timeNow,
-		LastLogin:        timeNow,
-		DeletedAt:        timeNow,
+		UpdatedAt:        &timeNow,
+		LastLogin:        &timeNow,
+		DeletedAt:        &timeNow,
 	}
 	ureq := UserRequest{
 		Id:       uid,
@@ -100,7 +102,6 @@ func TestUserResponseMappers(t *testing.T) {
 
 	ur = UserResponse{}
 	ur.FromProtoSignIn(&intrvproto.SignInUserResponse{
-		Status:       "ok",
 		AccessToken:  "access",
 		RefreshToken: "refresh",
 	})

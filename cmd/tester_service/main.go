@@ -30,12 +30,6 @@ type User struct {
 	Username       string
 	Email          string
 	Password       string
-	token          *Token
-}
-
-type Token struct {
-	access  string
-	refresh string
 }
 
 var (
@@ -86,7 +80,7 @@ func runWorkersInOrder(ctx context.Context, cfg *config.Config, l *logger.Logger
 	<-done
 }
 
-func createUser(ctx context.Context, cfg *config.Config, created chan User, failed chan User) {
+func createUser(ctx context.Context, cfg *config.Config, created, failed chan User) {
 	concurrentGoroutines <- struct{}{}
 
 	pUsername, _ := generator.RandomString(12)
@@ -129,72 +123,70 @@ func createUser(ctx context.Context, cfg *config.Config, created chan User, fail
 func activateUser(ctx context.Context, cfg *config.Config, created chan User, activated chan User, failed chan User) {
 	concurrentGoroutines <- struct{}{}
 	// ctx := context.TODO()
-	select {
-	case user := <-created:
-		reqUser := &models.VerificationCodeRequest{Email: user.Email}
-		marshaled, err := json.Marshal(reqUser)
-		if err != nil {
-			log.Fatalf("impossible to marshall: %s", err)
-		}
-		client := &http.Client{}
-		URL := "http://" + cfg.HTTP.Addr + "/auth/code"
-		req, err := http.NewRequestWithContext(ctx, "POST", URL, bytes.NewReader(marshaled))
-		if err != nil {
-			log.Fatalf("impossible to read all body of response: %s", err)
-		}
-		req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Fatal(err)
-			<-concurrentGoroutines
-			return
-		}
-		type vCode struct {
-			Token string `json:"verification_token"`
-		}
-		type target struct {
-			User vCode `json:"user"`
-		}
-		tgt := target{}
-		err = json.NewDecoder(resp.Body).Decode(&tgt)
-		if err != nil {
-			fmt.Println(err)
-			<-concurrentGoroutines
-			return
-		}
-		defer resp.Body.Close()
-		if err != nil {
-			<-concurrentGoroutines
-			return
-		}
-
-		client = &http.Client{}
-		URL = "http://" + cfg.HTTP.Addr + "/auth/verify/" + tgt.User.Token
-		req, err = http.NewRequestWithContext(ctx, "GET", URL, bytes.NewReader(marshaled))
-		if err != nil {
-			log.Fatalf("impossible to read all body of response: %s", err)
-		}
-		req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
-		resp, err = client.Do(req)
-		if err != nil {
-			<-concurrentGoroutines
-			log.Fatal(err)
-			return
-		}
-
-		if err != nil {
-			<-concurrentGoroutines
-			log.Fatal(err)
-			return
-		}
-		defer resp.Body.Close()
-
-		activated <- User{ValidationCode: tgt.User.Token, Username: user.Username, Password: user.Password}
+	user := <-created
+	reqUser := &models.VerificationCodeRequest{Email: user.Email}
+	marshaled, err := json.Marshal(reqUser)
+	if err != nil {
+		log.Fatalf("impossible to marshall: %s", err)
 	}
+	client := &http.Client{}
+	URL := "http://" + cfg.HTTP.Addr + "/auth/code"
+	req, err := http.NewRequestWithContext(ctx, "POST", URL, bytes.NewReader(marshaled))
+	if err != nil {
+		log.Fatalf("impossible to read all body of response: %s", err)
+	}
+	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+		<-concurrentGoroutines
+		return
+	}
+	type vCode struct {
+		Token string `json:"verification_token"`
+	}
+	type target struct {
+		User vCode `json:"user"`
+	}
+	tgt := target{}
+	err = json.NewDecoder(resp.Body).Decode(&tgt)
+	if err != nil {
+		fmt.Println(err)
+		<-concurrentGoroutines
+		return
+	}
+	defer resp.Body.Close()
+	if err != nil {
+		<-concurrentGoroutines
+		return
+	}
+
+	client = &http.Client{}
+	URL = "http://" + cfg.HTTP.Addr + "/auth/verify/" + tgt.User.Token
+	req, err = http.NewRequestWithContext(ctx, "GET", URL, bytes.NewReader(marshaled))
+	if err != nil {
+		log.Fatalf("impossible to read all body of response: %s", err)
+	}
+	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
+	resp, err = client.Do(req)
+	if err != nil {
+		<-concurrentGoroutines
+		log.Fatal(err)
+		return
+	}
+
+	if err != nil {
+		<-concurrentGoroutines
+		log.Fatal(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	activated <- User{ValidationCode: tgt.User.Token, Username: user.Username, Password: user.Password}
 	<-concurrentGoroutines
 }
 
-func tokenUser(ctx context.Context, cfg *config.Config, activated chan User, failed chan User) {
+func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan User) {
 	concurrentGoroutines <- struct{}{}
 
 	user := <-activated
@@ -213,6 +205,7 @@ func tokenUser(ctx context.Context, cfg *config.Config, activated chan User, fai
 	if err != nil {
 		log.Fatalf("impossible to read all body of response: %s", err)
 	}
+
 	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
 	resp, err := client.Do(req)
 	if err != nil {

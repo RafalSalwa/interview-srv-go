@@ -12,9 +12,7 @@ type Config struct {
 
 func MakeToken(cfg Config) string {
 	hash := sha256.New()
-	_, err := io.WriteString(hash, cfg.salt)
-	if err != nil {
-	}
+	_, _ = io.WriteString(hash, cfg.salt)
 	token := base64.RawStdEncoding.EncodeToString(hash.Sum(nil))
 	return token
 }

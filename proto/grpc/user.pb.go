@@ -168,7 +168,7 @@ type UserDetails struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id        int64                `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id        int64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Username  string               `protobuf:"bytes,2,opt,name=Username,proto3" json:"Username,omitempty"`
 	Firstname string               `protobuf:"bytes,3,opt,name=Firstname,proto3" json:"Firstname,omitempty"`
 	Lastname  string               `protobuf:"bytes,4,opt,name=Lastname,proto3" json:"Lastname,omitempty"`
@@ -617,7 +617,7 @@ type ChangePasswordRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id       int64  `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	Id       int64  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Password string `protobuf:"bytes,2,opt,name=Password,proto3" json:"Password,omitempty"`
 }
 

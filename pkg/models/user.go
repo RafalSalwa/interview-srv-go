@@ -1,12 +1,11 @@
 package models
 
 import (
-	"time"
-
+	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
 	"gorm.io/gorm"
+	"time"
 )
 
-// swagger:model User
 type UserDBModel struct {
 	Id               int64      `gorm:"id;primaryKey;autoIncrement"`
 	Username         string     `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
@@ -22,6 +21,7 @@ type UserDBModel struct {
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
 	Verified         bool       `gorm:"column:is_verified;default:false"`
 	Active           bool       `gorm:"column:is_active;default:false"`
+	*cacheable.Cacheable
 }
 
 type UserMongoModel struct {
@@ -38,6 +38,18 @@ type UserMongoModel struct {
 	CreatedAt        time.Time  `bson:"createdAt,omitempty"`
 	UpdatedAt        *time.Time `bson:"updatedAt,omitempty"`
 	LastLogin        *time.Time `bson:"lastLogin,omitempty"`
+}
+
+func (um *UserDBModel) Get() (err error) {
+	return nil
+}
+
+func (um *UserDBModel) GetKey() string {
+	return ""
+}
+
+func (um *UserDBModel) Set(expire time.Duration) error {
+	return nil
 }
 
 func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {

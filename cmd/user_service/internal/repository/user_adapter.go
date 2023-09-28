@@ -32,7 +32,7 @@ func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error
 	return user, nil
 }
 
-func (r *UserAdapter) ConfirmVerify(ctx context.Context, vCode string) error {
+func (r *UserAdapter) ConfirmVerify(_ context.Context, vCode string) error {
 	user := models.UserDBModel{VerificationCode: vCode}
 	r.Load(&user)
 	var count int64
@@ -60,13 +60,13 @@ func NewUserAdapter(db *gorm.DB) UserRepository {
 	return &UserAdapter{DB: db}
 }
 
-func (r *UserAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
+func (r *UserAdapter) ById(_ context.Context, id int64) (*models.UserDBModel, error) {
 	var user models.UserDBModel
 	r.DB.First(&user, "id = ?", id)
 	return &user, nil
 }
 
-func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
+func (r *UserAdapter) ByLogin(_ context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
 	var dbUser models.UserDBModel
 
 	r.DB.First(&dbUser, "username = ? OR email = ?", user.Username, user.Email)

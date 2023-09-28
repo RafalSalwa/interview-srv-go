@@ -25,7 +25,7 @@ func NewConnection(cfg Config) *Connection {
 }
 
 func (l *Connection) Connect() error {
-	c, err := amqp.Dial(l.credentials.GetUrl())
+	c, err := amqp.Dial(l.credentials.GetURL())
 	if err != nil {
 		return err
 	}

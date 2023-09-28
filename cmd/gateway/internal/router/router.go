@@ -1,7 +1,6 @@
 package router
 
 import (
-	_ "embed"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,7 +20,7 @@ func NewHTTPRouter(l *logger.Logger) *mux.Router {
 	promMiddleware := middlewares.NewPrometheusMiddleware()
 
 	router.Use(
-		middlewares.ContentTypeJson(),
+		middlewares.ContentTypeJSON(),
 		middlewares.CorrelationID(),
 		middlewares.CORS(),
 		middlewares.RequestLog(l),
@@ -34,7 +33,8 @@ func NewHTTPRouter(l *logger.Logger) *mux.Router {
 
 func setupSwagger(r *mux.Router) {
 	docs.SwaggerInfo.Title = "Interview API for Gateway Service"
-	docs.SwaggerInfo.Description = "API Gateway that works like a backends for frontends pattern and passes requests to specific services"
+	docs.SwaggerInfo.Description = "API Gateway that works like a backends for frontends pattern" +
+		" and passes requests to specific services"
 
 	jsonFile, err := os.Open("docs/swagger.json")
 	if err != nil {

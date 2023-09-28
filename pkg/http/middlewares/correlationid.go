@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type CorrId struct {
-	correlationid string
+type CorrID struct {
+	value string
 }
 
 func CorrelationID() mux.MiddlewareFunc {
@@ -22,7 +22,7 @@ func CorrelationID() mux.MiddlewareFunc {
 				newid := uuid.New()
 				id = newid.String()
 			}
-			ctx = context.WithValue(ctx, CorrId{"correlation_id"}, id)
+			ctx = context.WithValue(ctx, CorrID{"correlation_id"}, id)
 			r = r.WithContext(ctx)
 			log := zerolog.Ctx(ctx)
 			log.UpdateContext(func(c zerolog.Context) zerolog.Context {

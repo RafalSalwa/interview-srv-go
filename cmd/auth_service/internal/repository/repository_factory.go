@@ -32,7 +32,7 @@ func NewUserRepository(ctx context.Context, dbType string, params *config.Config
 		return newMongoDBUserRepository(mongoClient), nil
 
 	case Redis:
-		universalRedisClient, err := redisClient.NewUniversalRedisClient(params.Redis)
+		universalRedisClient, err := redisClient.NewUniversalRedisClient(ctx, params.Redis)
 		if err != nil {
 			return nil, err
 		}

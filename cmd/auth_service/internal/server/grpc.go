@@ -7,7 +7,7 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rpc_api"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/rpc"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/services"
 	grpcconfig "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
@@ -32,26 +32,26 @@ const (
 type GRPC struct {
 	pb.UnimplementedAuthServiceServer
 	config      grpcconfig.Config
-	probesCfg   probes.Config
+	probesCfg   *probes.Config
 	logger      *logger.Logger
 	authService services.AuthService
 }
 
 func NewGrpcServer(
 	config grpcconfig.Config,
-	logger *logger.Logger,
-	probesCfg probes.Config,
+	log *logger.Logger,
+	probesCfg *probes.Config,
 	authService services.AuthService) *GRPC {
 	srv := &GRPC{
 		config:      config,
-		logger:      logger,
+		logger:      log,
 		probesCfg:   probesCfg,
 		authService: authService,
 	}
 	return srv
 }
 
-func (s GRPC) Run() {
+func (s *GRPC) Run() {
 	grpcServer := grpc.NewServer(
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle: maxConnectionIdle * time.Minute,
@@ -72,7 +72,7 @@ func (s GRPC) Run() {
 		)),
 	)
 
-	authServer, err := rpc_api.NewGrpcAuthServer(s.config, s.logger, s.authService)
+	authServer, err := rpc.NewGrpcAuthServer(s.config, s.logger, s.authService)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("auth:server:new")
 	}

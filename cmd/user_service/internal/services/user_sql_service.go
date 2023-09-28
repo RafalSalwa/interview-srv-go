@@ -19,7 +19,7 @@ type SqlServiceImpl struct {
 }
 
 type UserSqlService interface {
-	GetById(id int) (user *models.UserDBResponse, err error)
+	GetByID(id int) (user *models.UserDBResponse, err error)
 	GetByCode(code string) (user *models.UserDBModel, err error)
 	UsernameInUse(user *models.SignUpUserRequest) bool
 	StoreVerificationData(user *models.UserDBModel) bool
@@ -51,10 +51,19 @@ func (s SqlServiceImpl) GetByCode(code string) (*models.UserDBModel, error) {
 	return user, nil
 }
 
-func (s *SqlServiceImpl) GetById(id int) (user *models.UserDBResponse, err error) {
+func (s *SqlServiceImpl) GetByID(id int) (user *models.UserDBResponse, err error) {
 	user = &models.UserDBResponse{}
 
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name,password,is_verified, is_active, created_at FROM `user` WHERE is_active = 1 AND id=?", id)
+	row := s.db.QueryRow("SELECT "+
+		"id,"+
+		"username,"+
+		"first_name,"+
+		"last_name, "+
+		"password, "+
+		"is_verified, "+
+		"is_active, "+
+		"created_at "+
+		"FROM `user` WHERE is_active = 1 AND id=?", id)
 	err = row.Scan(&user.Id,
 		&user.Username,
 		&user.Firstname,
@@ -93,7 +102,7 @@ func (s *SqlServiceImpl) UsernameInUse(user *models.SignUpUserRequest) bool {
 
 func (s *SqlServiceImpl) StoreVerificationData(user *models.UserDBModel) bool {
 	_, err := s.db.Exec("UPDATE `user` SET is_verified = 1, is_active=1 WHERE id = ?", user.Id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return false
 	}
 
@@ -118,7 +127,8 @@ func (s *SqlServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) 
 func (s *SqlServiceImpl) LoginUser(u *models.SignInUserRequest) (*models.UserResponse, error) {
 	user := models.UserResponse{}
 
-	row := s.db.QueryRow("SELECT id,username,first_name,last_name FROM `user` WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
+	row := s.db.QueryRow("SELECT id,username,first_name,last_name FROM `user` "+
+		"WHERE (username=? OR email=?) AND (is_active = 1 AND is_verified = 1)", u.Username, u.Email)
 	err := row.Scan(&user.Id,
 		&user.Username,
 		&user.Firstname)
@@ -187,7 +197,8 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	sqlStatement := "INSERT INTO `user` ( `password`, `email`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,0,1);"
+	sqlStatement := "INSERT INTO `user` ( `password`, `email`, `verification_code`, `is_verified`,`is_active`) " +
+		"VALUES (?,?,?,0,1);"
 	rows, err := tx.ExecContext(ctx,
 		sqlStatement,
 		dbUser.Password,
