@@ -1,19 +1,19 @@
 package services
 
 import (
-	"context"
-	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
-	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	"go.opentelemetry.io/otel"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/pkg/generator"
+    "github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    "go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
@@ -81,17 +81,22 @@ func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignIn
 	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "AuthService SignInUser")
 	defer span.End()
 
-	udb := &models.UserDBModel{
-		Username: reqUser.Username,
-		Email:    reqUser.Email,
-	}
-	//err := dbUser.Get()
-	dbUser, err := a.repository.Load(ctx, udb)
+	enc, err := encdec.Encrypt(reqUser.Email)
 	if err != nil {
 		tracing.RecordError(span, err)
 		return nil, err
 	}
-	dbUser.Cacheable, _ = cacheable.NewCachable("user_", dbUser.Id, dbUser)
+	udb := &models.UserDBModel{
+		Email: enc,
+	}
+	if err = udb.Get(); err != nil {
+		udb, err := a.repository.Load(ctx, udb)
+		if err != nil {
+			tracing.RecordError(span, err)
+			return nil, err
+		}
+	}
+
 	if err = hashing.Argon2IDComparePasswordAndHash(reqUser.Password, dbUser.Password); err != nil {
 		tracing.RecordError(span, err)
 		return nil, err

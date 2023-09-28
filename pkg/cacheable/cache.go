@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"time"
 )
 
@@ -29,14 +28,14 @@ type ICacheable interface {
 type Cacheable struct {
 	LastUpdated time.Time `json:"last_updated,omitempty"`
 	prefix      string
-	cacheID     int64
+	cacheID     string
 	parent      ICacheable
 }
 
 func (tag Tags) key(key string) string {
 	return "redis_tags_" + key
 }
-func NewCachable(prefix string, id int64, parentPtr ICacheable) (*Cacheable, error) {
+func NewCachable(prefix, id string, parentPtr ICacheable) (*Cacheable, error) {
 	if reflect.ValueOf(parentPtr).Kind() != reflect.Ptr {
 		return nil, fmt.Errorf("parent field in cachable must be a pointer")
 	}
@@ -44,7 +43,7 @@ func NewCachable(prefix string, id int64, parentPtr ICacheable) (*Cacheable, err
 }
 
 func (c *Cacheable) GetKey() string {
-	return KeyPrefix + c.prefix + ":" + strconv.FormatInt(c.cacheID, 10)
+	return KeyPrefix + c.prefix + ":" + c.cacheID
 }
 
 func (c *Cacheable) Get(ctx context.Context) error {

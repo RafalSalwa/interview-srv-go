@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
@@ -31,6 +32,7 @@ func (r *UserAdapter) Load(ctx context.Context, user *models.UserDBModel) (*mode
 	if err := r.DB.Where(&user).First(&user).Error; err != nil {
 		return nil, err
 	}
+	user.Cacheable, _ = cacheable.NewCachable("user_", user.Email, user)
 	return user, nil
 }
 
