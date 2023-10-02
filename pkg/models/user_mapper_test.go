@@ -74,13 +74,12 @@ func initStructs() usersModels {
 		LastLogin:        &timeNow,
 		DeletedAt:        &timeNow,
 	}
-	um := usersModels{
+	return usersModels{
 		HTTPResponse: uresp,
 		HTTPRequest:  ureq,
 		DBResponse:   udbresp,
 		DBModel:      udb,
 	}
-	return um
 }
 
 func TestUserResponseMappers(t *testing.T) {
@@ -118,6 +117,17 @@ func TestUserResponseMappers(t *testing.T) {
 	assert.Equal(t, ur.Username, "username")
 	assert.Equal(t, ur.VerificationCode, "abcd")
 
+	dbu := UserDBModel{
+		Id: 1,
+	}
+	sup := &SignUpUserRequest{
+		Email:           "test@test.com",
+		Password:        "password",
+		PasswordConfirm: "password",
+	}
+	err = dbu.FromCreateUserReq(sup)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, dbu)
 	intrvU := &intrvproto.User{
 		Id:        1,
 		Username:  "username",
@@ -127,4 +137,8 @@ func TestUserResponseMappers(t *testing.T) {
 	err = ur.FromProtoUserResponse(&intrvproto.UserResponse{User: intrvU})
 	assert.NoError(t, err)
 	assert.Equal(t, ur.Username, "username")
+
+	ur = UserResponse{Id: 1}
+	ur.FromProtoUserDetails(&intrvproto.UserDetails{Id: 1})
+	assert.NotEmpty(t, ur)
 }

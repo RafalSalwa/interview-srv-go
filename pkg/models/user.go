@@ -39,18 +39,6 @@ type UserMongoModel struct {
 	LastLogin        *time.Time `bson:"lastLogin,omitempty"`
 }
 
-func (um *UserDBModel) Get() (err error) {
-	return nil
-}
-
-func (um *UserDBModel) GetKey() string {
-	return ""
-}
-
-func (um *UserDBModel) Set(expire time.Duration) error {
-	return nil
-}
-
 func (um *UserDBModel) BeforeCreate(tx *gorm.DB) (err error) {
 	um.Active = false
 	um.Verified = false
