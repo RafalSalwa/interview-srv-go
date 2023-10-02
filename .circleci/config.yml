@@ -40,3 +40,7 @@ workflows:
       - build
 #      - lint
       - test
+  upload-to-codecov:
+    jobs:
+      - checkout
+      - codecov/upload
