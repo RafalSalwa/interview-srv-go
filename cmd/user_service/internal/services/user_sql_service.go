@@ -18,7 +18,7 @@ type SqlServiceImpl struct {
 	logger *logger.Logger
 }
 
-type UserSqlService interface {
+type SQLService interface {
 	GetByID(id int) (user *models.UserDBResponse, err error)
 	GetByCode(code string) (user *models.UserDBModel, err error)
 	UsernameInUse(user *models.SignUpUserRequest) bool
@@ -29,7 +29,7 @@ type UserSqlService interface {
 	CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error)
 }
 
-func NewMySqlService(db *mySql.DB, l *logger.Logger) *SqlServiceImpl {
+func NewMySQLService(db *mySql.DB, l *logger.Logger) *SqlServiceImpl {
 	return &SqlServiceImpl{db, l}
 }
 

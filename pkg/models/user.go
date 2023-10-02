@@ -1,9 +1,10 @@
 package models
 
 import (
+	"time"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
 	"gorm.io/gorm"
-	"time"
 )
 
 type UserDBModel struct {

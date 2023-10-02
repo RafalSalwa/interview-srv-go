@@ -25,7 +25,7 @@ const (
 	numUsers    = 50
 )
 
-type User struct {
+type testUser struct {
 	ValidationCode string
 	Username       string
 	Email          string
@@ -49,9 +49,9 @@ func main() {
 }
 
 func runWorkersInOrder(ctx context.Context, cfg *config.Config, l *logger.Logger) {
-	qCreatedUsers := make(chan User, numUsers)
-	qActivatedUsers := make(chan User, numUsers)
-	qFailedUsers := make(chan User, numUsers)
+	qCreatedUsers := make(chan testUser, numUsers)
+	qActivatedUsers := make(chan testUser, numUsers)
+	qFailedUsers := make(chan testUser, numUsers)
 
 	done := make(chan bool)
 
@@ -67,7 +67,7 @@ func runWorkersInOrder(ctx context.Context, cfg *config.Config, l *logger.Logger
 
 	go func() {
 		for {
-			fmt.Printf("Concurrent queue len: | %6d | user creation queue:  %6d | user activation queue: %6d \n", len(concurrentGoroutines), len(qCreatedUsers), len(qActivatedUsers))
+			fmt.Printf("Concurrent queue len: | %6d | testUser creation queue:  %6d | testUser activation queue: %6d \n", len(concurrentGoroutines), len(qCreatedUsers), len(qActivatedUsers))
 			if len(concurrentGoroutines) == 0 {
 				done <- true
 				fmt.Println("Queues depleted, closing")
@@ -80,7 +80,7 @@ func runWorkersInOrder(ctx context.Context, cfg *config.Config, l *logger.Logger
 	<-done
 }
 
-func createUser(ctx context.Context, cfg *config.Config, created, failed chan User) {
+func createUser(ctx context.Context, cfg *config.Config, created, failed chan testUser) {
 	concurrentGoroutines <- struct{}{}
 
 	pUsername, _ := generator.RandomString(12)
@@ -94,8 +94,6 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan Us
 	marshaled, err := json.Marshal(newUser)
 	if err != nil {
 		log.Fatalf("impossible to marshall: %s", err)
-		<-concurrentGoroutines
-		return
 	}
 	client := &http.Client{}
 	URL := "http://" + cfg.HTTP.Addr + "/auth/signup"
@@ -112,7 +110,7 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan Us
 		<-concurrentGoroutines
 		return
 	}
-	created <- User{
+	created <- testUser{
 		Username: *pUsername,
 		Email:    email,
 		Password: password,
@@ -120,7 +118,7 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan Us
 	<-concurrentGoroutines
 }
 
-func activateUser(ctx context.Context, cfg *config.Config, created chan User, activated chan User, failed chan User) {
+func activateUser(ctx context.Context, cfg *config.Config, created chan testUser, activated chan testUser, failed chan testUser) {
 	concurrentGoroutines <- struct{}{}
 	// ctx := context.TODO()
 	user := <-created
@@ -139,14 +137,12 @@ func activateUser(ctx context.Context, cfg *config.Config, created chan User, ac
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		<-concurrentGoroutines
-		return
 	}
 	type vCode struct {
 		Token string `json:"verification_token"`
 	}
 	type target struct {
-		User vCode `json:"user"`
+		User vCode `json:"testUser"`
 	}
 	tgt := target{}
 	err = json.NewDecoder(resp.Body).Decode(&tgt)
@@ -182,11 +178,11 @@ func activateUser(ctx context.Context, cfg *config.Config, created chan User, ac
 	}
 	defer resp.Body.Close()
 
-	activated <- User{ValidationCode: tgt.User.Token, Username: user.Username, Password: user.Password}
+	activated <- testUser{ValidationCode: tgt.User.Token, Username: user.Username, Password: user.Password}
 	<-concurrentGoroutines
 }
 
-func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan User) {
+func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan testUser) {
 	concurrentGoroutines <- struct{}{}
 
 	user := <-activated
@@ -197,7 +193,6 @@ func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan U
 	marshaled, err := json.Marshal(credentials)
 	if err != nil {
 		log.Fatalf("impossible to marshall: %s", err)
-		<-concurrentGoroutines
 	}
 	client := &http.Client{}
 	URL := "http://" + cfg.HTTP.Addr + "/auth/signin"
@@ -215,7 +210,6 @@ func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan U
 	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalf("impossible to read all body of response: %s", err)
-		<-concurrentGoroutines
 	}
 	<-concurrentGoroutines
 }

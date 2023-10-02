@@ -41,9 +41,9 @@ func NewDaisyChain(ctx context.Context, cfg *config.Config) {
 
 	go Generate(ctx, ch, cfg)
 	mid := make(chan User)
-	go worker(ch, mid, "activate")
+	go worker(ctx, ch, mid, "activate")
 	out := make(chan User)
-	go worker(mid, out, "token")
+	go worker(ctx, mid, out, "token")
 }
 
 func Generate(ctx context.Context, ch chan<- User, cfg *config.Config) {
@@ -83,27 +83,25 @@ func dcCreateUser(ctx context.Context, cfg *config.Config) User {
 	}
 }
 
-func worker(in <-chan User, out chan<- User, task string) {
+func worker(ctx context.Context, in <-chan User, out chan<- User, task string) {
 	inUser := <-in
 	var outUser User
 	switch task {
 	case "activate":
-		outUser = dcActivateUser(inUser)
+		outUser = dcActivateUser(ctx, inUser)
 	case "token":
-		outUser = dcTokenUser(inUser)
+		outUser = dcTokenUser(ctx, inUser)
 	}
 	out <- outUser
 }
 
-func dcActivateUser(inUser User) User {
-	ctx := context.TODO()
+func dcActivateUser(ctx context.Context, inUser User) User {
 	rVerification := &pb.VerifyUserRequest{Code: inUser.ValidationCode}
 	_, _ = userClient.VerifyUser(ctx, rVerification)
 	return inUser
 }
 
-func dcTokenUser(inUser User) User {
-	ctx := context.TODO()
+func dcTokenUser(ctx context.Context, inUser User) User {
 
 	credentials := &pb.SignInUserInput{
 		Username: inUser.Username,

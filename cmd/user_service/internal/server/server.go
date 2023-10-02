@@ -12,23 +12,19 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/go-playground/validator/v10"
-	"github.com/go-redis/redis/v8"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type server struct {
-	log         *logger.Logger
-	cfg         *config.Config
-	v           *validator.Validate
-	mongoClient *mongo.Client
-	redisClient redis.UniversalClient
+type Server struct {
+	log *logger.Logger
+	cfg *config.Config
+	v   *validator.Validate
 }
 
-func NewGRPC(cfg *config.Config, log *logger.Logger) *server {
-	return &server{log: log, cfg: cfg, v: validator.New()}
+func NewGRPC(cfg *config.Config, log *logger.Logger) *Server {
+	return &Server{log: log, cfg: cfg, v: validator.New()}
 }
 
-func (srv *server) Run() error {
+func (srv *Server) Run() error {
 	ctx, rejectContext := context.WithCancel(NewContextCancellableByOsSignals(context.Background()))
 
 	userService := services.NewUserService(ctx, srv.cfg, srv.log)

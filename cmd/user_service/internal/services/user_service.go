@@ -25,7 +25,7 @@ type UserServiceImpl struct {
 
 type UserService interface {
 	GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error)
-	GetById(ctx context.Context, id int64) (*models.UserDBModel, error)
+	GetByID(ctx context.Context, id int64) (*models.UserDBModel, error)
 	UsernameInUse(user *models.UserDBModel) (bool, error)
 	StoreVerificationData(ctx context.Context, vCode string) error
 	UpdateUser(user *models.UpdateUserRequest) (err error)
@@ -80,7 +80,7 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.SignInUserRe
 	}
 	return ur, nil
 }
-func (s *UserServiceImpl) GetById(ctx context.Context, id int64) (*models.UserDBModel, error) {
+func (s *UserServiceImpl) GetByID(ctx context.Context, id int64) (*models.UserDBModel, error) {
 	user, err := s.repository.ById(ctx, id)
 	if err != nil {
 		return nil, err

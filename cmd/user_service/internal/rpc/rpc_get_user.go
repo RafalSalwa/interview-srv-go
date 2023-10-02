@@ -30,7 +30,7 @@ func (us *UserServer) GetUserByID(ctx context.Context, req *pb.GetUserRequest) (
 	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserByID")
 	defer span.End()
 
-	udb, err := us.userService.GetById(ctx, req.UserId)
+	udb, err := us.userService.GetByID(ctx, req.UserId)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
@@ -94,7 +94,7 @@ func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest)
 }
 
 func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
-	user, err := us.userService.GetById(ctx, req.GetUserId())
+	user, err := us.userService.GetByID(ctx, req.GetUserId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
@@ -112,7 +112,6 @@ func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest
 }
 
 func (us *UserServer) ChangePassword(
-	ctx context.Context,
 	req *pb.ChangePasswordRequest) (*pb.ChangePasswordResponse, error) {
 	err := us.userService.UpdateUserPassword(req.GetId(), req.GetPassword())
 	if err != nil {

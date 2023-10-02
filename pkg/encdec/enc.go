@@ -13,12 +13,12 @@ func Encrypt(plaintext string) (string, error) {
 	c, err := aes.NewCipher([]byte(key))
 
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
