@@ -16,11 +16,14 @@ jobs:
           name: Fetch dependencies
           command: go mod download
       - run:
-          name: Test
-          command: go test ./...
+          name: Unit test
+          command: make test_unit
+      - run:
+          name: Integration test
+          command: make test_integration
   build:
     docker:
-      - image: golang:1.17-alpine
+      - image: cimg/go:1.21.1
     working_directory: /go/src/interview-app-srv
     steps:
       - checkout
