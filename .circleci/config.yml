@@ -19,9 +19,7 @@ jobs:
           command: | 
             make test_unit
             mv coverage.html /tmp/artifacts
-      - store_artifacts:
-          path: /tmp/artifacts
-      - codecov/upload:
+      - codecov/upload
           
   build:
     docker:
