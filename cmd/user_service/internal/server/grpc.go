@@ -99,7 +99,7 @@ func (s GRPC) Run(l *logger.Logger) {
 	})
 	grpcPanicRecoveryHandler := func(p any) (err error) {
 		panicsTotal.Inc()
-		l.Error().Err(err).Msgf("recovered from panic %t", p, "stack", debug.Stack())
+		l.Error().Err(err).Msgf("recovered from panic %t stack %v", p, debug.Stack())
 		return status.Errorf(codes.Internal, "%s", p)
 	}
 

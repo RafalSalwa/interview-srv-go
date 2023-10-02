@@ -24,7 +24,7 @@ func TestVerificationCode(t *testing.T) {
 				return
 			}
 			letters := regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
-			if !letters(*code) {
+			if !letters(code) {
 				t.Error("verification code can contain only letters")
 				return
 			}
