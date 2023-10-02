@@ -1,10 +1,9 @@
 package models
 
 import (
-	"time"
+    "time"
 
-	"github.com/RafalSalwa/interview-app-srv/pkg/cacheable"
-	"gorm.io/gorm"
+    "gorm.io/gorm"
 )
 
 type UserDBModel struct {
@@ -22,7 +21,6 @@ type UserDBModel struct {
 	DeletedAt        *time.Time `gorm:"column:deleted_at"`
 	Verified         bool       `gorm:"column:is_verified;default:false"`
 	Active           bool       `gorm:"column:is_active;default:false"`
-	*cacheable.Cacheable
 }
 
 type UserMongoModel struct {

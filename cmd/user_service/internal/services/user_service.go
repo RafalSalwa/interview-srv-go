@@ -30,7 +30,7 @@ type UserService interface {
 	StoreVerificationData(ctx context.Context, vCode string) error
 	UpdateUser(user *models.UpdateUserRequest) (err error)
 	LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error)
-	UpdateUserPassword(userid int64, password string) error
+	UpdateUserPassword(ctx context.Context, userid int64, password string) error
 	CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error)
 }
 
@@ -114,8 +114,8 @@ func (s *UserServiceImpl) LoginUser(user *models.SignInUserRequest) (*models.Use
 	panic("implement me")
 }
 
-func (s *UserServiceImpl) UpdateUserPassword(userid int64, password string) error {
-	err := s.repository.ChangePassword(userid, password)
+func (s *UserServiceImpl) UpdateUserPassword(ctx context.Context, userid int64, password string) error {
+	err := s.repository.ChangePassword(ctx, userid, password)
 	if err != nil {
 		return err
 	}

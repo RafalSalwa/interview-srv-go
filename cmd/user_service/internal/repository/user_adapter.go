@@ -15,7 +15,7 @@ type UserAdapter struct {
 	DB *gorm.DB
 }
 
-func (r *UserAdapter) ChangePassword(userid int64, password string) error {
+func (r *UserAdapter) ChangePassword(ctx context.Context, userid int64, password string) error {
 	user := models.UserDBModel{Id: userid}
 	return r.DB.Model(user).
 		Updates(models.UserDBModel{

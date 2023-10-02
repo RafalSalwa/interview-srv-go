@@ -3,13 +3,14 @@
 package config
 
 import (
+	"github.com/RafalSalwa/interview-app-srv/pkg/env"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInitConfig(t *testing.T) {
-	path, err := getEnvPath()
+	path, err := env.GetConfigPath("user_service")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, path)
 	assert.Contains(t, path, "user_service")

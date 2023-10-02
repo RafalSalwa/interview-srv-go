@@ -11,10 +11,10 @@ import (
 )
 
 type usersModels struct {
-	uresp   UserResponse
-	ureq    UserRequest
-	udbResp UserDBResponse
-	udb     UserDBModel
+	HTTPResponse UserResponse
+	HTTPRequest  UserRequest
+	DBResponse   UserDBResponse
+	DBModel      UserDBModel
 }
 
 func initStructs() usersModels {
@@ -75,21 +75,21 @@ func initStructs() usersModels {
 		DeletedAt:        &timeNow,
 	}
 	um := usersModels{
-		uresp:   uresp,
-		ureq:    ureq,
-		udbResp: udbresp,
-		udb:     udb,
+		HTTPResponse: uresp,
+		HTTPRequest:  ureq,
+		DBResponse:   udbresp,
+		DBModel:      udb,
 	}
 	return um
 }
 
 func TestUserResponseMappers(t *testing.T) {
-	um := initStructs()
+	testModel := initStructs()
 	ur := UserResponse{}
-	err := ur.FromDBModel(&um.udb)
+	err := ur.FromDBModel(&testModel.DBModel)
 	assert.NoError(t, err)
 	ur = UserResponse{}
-	err = ur.FromDBResponse(&um.udbResp)
+	err = ur.FromDBResponse(&testModel.DBResponse)
 	assert.NoError(t, err)
 	tp := &jwt.TokenPair{
 		AccessToken:  "access",
