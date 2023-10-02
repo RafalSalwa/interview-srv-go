@@ -55,7 +55,7 @@ func NewGrpcServer(config grpc_config.Config,
 	return srv, nil
 }
 
-func (s GRPC) Run() {
+func (s GRPC) Run(l *logger.Logger) {
 	logEntry := logger.NewGRPCLogger()
 	grpclogrus.ReplaceGrpcLogger(logEntry)
 
@@ -85,8 +85,8 @@ func (s GRPC) Run() {
 		return nil
 	}
 
-	l := log.NewLogfmtLogger(os.Stderr)
-	rpcLogger := log.With(l, "service", "gRPC/server", "component", "user_service")
+	flog := log.NewLogfmtLogger(os.Stderr)
+	rpcLogger := log.With(flog, "service", "gRPC/server", "component", "user_service")
 	logTraceID := func(ctx context.Context) logging.Fields {
 		if span := trace.SpanContextFromContext(ctx); span.IsSampled() {
 			return logging.Fields{"traceID", span.TraceID().String()}
@@ -99,7 +99,7 @@ func (s GRPC) Run() {
 	})
 	grpcPanicRecoveryHandler := func(p any) (err error) {
 		panicsTotal.Inc()
-		level.Error(rpcLogger).Log("msg", "recovered from panic", "panic", p, "stack", debug.Stack())
+		l.Error().Err(err).Msgf("recovered from panic %t", p, "stack", debug.Stack())
 		return status.Errorf(codes.Internal, "%s", p)
 	}
 
@@ -125,7 +125,7 @@ func (s GRPC) Run() {
 
 	userServer, err := rpc.NewGrpcUserServer(s.config, s.userService)
 	if err != nil {
-		l.Log(err)
+		l.Error().Err(err).Msg("new GRPC server")
 	}
 	pb.RegisterUserServiceServer(grpcServer, userServer)
 	reflection.Register(grpcServer)
@@ -133,14 +133,11 @@ func (s GRPC) Run() {
 	listener, err := net.Listen("tcp", s.config.Addr)
 
 	if err != nil {
-		l.Log(err)
-		// s.l.Error().Err(err)
+		l.Error().Err(err).Msg("GRPC listen")
 	}
 
-	l.Log("Starting gRPC server on: %s", s.config.Addr)
 	if err = grpcServer.Serve(listener); err != nil {
-		l.Log("serve:", err)
-		// s.l.Error().Err(err)
+		l.Error().Err(err).Msg("GRPC serve")
 	}
 	grpcServer.GracefulStop()
 }

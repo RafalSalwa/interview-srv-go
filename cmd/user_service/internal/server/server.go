@@ -37,7 +37,7 @@ func (srv *Server) Run() error {
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		grpcServer.Run()
+		grpcServer.Run(srv.log)
 	}()
 
 	if srv.cfg.Jaeger.Enable {

@@ -190,15 +190,14 @@ func (s *SqlServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*
 	dbUser := &models.UserDBModel{
 		Password:         newUserRequest.Password,
 		Email:            newUserRequest.Email,
-		VerificationCode: *vcode,
+		VerificationCode: vcode,
 	}
 	ctx := getContext()
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	sqlStatement := "INSERT INTO `user` ( `password`, `email`, `verification_code`, `is_verified`,`is_active`) " +
-		"VALUES (?,?,?,0,1);"
+	sqlStatement := "INSERT INTO `user` ( `password`, `email`, `verification_code`, `is_verified`,`is_active`) VALUES (?,?,?,0,1);"
 	rows, err := tx.ExecContext(ctx,
 		sqlStatement,
 		dbUser.Password,

@@ -63,7 +63,7 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUser
 		return nil, err
 	}
 
-	um.VerificationCode = *vcode
+	um.VerificationCode = vcode
 	if errDB := a.repository.SingUp(ctx, um); errDB != nil {
 		return nil, errDB
 	}

@@ -52,7 +52,7 @@ func Generate(ctx context.Context, ch chan<- User, cfg *config.Config) {
 
 func dcCreateUser(ctx context.Context, cfg *config.Config) User {
 	pUsername, _ := generator.RandomString(12)
-	email := *pUsername + emailDomain
+	email := pUsername + emailDomain
 
 	newUser := &models.SignUpUserRequest{
 		Email:           email,

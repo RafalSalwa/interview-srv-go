@@ -25,6 +25,9 @@ test_integration:
 lint:
 	golangci-lint run --enable gosec
 
+check_sec:
+	gosec ./...
+
 .PHONY: proto
 proto:
 	@ if ! which protoc > /dev/null; then \

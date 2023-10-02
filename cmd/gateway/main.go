@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
@@ -100,11 +101,17 @@ func checkFlags(l *logger.Logger) {
 					l.Print(cyanStar, "Starting pprof server on port 6060.")
 					l.Print("Go to", "http://localhost:6060/debug/pprof in a browser to see supported endpoints.")
 
-					err := http.ListenAndServe("0.0.0.0:6060", nil)
-
-					if err != nil {
-						l.Error().Err(err).Msg("pprof server exited with error:")
+					srv := &http.Server{
+						Addr:         "0.0.0.0:6060",
+						Handler:      nil,
+						ReadTimeout:  3 * time.Second,
+						WriteTimeout: 5 * time.Second,
+						IdleTimeout:  5 * time.Second,
 					}
+					if err := srv.ListenAndServe(); err != nil {
+						l.Error().Err(err).Msg("Failed to serve Prometheus metrics:")
+					}
+
 				}()
 				args = args[1:]
 			default:
