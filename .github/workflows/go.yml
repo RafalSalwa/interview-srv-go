@@ -1,10 +1,29 @@
 name: Go package
 
-on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+      tags:
+        description: 'Test scenario tags'
+        required: false
+        type: boolean
+      env:
+        description: 'Environment to run tests against'
+        type: environment
+        required: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
 
@@ -31,7 +50,7 @@ jobs:
           name: Go-results
           path: TestResults.json
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
