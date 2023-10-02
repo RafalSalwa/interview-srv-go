@@ -16,7 +16,11 @@ jobs:
           command: go mod download
       - run:
           name: Unit test
-          command: make test_unit
+          command: | 
+            make test_unit
+            mv coverage.html /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
   build:
     docker:
       - image: cimg/go:1.21.1
