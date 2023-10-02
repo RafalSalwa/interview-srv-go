@@ -21,6 +21,8 @@ jobs:
             mv coverage.html /tmp/artifacts
       - store_artifacts:
           path: /tmp/artifacts
+      - codecov/upload:
+          
   build:
     docker:
       - image: cimg/go:1.21.1
@@ -44,6 +46,3 @@ workflows:
       - build
 #      - lint
       - test
-  upload-to-codecov:
-    jobs:
-      - codecov/upload
