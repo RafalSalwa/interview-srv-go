@@ -4,13 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"net/http"
-	_ "net/http/pprof"
-
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 type Server struct {

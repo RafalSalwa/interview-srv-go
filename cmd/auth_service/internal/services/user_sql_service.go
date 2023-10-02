@@ -176,7 +176,7 @@ func (s *SQLServiceImpl) CreateUser(newUserRequest *models.SignUpUserRequest) (*
 	dbUser := &models.UserDBModel{
 		Email:            newUserRequest.Email,
 		Password:         newUserRequest.Password,
-		VerificationCode: *vcode,
+		VerificationCode: vcode,
 	}
 	ctx := getContext()
 	tx, err := s.db.BeginTx(ctx, nil)

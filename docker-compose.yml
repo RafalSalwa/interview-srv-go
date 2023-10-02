@@ -215,13 +215,13 @@ services:
           - imongo
 
   cache:
-    container_name: cacheable
+    container_name: cache
     image: redis:7-alpine
     ports:
       - '6379:6379'
     command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - cacheable:/data
+      - cache:/data
     networks:
       interview-net:
         aliases:

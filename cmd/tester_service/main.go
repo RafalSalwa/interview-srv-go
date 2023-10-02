@@ -84,7 +84,7 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan te
 	concurrentGoroutines <- struct{}{}
 
 	pUsername, _ := generator.RandomString(12)
-	email := *pUsername + emailDomain
+	email := pUsername + emailDomain
 
 	newUser := &models.SignUpUserRequest{
 		Email:           email,
@@ -111,7 +111,7 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan te
 		return
 	}
 	created <- testUser{
-		Username: *pUsername,
+		Username: pUsername,
 		Email:    email,
 		Password: password,
 	}

@@ -34,7 +34,10 @@ func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error
 
 func (r *UserAdapter) ConfirmVerify(_ context.Context, vCode string) error {
 	user := models.UserDBModel{VerificationCode: vCode}
-	r.Load(&user)
+	_, err := r.Load(&user)
+	if err != nil {
+		return err
+	}
 	var count int64
 
 	r.DB.Where(&user).First(&user).Count(&count)
