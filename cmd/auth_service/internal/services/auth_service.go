@@ -1,19 +1,20 @@
 package services
 
 import (
-    "context"
-    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
-    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"context"
 
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
-    "github.com/RafalSalwa/interview-app-srv/pkg/generator"
-    "github.com/RafalSalwa/interview-app-srv/pkg/hashing"
-    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-    "go.opentelemetry.io/otel"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	"go.opentelemetry.io/otel"
 )
 
 type AuthServiceImpl struct {
@@ -89,27 +90,25 @@ func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignIn
 	udb := &models.UserDBModel{
 		Email: enc,
 	}
-	if err = udb.Get(); err != nil {
-		udb, err := a.repository.Load(ctx, udb)
-		if err != nil {
-			tracing.RecordError(span, err)
-			return nil, err
-		}
-	}
-
-	if err = hashing.Argon2IDComparePasswordAndHash(reqUser.Password, dbUser.Password); err != nil {
-		tracing.RecordError(span, err)
-		return nil, err
-	}
-
-	ur := &models.UserResponse{}
-	err = ur.FromDBModel(dbUser)
+	udb, err = a.repository.Load(ctx, udb)
 	if err != nil {
 		tracing.RecordError(span, err)
 		return nil, err
 	}
 
-	tp, err := jwt.GenerateTokenPair(a.config, dbUser.Id)
+	if err = hashing.Argon2IDComparePasswordAndHash(reqUser.Password, udb.Password); err != nil {
+		tracing.RecordError(span, err)
+		return nil, err
+	}
+
+	ur := &models.UserResponse{}
+	err = ur.FromDBModel(udb)
+	if err != nil {
+		tracing.RecordError(span, err)
+		return nil, err
+	}
+
+	tp, err := jwt.GenerateTokenPair(a.config, udb.Id)
 	if err != nil {
 		tracing.RecordError(span, err)
 		return nil, err

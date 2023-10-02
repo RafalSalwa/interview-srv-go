@@ -36,7 +36,6 @@ func (l *Consumer) HandleSingleMessage(ctx context.Context) error {
 					return d.Ack(false)
 				}
 				return d.Reject(true)
-
 			}
 		}
 	}

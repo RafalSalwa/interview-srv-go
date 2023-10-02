@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -21,7 +20,7 @@ jobs:
         run: go build -o gateway ./cmd/gateway/main.go
 
       - name: Test
-        run: go test -v -cover -race ./internal/... ./pkg/... ./cmd/... -json > TestResults.json
+        run: make test_unit
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         env:
@@ -32,7 +31,9 @@ jobs:
           name: Go-results
           path: TestResults.json
   test:
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

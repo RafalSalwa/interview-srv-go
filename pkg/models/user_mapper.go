@@ -46,11 +46,11 @@ func (r *UserResponse) FromProtoUserDetails(pbu *intrvproto.UserDetails) {
 
 func (r *UserResponse) FromDBModel(um *UserDBModel) error {
 	err := copier.Copy(r, &um)
-	r.Username = um.Username
-	r.CreatedAt = um.CreatedAt
 	if err != nil {
 		return fmt.Errorf("from response to db error: %w", err)
 	}
+	r.Username = um.Username
+	r.CreatedAt = um.CreatedAt
 	return nil
 }
 

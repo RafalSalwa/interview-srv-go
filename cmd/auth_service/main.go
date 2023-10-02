@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/auth_service/internal/server"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"os"
 )
 
 func main() {

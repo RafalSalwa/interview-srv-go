@@ -36,7 +36,13 @@ func (c *IntrvClient) HandleChannel(ctx context.Context, channelName string, con
 		return err
 	}
 
-	defer consumer.Close()
+	defer func(consumer *Consumer) error {
+		err := consumer.Close()
+		if err != nil {
+			return err
+		}
+		return nil
+	}(consumer)
 	return consumer.Handle(ctx)
 }
 
