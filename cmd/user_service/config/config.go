@@ -1,25 +1,21 @@
 package config
 
 import (
-	"fmt"
-	"os"
-	"strings"
+    "github.com/RafalSalwa/interview-app-srv/pkg/env"
 
-	"github.com/RafalSalwa/interview-app-srv/pkg/env"
+    "github.com/RafalSalwa/interview-app-srv/pkg/email"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 
-	"github.com/RafalSalwa/interview-app-srv/pkg/email"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/grpc"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	mongodb "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"github.com/RafalSalwa/interview-app-srv/pkg/probes"
-	"github.com/RafalSalwa/interview-app-srv/pkg/redis"
-	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
+    "github.com/RafalSalwa/interview-app-srv/pkg/grpc"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    mongodb "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "github.com/RafalSalwa/interview-app-srv/pkg/probes"
+    "github.com/RafalSalwa/interview-app-srv/pkg/redis"
+    "github.com/RafalSalwa/interview-app-srv/pkg/sql"
+    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+    "github.com/pkg/errors"
+    "github.com/spf13/viper"
 )
 
 type Config struct {
@@ -59,21 +55,4 @@ func InitConfig() (*Config, error) {
 		return nil, errors.Wrap(err, "viper.Unmarshal")
 	}
 	return cfg, nil
-}
-
-func getEnvPath() (string, error) {
-	getwd, err := os.Getwd()
-	appEnv := os.Getenv("APP_ENV")
-	if err != nil {
-		return "", errors.Wrap(err, "os.Getwd")
-	}
-
-	configPath := ""
-	if strings.Contains(getwd, "user_service") {
-		configPath = fmt.Sprintf("%s/config.%s.yaml", getwd, appEnv)
-	} else {
-		configPath = fmt.Sprintf("%s/cmd/user_service/config/config.%s.yaml", getwd, appEnv)
-	}
-
-	return configPath, nil
 }

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 )

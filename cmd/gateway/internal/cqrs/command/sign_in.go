@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+
 	"go.opentelemetry.io/otel"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"

@@ -4,12 +4,30 @@ orbs:
   codecov: codecov/codecov@3.2.5
   docker: circleci/docker@2.2.0
 jobs:
+  test:
+    docker:
+      - image: golang:1.17
+    working_directory: /go/src/interview-app-srv
+    steps:
+      - checkout
+      - run:
+          name: "Setup APP_WD"
+          command: echo 'export APP_WD="$(cd ${CIRCLE_WORKING_DIRECTORY}; pwd)/resources"' >> $BASH_ENV
+      - run:
+          name: Fetch dependencies
+          command: go mod download
+      - run:
+          name: Test
+          command: go test ./...
   build:
     docker:
       - image: golang:1.17-alpine
     working_directory: /go/src/interview-app-srv
+    steps:
       - checkout
-      - go mod download
+      - run:
+          name: "go mod"
+          command: "go mod download"
   
   lint:
     docker:
@@ -17,13 +35,7 @@ jobs:
     steps:
       - checkout
       - run: golangci-lint run
-  test:
-    docker:
-      - image: golang:1.17
-    working_directory: /go/src/<your-project-name>
-    steps:
-      - checkout
-      - run: go test -v -race ./...
+  
 
 workflows:
   build_lint_test:

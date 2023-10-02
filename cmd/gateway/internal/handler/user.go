@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
@@ -15,13 +18,11 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/status"
-	"net/http"
-	"strconv"
 )
 
 type UserHandler interface {
 	RouteRegisterer
-	GetUserById() HandlerFunc
+	GetUserByID() HandlerFunc
 	PasswordChange() HandlerFunc
 }
 
@@ -39,16 +40,16 @@ func (uh userHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
 	s := r.PathPrefix("/user").Subrouter()
 	s.Use(middlewares.ValidateJWTAccessToken(params))
 
-	s.Methods(http.MethodGet).Path("").HandlerFunc(uh.GetUserById())
+	s.Methods(http.MethodGet).Path("").HandlerFunc(uh.GetUserByID())
 	s.Methods(http.MethodPost).Path("/change_password").HandlerFunc(uh.PasswordChange())
 }
 
-func (uh userHandler) GetUserById() HandlerFunc {
+func (uh userHandler) GetUserByID() HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserByID")
 		defer span.End()
 
-		userId, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+		userID, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
@@ -57,7 +58,7 @@ func (uh userHandler) GetUserById() HandlerFunc {
 			return
 		}
 
-		user, err := uh.cqrs.GetUser(ctx, userId)
+		user, err := uh.cqrs.GetUser(ctx, userID)
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
@@ -81,7 +82,7 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "PasswordChange")
 		defer span.End()
 
-		userId, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+		userID, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
 		if err != nil {
 			tracing.RecordError(span, err)
 			uh.logger.Error().Err(err).Msg("GetUserByID:header:getId")
@@ -103,7 +104,7 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 			return
 		}
 
-		_, err = uh.cqrs.GetUser(ctx, userId)
+		_, err = uh.cqrs.GetUser(ctx, userID)
 		if err != nil {
 			tracing.RecordError(span, err)
 			uh.logger.Error().Err(err).Msg("PasswordChange:grpc:GetUser")

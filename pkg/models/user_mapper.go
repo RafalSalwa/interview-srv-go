@@ -122,7 +122,7 @@ func (m *UserMongoModel) FromDBModel(user *UserDBModel) error {
 func getRolesList(r string) []string {
 	i := strings.Index(r, "roles")
 	type RoleItem struct {
-		Roles []string
+		Roles []string `json:"roles"`
 	}
 	var val RoleItem
 
