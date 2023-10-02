@@ -102,7 +102,6 @@ func dcActivateUser(ctx context.Context, inUser User) User {
 }
 
 func dcTokenUser(ctx context.Context, inUser User) User {
-
 	credentials := &pb.SignInUserInput{
 		Username: inUser.Username,
 		Password: inUser.Password,

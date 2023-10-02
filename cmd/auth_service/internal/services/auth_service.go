@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 

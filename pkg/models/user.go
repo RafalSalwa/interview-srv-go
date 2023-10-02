@@ -1,9 +1,9 @@
 package models
 
 import (
-    "time"
+	"time"
 
-    "gorm.io/gorm"
+	"gorm.io/gorm"
 )
 
 type UserDBModel struct {

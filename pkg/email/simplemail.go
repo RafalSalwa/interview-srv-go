@@ -79,6 +79,13 @@ func (c *Client) SendVerificationEmail(data UserEmailData) error {
 		SetBodyData(mail.TextHTML, body.Bytes())
 
 	con, err := c.client.Connect()
+	defer func(con *mail.SMTPClient) error {
+		err = con.Close()
+		if err != nil {
+			return err
+		}
+		return nil
+	}(con)
 	if err != nil {
 		return err
 	}
@@ -86,6 +93,6 @@ func (c *Client) SendVerificationEmail(data UserEmailData) error {
 	if err != nil {
 		fmt.Println("send:", err)
 	}
-	con.Close()
+
 	return nil
 }

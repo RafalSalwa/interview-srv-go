@@ -114,7 +114,6 @@ func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest
 func (us *UserServer) ChangePassword(
 	ctx context.Context,
 	req *pb.ChangePasswordRequest) (*pb.ChangePasswordResponse, error) {
-
 	err := us.userService.UpdateUserPassword(ctx, req.GetId(), req.GetPassword())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
