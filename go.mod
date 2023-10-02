@@ -1,6 +1,6 @@
 module github.com/RafalSalwa/interview-app-srv
 
-go 1.20
+go 1.21
 
 require (
 	github.com/fatih/color v1.13.0
@@ -16,9 +16,6 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jinzhu/copier v0.3.5
-	github.com/joeshaw/envdecode v0.0.0-20200121155833-099f1fc765bd
-	github.com/joho/godotenv v1.5.1
-	github.com/kovetskiy/go-php-serialize v0.0.0-20141101074437-71ef41a548d8
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/newrelic/go-agent/v3 v3.21.1
 	github.com/pkg/errors v0.9.1
