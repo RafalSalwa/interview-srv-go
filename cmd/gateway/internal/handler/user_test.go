@@ -62,7 +62,7 @@ func TestGetUserById(t *testing.T) {
 	assert.NoError(t, err)
 	r.Header.Set("x-user-id", strconv.FormatInt(sub.ID, 10))
 
-	http.HandlerFunc(ut.uHandler.GetUserById()).ServeHTTP(w, r)
+	http.HandlerFunc(ut.uHandler.GetUserByID()).ServeHTTP(w, r)
 	if status := w.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
