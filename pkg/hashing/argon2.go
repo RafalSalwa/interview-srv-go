@@ -18,7 +18,7 @@ var (
 	ErrHashesMismatch      = errors.New("argon2id: hashes mismatch")
 )
 
-var DefaultParams = &Params{
+var defaultParams = &params{
 	Memory:      64 * 1024,
 	Iterations:  4,
 	Parallelism: 4,
@@ -26,51 +26,31 @@ var DefaultParams = &Params{
 	KeyLength:   32,
 }
 
-type Params struct {
-	// The amount of memory used by the algorithm (in kibibytes).
-	Memory uint32
-
-	// The number of iterations over the memory.
-	Iterations uint32
-
-	// The number of threads (or lanes) used by the algorithm.
-	// Recommended value is between 1 and runtime.NumCPU().
+type params struct {
+	Memory      uint32
+	Iterations  uint32
 	Parallelism uint8
-
-	// Length of the random salt. 16 bytes is recommended for password hashing.
-	SaltLength uint32
-
-	// Length of the generated key. 16 bytes or more is recommended.
-	KeyLength uint32
+	SaltLength  uint32
+	KeyLength   uint32
 }
 
-// CreateHash returns a Argon2id hash of a plain-text password using the
-// provided algorithm parameters. The returned hash follows the format used by
-// the Argon2 reference C implementation and contains the base64-encoded Argon2id d
-// derived key prefixed by the salt and parameters. It looks like this:
-//
-//	$argon2id$v=19$m=65536,t=3,p=2$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWRWJTmaaJObG
 func Argon2ID(password string) (hash string, err error) {
-	salt, err := generateRandomBytes(DefaultParams.SaltLength)
+	salt, err := generateRandomBytes(defaultParams.SaltLength)
 	if err != nil {
 		return "", err
 	}
 
-	key := argon2.IDKey([]byte(password), salt, DefaultParams.Iterations, DefaultParams.Memory, DefaultParams.Parallelism, DefaultParams.KeyLength)
+	key := argon2.IDKey([]byte(password), salt, defaultParams.Iterations, defaultParams.Memory, defaultParams.Parallelism, defaultParams.KeyLength)
 
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Key := base64.RawStdEncoding.EncodeToString(key)
 
-	hash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, DefaultParams.Memory, DefaultParams.Iterations, DefaultParams.Parallelism, b64Salt, b64Key)
+	hash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, defaultParams.Memory, defaultParams.Iterations, defaultParams.Parallelism, b64Salt, b64Key)
 	return hash, nil
 }
 
-// ComparePasswordAndHash performs a constant-time comparison between a
-// plain-text password and Argon2id hash, using the parameters and salt
-// contained in the hash. It returns true if they match, otherwise it returns
-// false.
 func Argon2IDComparePasswordAndHash(password, hash string) error {
-	match, _, err := CheckHash(password, hash)
+	match, _, err := checkHash(password, hash)
 	if err != nil {
 		return err
 	}
@@ -81,11 +61,8 @@ func Argon2IDComparePasswordAndHash(password, hash string) error {
 	return nil
 }
 
-// CheckHash is like ComparePasswordAndHash, except it also returns the params that the hash was
-// created with. This can be useful if you want to update your hash params over time (which you
-// should).
-func CheckHash(password, hash string) (match bool, params *Params, err error) {
-	params, salt, key, err := DecodeHash(hash)
+func checkHash(password, hash string) (match bool, params *params, err error) {
+	params, salt, key, err := decodeHash(hash)
 	if err != nil {
 		return false, nil, err
 	}
@@ -114,9 +91,7 @@ func generateRandomBytes(n uint32) ([]byte, error) {
 	return b, nil
 }
 
-// DecodeHash expects a hash created from this package, and parses it to return the params used to
-// create it, as well as the salt and key (password hash).
-func DecodeHash(hash string) (params *Params, salt, key []byte, err error) {
+func decodeHash(hash string) (p *params, salt, key []byte, err error) {
 	vals := strings.Split(hash, "$")
 	if len(vals) != 6 {
 		return nil, nil, nil, ErrInvalidHash
@@ -135,8 +110,8 @@ func DecodeHash(hash string) (params *Params, salt, key []byte, err error) {
 		return nil, nil, nil, ErrIncompatibleVersion
 	}
 
-	params = &Params{}
-	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &params.Memory, &params.Iterations, &params.Parallelism)
+	p = &params{}
+	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -145,13 +120,13 @@ func DecodeHash(hash string) (params *Params, salt, key []byte, err error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	params.SaltLength = uint32(len(salt))
+	p.SaltLength = uint32(len(salt))
 
 	key, err = base64.RawStdEncoding.Strict().DecodeString(vals[5])
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	params.KeyLength = uint32(len(key))
+	p.KeyLength = uint32(len(key))
 
-	return params, salt, key, nil
+	return p, salt, key, nil
 }
