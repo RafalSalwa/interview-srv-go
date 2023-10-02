@@ -16,7 +16,8 @@ tester:
 	docker compose up -f docker-compose.tester.yml -d
 
 test_unit:
-	APP_ENV=staging go test -v -cover ./pkg/... ./cmd/... -tags=unit
+	APP_ENV=staging go test -v -cover -coverprofile=cover.out ./pkg/... ./cmd/... -tags=unit
+	go tool cover -html=cover.out -o coverage.html
 
 test_integration:
 	APP_ENV=staging go test -cover ./cmd/... -tags=integration
