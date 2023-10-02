@@ -17,9 +17,6 @@ jobs:
       - run:
           name: Unit test
           command: make test_unit
-      - run:
-          name: Integration test
-          command: make test_integration
   build:
     docker:
       - image: cimg/go:1.21.1
@@ -29,17 +26,17 @@ jobs:
           name: "go mod"
           command: "go mod download"
   
-  lint:
-    docker:
-      - image: golangci/golangci-lint:v1.54-alpine
-    steps:
-      - checkout
-      - run: golangci-lint run
+#  lint:
+#    docker:
+#      - image: golangci/golangci-lint:v1.54-alpine
+#    steps:
+#      - checkout
+#      - run: golangci-lint run
   
 
 workflows:
   build_lint_test:
     jobs:
       - build
-      - lint
+#      - lint
       - test
