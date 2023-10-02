@@ -1,6 +1,11 @@
 ## Golang monorepo with REST, gRPC, CQRS, opentelemetry, gorillaMUX, swag, mailhog and rabbitMQ 
 #### based on docker containers, docker compose, Makefile 
 
+[![codecov](https://codecov.io/gh/RafalSalwa/interview-srv-go/graph/badge.svg?token=T0DZIOYDR8)](https://codecov.io/gh/RafalSalwa/interview-srv-go)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/RafalSalwa/interview-srv-go/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/RafalSalwa/interview-srv-go/tree/master)
+[![Go package](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/go.yml/badge.svg)](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/go.yml)
+[![Run Gosec](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/gosec.yml/badge.svg)](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/gosec.yml)
+
 services:
 - ### API Gateway
   - Backend For Frontend approach, gateway takes HTTP requests and decide which service over gRPC should be called
