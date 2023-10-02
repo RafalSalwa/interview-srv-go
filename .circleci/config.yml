@@ -6,7 +6,7 @@ jobs:
   test:
     docker:
       - image: cimg/go:1.21.1
-    working_directory: ~/go/src/interview-app-srv
+    working_directory: /go/src/interview-app-srv
     steps:
       - checkout
       - run:
