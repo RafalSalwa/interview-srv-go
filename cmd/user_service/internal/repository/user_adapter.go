@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"go.opentelemetry.io/otel"
 	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
@@ -25,16 +26,19 @@ func (r *UserAdapter) ChangePassword(ctx context.Context, userid int64, password
 		Error
 }
 
-func (r *UserAdapter) Load(user *models.UserDBModel) (*models.UserDBModel, error) {
+func (r *UserAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("repository").Start(ctx, "Repository/Load")
+	defer span.End()
+
 	if err := r.DB.Where(&user).Limit(1).Find(&user).Error; err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (r *UserAdapter) ConfirmVerify(_ context.Context, vCode string) error {
+func (r *UserAdapter) ConfirmVerify(ctx context.Context, vCode string) error {
 	user := models.UserDBModel{VerificationCode: vCode}
-	_, err := r.Load(&user)
+	_, err := r.Load(ctx, &user)
 	if err != nil {
 		return err
 	}

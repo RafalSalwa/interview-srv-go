@@ -86,7 +86,7 @@ func (a authHandler) SignUpUser() http.HandlerFunc {
 	var reqUser models.SignUpUserRequest
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := otel.GetTracerProvider().Tracer("auth-handler").Start(r.Context(), "Handler SignUpUser")
+		ctx, span := otel.GetTracerProvider().Tracer("Handler").Start(r.Context(), "Handler/SignUpUser")
 		defer span.End()
 
 		if err := validate.UserInput(r, &reqUser); err != nil {

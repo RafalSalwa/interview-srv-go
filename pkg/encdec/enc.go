@@ -12,15 +12,12 @@ const (
 
 var bytes = []byte{104, 32, 18, 239, 16, 250, 111, 197, 34, 150, 248, 7, 222, 146, 58, 151}
 
-func Encrypt(plaintext string) (string, error) {
-	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		return "", err
-	}
+func Encrypt(plaintext string) string {
+	block, _ := aes.NewCipher([]byte(key))
 
 	mode := cipher.NewCFBEncrypter(block, bytes)
 	cipherText := make([]byte, len(plaintext))
 	mode.XORKeyStream(cipherText, []byte(plaintext))
 
-	return base64.StdEncoding.EncodeToString(cipherText), nil
+	return base64.StdEncoding.EncodeToString(cipherText)
 }

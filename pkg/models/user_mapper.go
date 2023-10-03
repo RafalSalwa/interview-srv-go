@@ -3,9 +3,8 @@ package models
 import (
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
-	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/jinzhu/copier"
 )
 
@@ -17,9 +16,8 @@ func (r *UserResponse) FromDBResponse(user *UserDBResponse) error {
 	return nil
 }
 
-func (m *UserDBModel) FromCreateUserReq(cur *SignUpUserRequest) error {
+func (m *UserDBModel) FromCreateUserReq(cur SignUpUserRequest) error {
 	err := copier.Copy(m, &cur)
-	m.Username = cur.Email
 	if err != nil {
 		return fmt.Errorf("from create to db model error: %w", err)
 	}
@@ -92,6 +90,14 @@ func (r *UserDBResponse) FromProtoUserDetails(pw *intrvproto.UserDetails) error 
 
 func (m *UserMongoModel) FromDBModel(user *UserDBModel) error {
 	err := copier.Copy(m, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (um *UserDBModel) FromMongoUser(um2 UserMongoModel) error {
+	err := copier.Copy(um, um2)
 	if err != nil {
 		return err
 	}

@@ -7,9 +7,7 @@ import (
 )
 
 type AuthService interface {
-	EncryptEmails()
-
-	SignUpUser(ctx context.Context, request *models.SignUpUserRequest) (*models.UserResponse, error)
+	SignUpUser(ctx context.Context, request models.SignUpUserRequest) (*models.UserResponse, error)
 	SignInUser(ctx context.Context, request *models.SignInUserRequest) (*models.UserResponse, error)
 	GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error)
 	Verify(ctx context.Context, vCode string) error

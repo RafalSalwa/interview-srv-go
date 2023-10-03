@@ -2,7 +2,7 @@ serviceName: Auth Service
 app:
   env: dev
   debug: true
-  repository_type: mysql
+  repository_type: mongo
 grpc:
   addr: "auth_service:8022"
 probes:

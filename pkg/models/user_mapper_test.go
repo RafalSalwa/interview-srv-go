@@ -120,7 +120,7 @@ func TestUserResponseMappers(t *testing.T) {
 	dbu := UserDBModel{
 		Id: 1,
 	}
-	sup := &SignUpUserRequest{
+	sup := SignUpUserRequest{
 		Email:           "test@test.com",
 		Password:        "password",
 		PasswordConfirm: "password",

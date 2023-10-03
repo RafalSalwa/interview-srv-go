@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"go.opentelemetry.io/otel"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
@@ -26,7 +27,7 @@ type UserServiceImpl struct {
 type UserService interface {
 	GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error)
 	GetByID(ctx context.Context, id int64) (*models.UserDBModel, error)
-	UsernameInUse(user *models.UserDBModel) (bool, error)
+	UsernameInUse(ctx context.Context, user *models.UserDBModel) (bool, error)
 	StoreVerificationData(ctx context.Context, vCode string) error
 	UpdateUser(user *models.UpdateUserRequest) (err error)
 	LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error)
@@ -74,7 +75,7 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.SignInUserRe
 	userDbModel.Email = user.Email
 	userDbModel.Password = user.Password
 
-	ur, err := s.repository.Load(userDbModel)
+	ur, err := s.repository.Load(ctx, userDbModel)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +89,11 @@ func (s *UserServiceImpl) GetByID(ctx context.Context, id int64) (*models.UserDB
 	return user, nil
 }
 
-func (s *UserServiceImpl) UsernameInUse(user *models.UserDBModel) (bool, error) {
-	ur, err := s.repository.Load(user)
+func (s *UserServiceImpl) UsernameInUse(ctx context.Context, user *models.UserDBModel) (bool, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/UserExists")
+	defer span.End()
+
+	ur, err := s.repository.Load(ctx, user)
 	if err != nil {
 		return false, err
 	}

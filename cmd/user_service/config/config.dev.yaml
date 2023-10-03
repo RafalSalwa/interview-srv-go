@@ -1,4 +1,4 @@
-serviceName: user_service
+serviceName: User Service
 app:
   env: dev
   debug: true
@@ -34,7 +34,7 @@ redis:
   poolSize: 300
 jaeger: 
   enable: true
-  serviceName: user_service
+  serviceName: User Service
   addr: "http://jaeger:14268/api/traces"
   logSpans: true
   id: 3
