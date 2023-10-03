@@ -32,7 +32,7 @@ create table user
     email             varchar(255)                         not null,
     phone_no          varchar(11)                          null,
     roles             json                                 null,
-    verification_code varchar(12)                          not null,
+    verification_code varchar(32)                          not null,
     is_verified       tinyint(1) default 0                 not null,
     is_active         tinyint(1) default 0                 not null,
     created_at        datetime   default CURRENT_TIMESTAMP not null,

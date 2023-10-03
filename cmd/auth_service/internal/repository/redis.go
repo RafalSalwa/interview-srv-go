@@ -22,6 +22,21 @@ type RedisAdapter struct {
 	DB *redis.UniversalClient
 }
 
+func (r RedisAdapter) Update(ctx context.Context, user models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) Save(ctx context.Context, user models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RedisAdapter) Find(ctx context.Context, user *models.UserDBModel) ([]models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newRedisUserRepository(db *redis.UniversalClient) UserRepository {
 	return &RedisAdapter{DB: db}
 }
@@ -30,7 +45,7 @@ func NewRedisRepository(redisClient redis.UniversalClient, log *logger.Logger) *
 	return &RedisRepository{log: log, redisClient: redisClient}
 }
 
-func (r RedisAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
+func (r RedisAdapter) SignUp(ctx context.Context, user *models.UserDBModel) error {
 	// TODO implement me
 	panic("implement me")
 }

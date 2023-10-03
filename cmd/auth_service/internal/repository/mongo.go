@@ -29,6 +29,21 @@ type MongoAdapter struct {
 	DB *mongo.Client
 }
 
+func (m MongoAdapter) Update(ctx context.Context, user models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) Save(ctx context.Context, user models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoAdapter) Find(ctx context.Context, user *models.UserDBModel) ([]models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newMongoDBUserRepository(db *mongo.Client) UserRepository {
 	return &MongoAdapter{DB: db}
 }
@@ -37,7 +52,7 @@ func NewMongoRepository(db *mongo.Client, cfg apiMongo.Config, log *logger.Logge
 	return &Mongo{log: log, cfg: cfg, db: db}
 }
 
-func (m MongoAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
+func (m MongoAdapter) SignUp(ctx context.Context, user *models.UserDBModel) error {
 	// TODO implement me
 	panic("implement me")
 }

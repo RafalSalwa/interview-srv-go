@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
@@ -31,13 +32,16 @@ func (r *UserResponse) FromProtoUserDetails(pbu *intrvproto.UserDetails) {
 	r.Username = pbu.GetUsername()
 	r.Firstname = pbu.GetFirstname()
 	r.Lastname = pbu.GetLastname()
-	r.Email = pbu.GetEmail()
 	r.Verified = pbu.GetVerified()
 	r.Active = pbu.GetActive()
 	r.CreatedAt = pbu.GetCreatedAt().AsTime()
 
 	ll := pbu.GetLastLogin().AsTime()
 	r.LastLogin = &ll
+	if pbu.GetEmail() != "" {
+		dec, _ := encdec.Decrypt(pbu.GetEmail())
+		r.Email = dec
+	}
 }
 
 func (r *UserResponse) FromDBModel(um *UserDBModel) error {

@@ -8,5 +8,5 @@ RUN go mod download
 COPY . .
 COPY .env /interview/bin/
 
-CMD ["air", "-c", ".air.consumer_service.toml"]
+CMD ["air", "-c", "./build/.air.consumer_service.toml"]
 EXPOSE 8021 8022
