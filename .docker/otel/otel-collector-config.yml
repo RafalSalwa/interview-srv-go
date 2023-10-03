@@ -33,9 +33,6 @@ processors:
     metrics_exporter: prometheus
 
 service:
-  telemetry:
-    logs:
-      level: "debug"
   pipelines:
     traces:
       receivers: [otlp, jaeger]

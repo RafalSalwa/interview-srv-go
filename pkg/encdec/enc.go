@@ -3,28 +3,21 @@ package encdec
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
-	"io"
+	"encoding/base64"
 )
 
-const key string = "RHCaDQMfmrBhuaKLDmBNGOEgERuGzwSi"
+const (
+	key string = "RHCaDQMfmrBhuaKLDmBNGOEgERuGzwSi"
+)
 
-func Encrypt(plaintext string) (string, error) {
-	c, err := aes.NewCipher([]byte(key))
+var bytes = []byte{104, 32, 18, 239, 16, 250, 111, 197, 34, 150, 248, 7, 222, 146, 58, 151}
 
-	if err != nil {
-		return "", err
-	}
+func Encrypt(plaintext string) string {
+	block, _ := aes.NewCipher([]byte(key))
 
-	gcm, err := cipher.NewGCM(c)
-	if err != nil {
-		return "", err
-	}
+	mode := cipher.NewCFBEncrypter(block, bytes)
+	cipherText := make([]byte, len(plaintext))
+	mode.XORKeyStream(cipherText, []byte(plaintext))
 
-	nonce := make([]byte, gcm.NonceSize())
-	_, _ = io.ReadFull(rand.Reader, nonce)
-
-	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
-
-	return string(ciphertext), nil
+	return base64.StdEncoding.EncodeToString(cipherText)
 }

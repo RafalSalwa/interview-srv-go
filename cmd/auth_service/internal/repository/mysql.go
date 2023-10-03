@@ -24,7 +24,7 @@ func NewUserAdapter(db *gorm.DB) UserRepository {
 	return &UserAdapter{DB: db}
 }
 
-func (r *UserAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+func (r *UserAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
 	_, span := otel.GetTracerProvider().Tracer("auth-handler").Start(ctx, "Handler SignUpUser")
 	defer span.End()
 
@@ -34,8 +34,45 @@ func (r *UserAdapter) Load(ctx context.Context, user *models.UserDBModel) (*mode
 	return user, nil
 }
 
-func (r *UserAdapter) ConfirmVerify(ctx context.Context, user *models.UserDBModel) error {
-	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "ConfirmVerify")
+func (r *UserAdapter) Save(ctx context.Context, user models.UserDBModel) error {
+	_, span := otel.GetTracerProvider().Tracer("auth-handler").Start(ctx, "Handler SignUpUser")
+	defer span.End()
+
+	res := r.DB.Save(&user)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
+}
+
+func (r *UserAdapter) Update(ctx context.Context, user models.UserDBModel) error {
+	_, span := otel.GetTracerProvider().Tracer("auth-handler").Start(ctx, "Handler SignUpUser")
+	defer span.End()
+
+	res := r.DB.Updates(&user)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
+}
+
+func (r *UserAdapter) FindAll(ctx context.Context, user *models.UserDBModel) ([]models.UserDBModel, error) {
+	_, span := otel.GetTracerProvider().Tracer("auth-handler").Start(ctx, "Handler SignUpUser")
+	defer span.End()
+
+	var all []models.UserDBModel
+	res := r.DB.Find(&all)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return all, nil
+}
+
+func (r *UserAdapter) Confirm(ctx context.Context, user *models.UserDBModel) error {
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "Confirm")
 	defer span.End()
 
 	return r.DB.Model(user).Updates(models.UserDBModel{
@@ -44,9 +81,10 @@ func (r *UserAdapter) ConfirmVerify(ctx context.Context, user *models.UserDBMode
 	}).Error
 }
 
-func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
-	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "MySQL Repository SingUp")
+func (r *UserAdapter) SignUp(ctx context.Context, user models.UserDBModel) error {
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "MySQL Repository SignUp")
 	defer span.End()
+
 	if err := r.DB.Create(&user).Error; err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
@@ -55,8 +93,8 @@ func (r *UserAdapter) SingUp(ctx context.Context, user *models.UserDBModel) erro
 	return nil
 }
 
-func (r *UserAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
-	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "ById")
+func (r *UserAdapter) GetOrCreate(ctx context.Context, id int64) (*models.UserDBModel, error) {
+	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "GetOrCreate")
 	defer span.End()
 	var user models.UserDBModel
 	r.DB.First(&user, "id = ?", id)
@@ -73,14 +111,14 @@ func (r *UserAdapter) ByLogin(ctx context.Context, user *models.SignInUserReques
 	return nil, nil
 }
 
-func (r *UserAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
+func (r *UserAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) error {
 	_, span := otel.GetTracerProvider().Tracer("auth_service-repository").Start(ctx, "UpdateLastLogin")
 	defer span.End()
 
 	now := time.Now()
 	r.DB.Model(u).Update("LastLogin", now)
 	u.LastLogin = &now
-	return u, nil
+	return nil
 }
 
 func (r *UserAdapter) GetConnection() *gorm.DB {

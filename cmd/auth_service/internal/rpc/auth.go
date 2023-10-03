@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"errors"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"gorm.io/gorm"
@@ -43,25 +44,29 @@ func (a *Auth) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.Sig
 }
 
 func (a *Auth) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.SignUpUserResponse, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-rpc").Start(ctx, "GRPC SignUpUser")
+	ctx, span := otel.GetTracerProvider().Tracer("grpc func").Start(ctx, "RPC/SignUpUser")
 	defer span.End()
 
-	userSignUp := &models.SignUpUserRequest{
-		Email:           req.GetEmail(),
-		Password:        req.GetPassword(),
-		PasswordConfirm: req.GetPasswordConfirm(),
-	}
-
 	um := &models.UserDBModel{
-		Email:    req.Email,
-		Username: req.Email,
+		Email: encdec.Encrypt(req.Email),
 	}
 
-	dbUser, _ := a.authService.Load(ctx, um)
+	dbUser, err := a.authService.Load(ctx, um)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(otelcodes.Error, err.Error())
+		a.logger.Error().Err(err).Msg("rpc:service:signup")
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
 	if dbUser != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
 	}
 
+	userSignUp := models.SignUpUserRequest{
+		Email:           req.GetEmail(),
+		Password:        req.GetPassword(),
+		PasswordConfirm: req.GetPasswordConfirm(),
+	}
 	ur, err := a.authService.SignUpUser(ctx, userSignUp)
 	if err != nil {
 		span.RecordError(err)

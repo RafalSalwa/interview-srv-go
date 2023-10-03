@@ -24,7 +24,6 @@ type UserDBModel struct {
 }
 
 type UserMongoModel struct {
-	Id               int64      `bson:"_id,omitempty"`
 	Username         string     `bson:"username,omitempty"`
 	Password         string     `bson:"password,omitempty"`
 	Firstname        string     `bson:"firstname,omitempty"`

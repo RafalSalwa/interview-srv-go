@@ -11,7 +11,7 @@ import (
 
 const (
 	MySQL   string = "mysql"
-	MongoDB string = "mongodb"
+	MongoDB string = "mongo"
 	Redis   string = "redis"
 )
 
@@ -29,7 +29,7 @@ func NewUserRepository(ctx context.Context, dbType string, params *config.Config
 		if err != nil {
 			return nil, err
 		}
-		return newMongoDBUserRepository(mongoClient), nil
+		return newMongoDBUserRepository(mongoClient, params.Mongo), nil
 
 	case Redis:
 		universalRedisClient, err := redisClient.NewUniversalRedisClient(ctx, params.Redis)

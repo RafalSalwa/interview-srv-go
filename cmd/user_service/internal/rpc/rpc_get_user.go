@@ -15,11 +15,11 @@ import (
 )
 
 func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) (*pb.BoolValue, error) {
-	_, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserByID")
+	ctx, span := otel.GetTracerProvider().Tracer("grpc-func").Start(ctx, "RPC/CheckUserExists")
 	defer span.End()
 
 	user := &models.UserDBModel{Email: req.GetValue()}
-	exists, err := us.userService.UsernameInUse(user)
+	exists, err := us.userService.UsernameInUse(ctx, user)
 	if err != nil {
 		return &pb.BoolValue{Value: false}, status.Errorf(codes.Internal, err.Error())
 	}
@@ -27,7 +27,7 @@ func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) 
 }
 
 func (us *UserServer) GetUserByID(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GRPC GetUserByID")
+	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GetUserByID")
 	defer span.End()
 
 	udb, err := us.userService.GetByID(ctx, req.UserId)

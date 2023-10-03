@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 
@@ -43,35 +42,41 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
-func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur *models.SignUpUserRequest) (*models.UserResponse, error) {
+func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserRequest) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("auth_service-service").Start(ctx, "Service SignUpUser")
 	defer span.End()
 
 	if err := hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
-	um := &models.UserDBModel{}
+	um := models.UserDBModel{}
 	if err := um.FromCreateUserReq(cur); err != nil {
 		return nil, err
 	}
+
 	vcode, err := generator.RandomString(12)
 	if err != nil {
 		return nil, err
 	}
-	um.Password, err = hashing.Argon2ID(um.Password)
+	um.VerificationCode = vcode
+
+	hash, err := hashing.Argon2ID(um.Password)
 	if err != nil {
 		return nil, err
 	}
+	um.Password = hash
 
-	um.VerificationCode = vcode
-	if errDB := a.repository.SingUp(ctx, um); errDB != nil {
+	um.Email = encdec.Encrypt(cur.Email)
+	if errDB := a.repository.Save(ctx, um); errDB != nil {
 		return nil, errDB
 	}
+
 	if err = a.rabbitPublisher.Publish(ctx, um.AMQP()); err != nil {
 		return nil, err
 	}
+
 	ur := &models.UserResponse{}
-	err = ur.FromDBModel(um)
+	err = ur.FromDBModel(&um)
 	if err != nil {
 		return nil, err
 	}
@@ -82,15 +87,9 @@ func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignIn
 	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "AuthService SignInUser")
 	defer span.End()
 
-	enc, err := encdec.Encrypt(reqUser.Email)
-	if err != nil {
-		tracing.RecordError(span, err)
-		return nil, err
-	}
-	udb := &models.UserDBModel{
-		Email: enc,
-	}
-	udb, err = a.repository.Load(ctx, udb)
+	udb := &models.UserDBModel{Email: encdec.Encrypt(reqUser.Email)}
+
+	udb, err := a.repository.FindOne(ctx, udb)
 	if err != nil {
 		tracing.RecordError(span, err)
 		return nil, err
@@ -119,10 +118,12 @@ func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignIn
 }
 
 func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) (*models.UserResponse, error) {
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "GetVerificationKey")
+	defer span.End()
 	user := &models.UserDBModel{
-		Email: email,
+		Email: encdec.Encrypt(email),
 	}
-	dbUser, err := a.repository.Load(ctx, user)
+	dbUser, err := a.repository.FindOne(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +136,9 @@ func (a *AuthServiceImpl) GetVerificationKey(ctx context.Context, email string) 
 }
 
 func (a *AuthServiceImpl) Find(ctx context.Context, user *models.UserDBModel) (*models.UserResponse, error) {
-	dbUser, err := a.repository.Load(ctx, user)
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "FindAll")
+	defer span.End()
+	dbUser, err := a.repository.FindOne(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -153,14 +156,17 @@ func (a *AuthServiceImpl) Find(ctx context.Context, user *models.UserDBModel) (*
 }
 
 func (a *AuthServiceImpl) Load(ctx context.Context, user *models.UserDBModel) (*models.UserResponse, error) {
-	dbUser, err := a.repository.Load(ctx, user)
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "Service/FindOne")
+	defer span.End()
+
+	dbUser, err := a.repository.FindOne(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 	if dbUser == nil {
 		return nil, nil
 	}
-	dbUser, err = a.repository.UpdateLastLogin(ctx, dbUser)
+	err = a.repository.Update(ctx, *dbUser)
 	if err != nil {
 		return nil, err
 	}
@@ -183,15 +189,18 @@ func (a *AuthServiceImpl) Load(ctx context.Context, user *models.UserDBModel) (*
 }
 
 func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "Verify")
+	defer span.End()
+
 	udb := &models.UserDBModel{
 		VerificationCode: vCode,
 	}
-	dbUser, err := a.repository.Load(ctx, udb)
+	dbUser, err := a.repository.FindOne(ctx, udb)
 	if err != nil {
 		return err
 	}
 
-	if errV := a.repository.ConfirmVerify(ctx, udb); errV != nil {
+	if errV := a.repository.Confirm(ctx, udb); errV != nil {
 		return errV
 	}
 	ur := &models.UserResponse{}
@@ -201,7 +210,7 @@ func (a *AuthServiceImpl) Verify(ctx context.Context, vCode string) error {
 
 func (a *AuthServiceImpl) FindUserByID(uid int64) (*models.UserDBModel, error) {
 	ctx := context.Background()
-	dbUser, err := a.repository.ById(ctx, uid)
+	dbUser, err := a.repository.GetOrCreate(ctx, uid)
 	if err != nil {
 		return nil, err
 	}

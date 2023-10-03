@@ -6,7 +6,25 @@
 [![Go package](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/go.yml/badge.svg)](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/go.yml)
 [![Run Gosec](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/gosec.yml/badge.svg)](https://github.com/RafalSalwa/interview-srv-go/actions/workflows/gosec.yml)
 
-services:
+## Topics Covered
+- REST, gRPC, CQRS, Docker, distributed tracing (jaeger, otel, prometheus,grafana, NewRelics), testify
+- Onion, Clean architecture, Monorepo,
+- Swagger, Postman docs ([/docs](docs) directory)
+- JWT , auth and logging middleware
+- Env with Viper
+- hot reload with cosmtrek/air
+- golangcilint, pre-commit-hooks
+- MySQL, database/sql, gorm
+- Redis
+- MongoDB
+- Jenkins, GitHub actions
+  Plans:
+- .gitlabci, buildspec
+- mockery for testify, more tests
+
+
+## Services:
+![arch](docs/go_arch.png)
 - ### API Gateway
   - Backend For Frontend approach, gateway takes HTTP requests and decide which service over gRPC should be called
     - security & Auth methods 
@@ -50,35 +68,24 @@ services:
   - workers pool service that constantly creates users from registration, activation and signIn for JWT Tokens
   - optional daisy chain pattern for concurrency controll
   
-## Topics Covered
-- REST, gRPC, CQRS, Docker, distributed tracing (jaeger,prometheus,grafana, NewRelics), testify
-- Onion, Clean architecture, Monorepo,
-- Swagger, Postman docs ([/docs](docs) directory)
-- JWT , auth and logging middleware
-- Env with Viper
-- hot reload with cosmtrek/air
-- golangcilint, pre-commit-hooks
-- MySQL, database/sql, gorm
-- Redis
-- MongoDB
-- Jenkins, GitHub actions
-Plans:
-- .gitlabci, buildspec
-- mockery for testify, more tests
+
 ## Build
 make build
 
+make up
+
 ## Run tests
-make test
+make test_unit
+
+make test_integration
 
 ### gRPC
 - make proto
 
 ## Credentials
 #### services
-- interview:interview
-#### example user: 
-- user1:password
+- interview@interview.com:VeryG00dPass!
+
 
 screenshots:
 ![db](docs/db_design.png)

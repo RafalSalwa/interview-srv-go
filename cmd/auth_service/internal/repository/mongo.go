@@ -2,17 +2,16 @@ package repository
 
 import (
 	"context"
-
+	"errors"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"gorm.io/gorm"
+	"time"
 )
 
 type Mongo struct {
@@ -21,124 +20,105 @@ type Mongo struct {
 	db  *mongo.Client
 }
 
-type MongoRepository struct {
-	DB *mongo.Client
-}
-
 type MongoAdapter struct {
-	DB *mongo.Client
+	DB         *mongo.Client
+	cfg        apiMongo.Config
+	collection *mongo.Collection
 }
 
-func newMongoDBUserRepository(db *mongo.Client) UserRepository {
-	return &MongoAdapter{DB: db}
+func newMongoDBUserRepository(db *mongo.Client, cfg apiMongo.Config) UserRepository {
+	return &MongoAdapter{
+		DB:         db,
+		cfg:        cfg,
+		collection: db.Database(cfg.Database).Collection("users"),
+	}
 }
 
-func NewMongoRepository(db *mongo.Client, cfg apiMongo.Config, log *logger.Logger) *Mongo {
-	return &Mongo{log: log, cfg: cfg, db: db}
+func (m MongoAdapter) Update(ctx context.Context, user models.UserDBModel) error {
+	//TODO mongo implement me
+	panic("mongo Update implement me")
 }
 
-func (m MongoAdapter) SingUp(ctx context.Context, user *models.UserDBModel) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) ById(ctx context.Context, id int64) (*models.UserDBModel, error) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) ByLogin(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) ConfirmVerify(ctx context.Context, udb *models.UserDBModel) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) UpdateLastLogin(ctx context.Context, u *models.UserDBModel) (*models.UserDBModel, error) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) FindUserById(uid int64) (*models.UserDBModel, error) {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (m MongoAdapter) GetConnection() *gorm.DB {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (r *Mongo) CreateUser(ctx context.Context, user *models.UserDBModel) error {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-mongo").Start(ctx, "MongoDB CreateUser")
+func (m MongoAdapter) Save(ctx context.Context, user models.UserDBModel) error {
+	ctx, span := otel.GetTracerProvider().Tracer("mongodb repository").Start(ctx, "Service SignUpUser")
 	defer span.End()
 
-	mongoUser := models.UserMongoModel{}
-	err := mongoUser.FromDBModel(user)
+	mu := models.UserMongoModel{}
+	err := mu.FromDBModel(&user)
 	if err != nil {
 		return err
 	}
-	collection := r.db.Database(r.cfg.Database).Collection("users")
-
-	_, err = collection.InsertOne(ctx, mongoUser, &options.InsertOneOptions{})
+	_, err = m.collection.InsertOne(ctx, mu, &options.InsertOneOptions{})
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return errors.Wrap(err, "InsertOne")
+		return err
 	}
-
 	return nil
 }
 
-func (r *Mongo) UpdateUser(ctx context.Context, user *models.UserMongoModel) error {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-rpc").Start(ctx, "GRPC SignUpUser")
+func (m MongoAdapter) FindAll(ctx context.Context, user *models.UserDBModel) ([]models.UserDBModel, error) {
+	//TODO mongo implement me
+	panic("mongo FindAll implement me")
+}
+
+func (m MongoAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("mongodb").Start(ctx, "Repository/FindOne")
 	defer span.End()
 
-	collection := r.db.Database(r.cfg.Database).Collection("users")
+	var um models.UserMongoModel
+	if err := um.FromDBModel(user); err != nil {
+		return nil, err
+	}
+	if err := m.collection.FindOne(ctx, um).Decode(&um); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
+	}
+	if err := user.FromMongoUser(um); err != nil {
+		return nil, err
+	}
+	err := m.UpdateLastLogin(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (m MongoAdapter) GetOrCreate(ctx context.Context, id int64) (*models.UserDBModel, error) {
+	// TODO mongo implement me
+	panic("mongo GetOrCreate implement me")
+}
+
+func (m MongoAdapter) Confirm(ctx context.Context, udb *models.UserDBModel) error {
+	// TODO mongo implement me
+	panic("mongo Confirm implement me")
+}
+
+func (m MongoAdapter) UpdateLastLogin(ctx context.Context, user *models.UserDBModel) error {
+	ctx, span := otel.GetTracerProvider().Tracer("mongodb").Start(ctx, "Repository/UpdateLastLogin")
+	defer span.End()
+
+	var um models.UserMongoModel
+	if err := um.FromDBModel(user); err != nil {
+		return err
+	}
+	now := time.Now()
+	um.UpdatedAt = &now
 
 	ops := options.FindOneAndUpdate()
 	ops.SetReturnDocument(options.After)
 	ops.SetUpsert(true)
 
-	var updated models.UserMongoModel
-	if err := collection.FindOneAndUpdate(ctx, bson.M{"_id": user.Id}, bson.M{"$set": user}, ops).Decode(&updated); err != nil {
+	if err := m.collection.FindOneAndUpdate(ctx, um, bson.M{"$set": user}, ops).Decode(&um); err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return errors.Wrap(err, "Decode")
+		return err
+	}
+	if err := user.FromMongoUser(um); err != nil {
+		return err
 	}
 
 	return nil
-}
-
-func (r *Mongo) GetUser(ctx context.Context, id string) (*models.UserMongoModel, error) {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-rpc").Start(ctx, "GRPC SignUpUser")
-	defer span.End()
-
-	collection := r.db.Database(r.cfg.Database).Collection("users")
-
-	var user models.UserMongoModel
-	if err := collection.FindOne(ctx, bson.M{"_id": id}).Decode(&user); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return nil, errors.Wrap(err, "Decode")
-	}
-
-	return &user, nil
-}
-
-func (r *Mongo) DeleteUser(ctx context.Context, id string) error {
-	ctx, span := otel.GetTracerProvider().Tracer("auth_service-rpc").Start(ctx, "GRPC SignUpUser")
-	defer span.End()
-
-	collection := r.db.Database(r.cfg.Database).Collection("users")
-
-	return collection.FindOneAndDelete(ctx, bson.M{"_id": id}).Err()
 }
