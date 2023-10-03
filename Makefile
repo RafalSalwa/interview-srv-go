@@ -2,12 +2,8 @@
 
 build:
 	docker compose up --build -d
-
-compose-up:
-	docker compose up --build -d postgres rabbitmq && docker-compose logs -f
-
 up:
-	docker compose up -d && docker compose logs -f
+	docker compose up -d --force-recreate && docker compose logs -f
 compose-down:
 	docker compose down --remove-orphans
 
