@@ -2,7 +2,7 @@
 
 pipeline {
   agent any
-  tools { go }
+  tools { go '1.21.1' }
   
   options {
           timeout(time: 15, unit: 'MINUTES')
