@@ -125,7 +125,7 @@ func TestUserResponseMappers(t *testing.T) {
 		Password:        "password",
 		PasswordConfirm: "password",
 	}
-	err = dbu.FromCreateUserReq(sup)
+	err = dbu.FromCreateUserReq(sup, true)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, dbu)
 	intrvU := &intrvproto.User{

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
@@ -24,6 +25,26 @@ type MongoAdapter struct {
 	DB         *mongo.Client
 	cfg        apiMongo.Config
 	collection *mongo.Collection
+}
+
+func (m MongoAdapter) Exists(ctx context.Context, udb models.UserDBModel) (bool, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("mongodb").Start(ctx, "Repository/Exists")
+	defer span.End()
+
+	var um models.UserMongoModel
+	if err := um.FromDBModel(&udb); err != nil {
+		return false, err
+	}
+	fmt.Printf("db: %#v\n m: %#v\n", udb, um)
+	if err := m.collection.FindOne(ctx, um).Decode(&um); err != nil {
+		fmt.Println("Err:", err)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
 
 func newMongoDBUserRepository(db *mongo.Client, cfg apiMongo.Config) UserRepository {

@@ -16,8 +16,13 @@ type RedisAdapter struct {
 	DB *redis.UniversalClient
 }
 
+func (r RedisAdapter) Exists(ctx context.Context, udb models.UserDBModel) (bool, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newRedisUserRepository(client *redis.UniversalClient) UserRepository {
-	return nil
+	return &RedisAdapter{DB: client}
 }
 
 func (r RedisAdapter) Update(ctx context.Context, user models.UserDBModel) error {

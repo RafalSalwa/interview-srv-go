@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/jinzhu/copier"
@@ -16,12 +17,15 @@ func (r *UserResponse) FromDBResponse(user *UserDBResponse) error {
 	return nil
 }
 
-func (m *UserDBModel) FromCreateUserReq(cur SignUpUserRequest) error {
+func (m *UserDBModel) FromCreateUserReq(cur SignUpUserRequest, enc ...bool) error {
 	err := copier.Copy(m, &cur)
 	if err != nil {
 		return fmt.Errorf("from create to db model error: %w", err)
 	}
-
+	if len(enc) > 0 && enc[0] == true {
+		m.Email = encdec.Encrypt(cur.Email)
+		m.Password = hashing.Argon2ID(cur.Password)
+	}
 	return nil
 }
 

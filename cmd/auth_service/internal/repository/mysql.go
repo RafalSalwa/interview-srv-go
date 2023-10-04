@@ -16,6 +16,11 @@ type UserAdapter struct {
 	DB *gorm.DB
 }
 
+func (r *UserAdapter) Exists(ctx context.Context, udb models.UserDBModel) (bool, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newMySQLUserRepository(db *gorm.DB) UserRepository {
 	return &UserAdapter{DB: db}
 }
