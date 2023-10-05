@@ -45,21 +45,6 @@ func (a *Auth) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.Sig
 	ctx, span := otel.GetTracerProvider().Tracer("grpc func").Start(ctx, "RPC/SignUpUser")
 	defer span.End()
 
-	//um := &models.UserDBModel{
-	//	Email: encdec.Encrypt(req.Email),
-	//}
-	//
-	//dbUser, err := a.authService.Load(ctx, um)
-	//if err != nil {
-	//	span.RecordError(err)
-	//	span.SetStatus(otelcodes.Error, err.Error())
-	//	a.logger.Error().Err(err).Msg("rpc:service:signup")
-	//	return nil, status.Errorf(codes.Internal, err.Error())
-	//}
-	//if dbUser != nil {
-	//	return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
-	//}
-
 	userSignUp := models.SignUpUserRequest{
 		Email:           req.GetEmail(),
 		Password:        req.GetPassword(),
@@ -69,7 +54,7 @@ func (a *Auth) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.Sig
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
-		a.logger.Error().Err(err).Msg("rpc:service:signup")
+		a.logger.Error().Err(err).Msg("rpc:signup")
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	res := &pb.SignUpUserResponse{

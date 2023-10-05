@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"go.opentelemetry.io/otel"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
@@ -9,16 +12,11 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
 	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
-	redisClient "github.com/RafalSalwa/interview-app-srv/pkg/redis"
-	"github.com/RafalSalwa/interview-app-srv/pkg/sql"
 )
 
 type UserServiceImpl struct {
 	repository      repository.UserRepository
-	mongoRepo       *repository.Mongo
-	redisRepo       *repository.Redis
 	rabbitPublisher *rabbitmq.Publisher
 	logger          *logger.Logger
 	config          jwt.JWTConfig
@@ -36,33 +34,19 @@ type UserService interface {
 }
 
 func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger) UserServiceImpl {
-	mongoClient, err := apiMongo.NewClient(ctx, cfg.Mongo)
-	if err != nil {
-		log.Error().Err(err).Msg("grpc:run:mongo")
-	}
 
-	universalRedisClient, err := redisClient.NewUniversalRedisClient(ctx, cfg.Redis)
-	if err != nil {
-		log.Error().Err(err).Msg("redis")
+	userRepository, errR := repository.NewUserRepository(ctx, cfg.App.RepositoryType, cfg)
+	if errR != nil {
+		log.Error().Err(errR).Msg("user:service:new")
 	}
 
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
-		log.Error().Err(err).Msg("rabbitmq")
+		log.Error().Err(errP).Msg("rabbitmq")
 	}
-
-	ormDB, err := sql.NewGormConnection(cfg.MySQL)
-	if err != nil {
-		log.Error().Err(err).Msg("gorm")
-	}
-	userRepository := repository.NewUserAdapter(ormDB)
-	mongoRepo := repository.NewMongoRepository(mongoClient, log)
-	redisRepo := repository.NewRedisRepository(universalRedisClient, log)
 
 	return UserServiceImpl{
 		repository:      userRepository,
-		mongoRepo:       mongoRepo,
-		redisRepo:       redisRepo,
 		rabbitPublisher: publisher,
 		logger:          log,
 		config:          cfg.JWTToken,
@@ -70,17 +54,28 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 }
 
 func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
-	userDbModel := &models.UserDBModel{}
-	userDbModel.Username = user.Username
-	userDbModel.Email = user.Email
-	userDbModel.Password = user.Password
+	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/GetUser")
+	defer span.End()
 
-	ur, err := s.repository.Load(ctx, userDbModel)
+	userDbModel := &models.UserDBModel{
+		Email: encdec.Encrypt(user.Email),
+	}
+	userDbModel.Email = encdec.Encrypt(user.Email)
+
+	udb, err := s.repository.FindOne(ctx, userDbModel)
 	if err != nil {
+		tracing.RecordError(span, err)
 		return nil, err
 	}
-	return ur, nil
+
+	_, err = hashing.Argon2IDComparePasswordAndHash(user.Password, udb.Password)
+	if err != nil {
+		tracing.RecordError(span, err)
+		return nil, err
+	}
+	return udb, nil
 }
+
 func (s *UserServiceImpl) GetByID(ctx context.Context, id int64) (*models.UserDBModel, error) {
 	user, err := s.repository.ById(ctx, id)
 	if err != nil {
@@ -101,10 +96,26 @@ func (s *UserServiceImpl) UsernameInUse(ctx context.Context, user *models.UserDB
 }
 
 func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode string) error {
-	err := s.repository.ConfirmVerify(ctx, vCode)
+	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/StoreVerificationData")
+	defer span.End()
+
+	userDbModel := &models.UserDBModel{
+		VerificationCode: vCode,
+	}
+
+	udb, err := s.repository.FindOne(ctx, userDbModel)
+	if err != nil {
+		tracing.RecordError(span, err)
+		return err
+	}
+	udb.Active = true
+	udb.Verified = true
+
+	err = s.repository.Update(ctx, udb)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

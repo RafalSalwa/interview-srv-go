@@ -1,25 +1,18 @@
 package repository
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"time"
+    "context"
+    "errors"
+    "fmt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/codes"
+    "time"
 )
-
-type Mongo struct {
-	log *logger.Logger
-	cfg apiMongo.Config
-	db  *mongo.Client
-}
 
 type MongoAdapter struct {
 	DB         *mongo.Client
@@ -27,12 +20,20 @@ type MongoAdapter struct {
 	collection *mongo.Collection
 }
 
-func (m MongoAdapter) Exists(ctx context.Context, udb models.UserDBModel) (bool, error) {
+func newMongoDBUserRepository(db *mongo.Client, cfg apiMongo.Config) UserRepository {
+	return &MongoAdapter{
+		DB:         db,
+		cfg:        cfg,
+		collection: db.Database(cfg.Database).Collection("users"),
+	}
+}
+
+func (m MongoAdapter) Exists(ctx context.Context, udb *models.UserDBModel) (bool, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("mongodb").Start(ctx, "Repository/Exists")
 	defer span.End()
 
 	var um models.UserMongoModel
-	if err := um.FromDBModel(&udb); err != nil {
+	if err := um.FromDBModel(udb); err != nil {
 		return false, err
 	}
 	fmt.Printf("db: %#v\n m: %#v\n", udb, um)
@@ -47,25 +48,17 @@ func (m MongoAdapter) Exists(ctx context.Context, udb models.UserDBModel) (bool,
 	return true, nil
 }
 
-func newMongoDBUserRepository(db *mongo.Client, cfg apiMongo.Config) UserRepository {
-	return &MongoAdapter{
-		DB:         db,
-		cfg:        cfg,
-		collection: db.Database(cfg.Database).Collection("users"),
-	}
-}
-
 func (m MongoAdapter) Update(ctx context.Context, user models.UserDBModel) error {
 	//TODO mongo implement me
 	panic("mongo Update implement me")
 }
 
-func (m MongoAdapter) Save(ctx context.Context, user models.UserDBModel) error {
+func (m MongoAdapter) Save(ctx context.Context, user *models.UserDBModel) error {
 	ctx, span := otel.GetTracerProvider().Tracer("mongodb repository").Start(ctx, "Service SignUpUser")
 	defer span.End()
 
 	mu := models.UserMongoModel{}
-	err := mu.FromDBModel(&user)
+	err := mu.FromDBModel(user)
 	if err != nil {
 		return err
 	}
@@ -98,10 +91,6 @@ func (m MongoAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*m
 		return nil, err
 	}
 	if err := user.FromMongoUser(um); err != nil {
-		return nil, err
-	}
-	err := m.UpdateLastLogin(ctx, user)
-	if err != nil {
 		return nil, err
 	}
 	return user, nil

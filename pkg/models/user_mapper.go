@@ -24,7 +24,11 @@ func (m *UserDBModel) FromCreateUserReq(cur SignUpUserRequest, enc ...bool) erro
 	}
 	if len(enc) > 0 && enc[0] == true {
 		m.Email = encdec.Encrypt(cur.Email)
-		m.Password = hashing.Argon2ID(cur.Password)
+		hash, err := hashing.Argon2ID(cur.Password)
+		if err != nil {
+			return err
+		}
+		m.Password = hash
 	}
 	return nil
 }

@@ -6,19 +6,17 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"strings"
-
 	"golang.org/x/crypto/argon2"
+	"strings"
 )
 
 var (
 	ErrInvalidHash         = errors.New("argon2id: hash is not in the correct format")
 	ErrIncompatibleVariant = errors.New("argon2id: incompatible variant of argon2")
 	ErrIncompatibleVersion = errors.New("argon2id: incompatible version of argon2")
-	ErrHashesMismatch      = errors.New("argon2id: hashes mismatch")
 )
 
-var defaultParams = &params{
+var DefaultParams = &Params{
 	Memory:      64 * 1024,
 	Iterations:  4,
 	Parallelism: 4,
@@ -26,7 +24,7 @@ var defaultParams = &params{
 	KeyLength:   32,
 }
 
-type params struct {
+type Params struct {
 	Memory      uint32
 	Iterations  uint32
 	Parallelism uint8
@@ -34,31 +32,28 @@ type params struct {
 	KeyLength   uint32
 }
 
-func Argon2ID(password string) string {
-	salt := generateRandomBytes(defaultParams.SaltLength)
+func Argon2ID(password string) (hash string, err error) {
+	salt, err := generateRandomBytes(DefaultParams.SaltLength)
+	if err != nil {
+		return "", err
+	}
 
-	key := argon2.IDKey([]byte(password), salt, defaultParams.Iterations, defaultParams.Memory, defaultParams.Parallelism, defaultParams.KeyLength)
+	key := argon2.IDKey([]byte(password), salt, DefaultParams.Iterations, DefaultParams.Memory, DefaultParams.Parallelism, DefaultParams.KeyLength)
 
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Key := base64.RawStdEncoding.EncodeToString(key)
 
-	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, defaultParams.Memory, defaultParams.Iterations, defaultParams.Parallelism, b64Salt, b64Key)
+	hash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, DefaultParams.Memory, DefaultParams.Iterations, DefaultParams.Parallelism, b64Salt, b64Key)
+	return hash, nil
 }
 
-func Argon2IDComparePasswordAndHash(password, hash string) error {
-	match, _, err := checkHash(password, hash)
-	if err != nil {
-		return err
-	}
-
-	if !match {
-		return ErrHashesMismatch
-	}
-	return nil
+func Argon2IDComparePasswordAndHash(password, hash string) (match bool, err error) {
+	match, _, err = CheckHash(password, hash)
+	return match, err
 }
 
-func checkHash(password, hash string) (match bool, params *params, err error) {
-	params, salt, key, err := decodeHash(hash)
+func CheckHash(password, hash string) (match bool, params *Params, err error) {
+	params, salt, key, err := DecodeHash(hash)
 	if err != nil {
 		return false, nil, err
 	}
@@ -77,13 +72,17 @@ func checkHash(password, hash string) (match bool, params *params, err error) {
 	return false, params, nil
 }
 
-func generateRandomBytes(n uint32) []byte {
+func generateRandomBytes(n uint32) ([]byte, error) {
 	b := make([]byte, n)
-	_, _ = rand.Read(b)
-	return b
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
-func decodeHash(hash string) (p *params, salt, key []byte, err error) {
+func DecodeHash(hash string) (params *Params, salt, key []byte, err error) {
 	vals := strings.Split(hash, "$")
 	if len(vals) != 6 {
 		return nil, nil, nil, ErrInvalidHash
@@ -102,8 +101,8 @@ func decodeHash(hash string) (p *params, salt, key []byte, err error) {
 		return nil, nil, nil, ErrIncompatibleVersion
 	}
 
-	p = &params{}
-	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &p.Memory, &p.Iterations, &p.Parallelism)
+	params = &Params{}
+	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &params.Memory, &params.Iterations, &params.Parallelism)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -112,13 +111,13 @@ func decodeHash(hash string) (p *params, salt, key []byte, err error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.SaltLength = uint32(len(salt))
+	params.SaltLength = uint32(len(salt))
 
 	key, err = base64.RawStdEncoding.Strict().DecodeString(vals[5])
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	p.KeyLength = uint32(len(key))
+	params.KeyLength = uint32(len(key))
 
-	return p, salt, key, nil
+	return params, salt, key, nil
 }

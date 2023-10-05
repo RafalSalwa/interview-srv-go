@@ -72,9 +72,10 @@ func (us *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest)
 }
 
 func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest) (*pb.UserDetails, error) {
-	reqUser := &models.SignInUserRequest{}
-	reqUser.Username = req.Username
-	reqUser.Email = req.Email
+	reqUser := &models.SignInUserRequest{
+		Email:    req.GetEmail(),
+		Password: req.GetPassword(),
+	}
 
 	user, err := us.userService.GetUser(ctx, reqUser)
 	if err != nil {

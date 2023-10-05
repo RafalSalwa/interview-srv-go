@@ -3,7 +3,7 @@
 build:
 	docker compose up --build -d
 up:
-	docker compose up -d --force-recreate && docker compose logs -f
+	docker compose up -d --force-recreate && docker compose logs -f gateway auth_service user_service consumer_service
 compose-down:
 	docker compose down --remove-orphans
 

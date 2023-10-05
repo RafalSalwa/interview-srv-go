@@ -16,6 +16,25 @@ type UserAdapter struct {
 	DB *gorm.DB
 }
 
+func (r *UserAdapter) Save(ctx context.Context, user *models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserAdapter) Update(ctx context.Context, user *models.UserDBModel) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *UserAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func NewUserAdapter(db *gorm.DB) UserRepository {
+	return &UserAdapter{DB: db}
+}
+
 func (r *UserAdapter) ChangePassword(ctx context.Context, userid int64, password string) error {
 	user := models.UserDBModel{Id: userid}
 	return r.DB.Model(user).
@@ -61,10 +80,6 @@ func (r *UserAdapter) ConfirmVerify(ctx context.Context, vCode string) error {
 
 func (r *UserAdapter) SingUp(user *models.UserDBModel) error {
 	return r.DB.Create(&user).Error
-}
-
-func NewUserAdapter(db *gorm.DB) UserRepository {
-	return &UserAdapter{DB: db}
 }
 
 func (r *UserAdapter) ById(_ context.Context, id int64) (*models.UserDBModel, error) {
