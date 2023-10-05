@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
@@ -20,7 +19,7 @@ func NewFetchUserHandler(userClient intrvproto.UserServiceClient) FetchUserHandl
 
 func (h FetchUserHandler) Handle(ctx context.Context, q FetchUser) (models.UserResponse, error) {
 	credentials := &intrvproto.GetUserSignInRequest{
-		Username: q.Username,
+		Email:    q.Email,
 		Password: q.Password,
 	}
 
@@ -28,9 +27,7 @@ func (h FetchUserHandler) Handle(ctx context.Context, q FetchUser) (models.UserR
 	if err != nil {
 		return models.UserResponse{}, err
 	}
-	u := models.UserResponse{
-		Username: q.Username,
-	}
+	u := models.UserResponse{}
 	u.FromProtoUserDetails(resp)
 	return u, nil
 }

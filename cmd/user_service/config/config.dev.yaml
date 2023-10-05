@@ -2,6 +2,7 @@ serviceName: User Service
 app:
   env: dev
   debug: true
+  repository_type: mongo
 grpc:
   addr: ":8032"
 probes:
@@ -25,6 +26,7 @@ mongo:
   addr: "mongodb://mongo:27017/?directConnection=true"
   username: interview
   password: interview
+  database: users
   params:
     connectTimeout: 10s
 redis:

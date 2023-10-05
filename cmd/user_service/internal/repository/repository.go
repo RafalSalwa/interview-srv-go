@@ -9,6 +9,10 @@ import (
 )
 
 type UserRepository interface {
+	FindOne(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error)
+	Save(ctx context.Context, user *models.UserDBModel) error
+	Update(ctx context.Context, user *models.UserDBModel) error
+
 	SingUp(user *models.UserDBModel) error
 	Load(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error)
 	ById(ctx context.Context, id int64) (*models.UserDBModel, error)

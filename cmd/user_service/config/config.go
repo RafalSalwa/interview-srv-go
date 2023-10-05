@@ -34,8 +34,9 @@ type Config struct {
 }
 
 type App struct {
-	Env   string `mapstructure:"env"`
-	Debug bool   `mapstructure:"debug"`
+	Env            string `mapstructure:"env"`
+	Debug          bool   `mapstructure:"debug"`
+	RepositoryType string `mapstructure:"repository_type"`
 }
 
 func InitConfig() (*Config, error) {

@@ -18,7 +18,7 @@ func TestArgon2ID(t *testing.T) {
 func TestArgon2IDComparePasswordAndHash(t *testing.T) {
 	p := "password"
 	h := "$argon2id$v=19$m=65536,t=4,p=4$rowcIlsB499gUPbat+2Aow$IJxppAHk5yWKpRemzd5YdYFV9UrLRVG4M+5owhXUrh4"
-	err := Argon2IDComparePasswordAndHash(p, h)
+	_, err := Argon2IDComparePasswordAndHash(p, h)
 	if err != nil {
 		t.Errorf("compare err")
 		return

@@ -97,22 +97,7 @@ func (a authHandler) SignUpUser() http.HandlerFunc {
 			return
 		}
 
-		exists, err := a.cqrs.CheckUserExistsQuery(ctx, reqUser.Email)
-
-		if err != nil {
-			if e, ok := status.FromError(err); ok {
-				responses.FromGRPCError(e, w)
-				return
-			}
-			responses.InternalServerError(w)
-			return
-		}
-		if exists {
-			responses.InternalServerError(w)
-			return
-		}
-
-		err = a.cqrs.SignupUserCommand(ctx, reqUser)
+		err := a.cqrs.SignupUserCommand(ctx, reqUser)
 
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
