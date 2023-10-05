@@ -23,7 +23,7 @@ type UserServiceImpl struct {
 }
 
 type UserService interface {
-	GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error)
+	GetUser(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error)
 	GetByID(ctx context.Context, id int64) (*models.UserDBModel, error)
 	UsernameInUse(ctx context.Context, user *models.UserDBModel) (bool, error)
 	StoreVerificationData(ctx context.Context, vCode string) error
@@ -53,7 +53,7 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
-func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.SignInUserRequest) (*models.UserDBModel, error) {
+func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/GetUser")
 	defer span.End()
 

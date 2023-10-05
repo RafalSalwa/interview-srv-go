@@ -30,7 +30,8 @@ func (us *UserServer) GetUserByID(ctx context.Context, req *pb.GetUserRequest) (
 	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GetUserByID")
 	defer span.End()
 
-	udb, err := us.userService.GetByID(ctx, req.UserId)
+	user := &models.UserDBModel{Id: req.GetUserId()}
+	udb, err := us.userService.GetUser(ctx, user)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
@@ -72,7 +73,7 @@ func (us *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest)
 }
 
 func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest) (*pb.UserDetails, error) {
-	reqUser := &models.SignInUserRequest{
+	reqUser := &models.UserDBModel{
 		Email:    req.GetEmail(),
 		Password: req.GetPassword(),
 	}

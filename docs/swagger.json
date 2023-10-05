@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "description": "Interview API with usage of REST,gRPC,MySQL,Redis,mongo,AMQP",
+        "description": "Interview API with usage of REST,gRPC,MySQL,Redis,mongo,AMQP. <br/> <br/> Current authorize settings is: <strong>Basic Auth</strong> with <strong>interview/interview</strong> parameters",
         "title": "Go Interview REST API",
         "contact": {
             "name": "RafalSalwa",
