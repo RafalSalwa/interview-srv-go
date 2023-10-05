@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/email"
@@ -25,9 +26,14 @@ func WrapHandleCustomerAccountRequestConfirmEmail(event rabbitmq.Event) error {
 }
 
 func CustomerAccountRequestConfirmEmail(payload models.UserEvent, mailer email.Client) error {
-	err := mailer.SendVerificationEmail(email.UserEmailData{
+	addr, err := encdec.Decrypt(payload.Email)
+	if err != nil {
+		return err
+	}
+
+	err = mailer.SendVerificationEmail(email.UserEmailData{
 		Username:         payload.Username,
-		Email:            payload.Email,
+		Email:            addr,
 		VerificationCode: payload.VerificationCode,
 	})
 	if err != nil {
