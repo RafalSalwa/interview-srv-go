@@ -52,7 +52,6 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 	udb := &models.UserDBModel{
 		Email: encdec.Encrypt(cur.Email),
 	}
-	fmt.Println("udb service", udb)
 	ok, err := a.repository.Exists(ctx, udb)
 	if err != nil {
 		return nil, fmt.Errorf("service:repo:exists %w", err)
@@ -91,7 +90,7 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 	ur := &models.UserResponse{}
 	err = ur.FromDBModel(udb)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("service:repo:mapper:fromDBModel %w", err)
 	}
 	return ur, nil
 }

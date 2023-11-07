@@ -22,13 +22,25 @@ func (r *UserAdapter) Save(ctx context.Context, user *models.UserDBModel) error 
 }
 
 func (r *UserAdapter) Update(ctx context.Context, user *models.UserDBModel) error {
-	//TODO implement me
-	panic("implement me")
+	_, span := otel.GetTracerProvider().Tracer("repository").Start(ctx, "Repository/Update")
+	defer span.End()
+
+	res := r.DB.Updates(&user)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
 }
 
 func (r *UserAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
-	//TODO implement me
-	panic("implement me")
+	ctx, span := otel.GetTracerProvider().Tracer("repository").Start(ctx, "Repository/FindOne")
+	defer span.End()
+
+	if err := r.DB.Where(&user).Limit(1).Find(&user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func NewUserAdapter(db *gorm.DB) UserRepository {

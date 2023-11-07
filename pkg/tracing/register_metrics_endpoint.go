@@ -1,11 +1,11 @@
 package tracing
 
 import (
-	"fmt"
-	"net/http"
-	"time"
+    "log"
+    "net/http"
+    "time"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func RegisterMetricsEndpoint(addr string) {
@@ -21,7 +21,7 @@ func RegisterMetricsEndpoint(addr string) {
 		}
 
 		if err := server.ListenAndServe(); err != nil {
-			fmt.Println("Failed to serve Prometheus metrics:", err)
+			log.Fatal("Failed to serve Prometheus metrics:", err)
 		}
 	}()
 }

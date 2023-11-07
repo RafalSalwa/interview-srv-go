@@ -1,17 +1,16 @@
 package repository
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"gorm.io/gorm"
+    "context"
+    "errors"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/codes"
+    "gorm.io/gorm"
 )
 
 type MongoAdapter struct {
@@ -54,7 +53,6 @@ func (m MongoAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*m
 	if err := um.FromDBModel(user); err != nil {
 		return nil, err
 	}
-	fmt.Printf("%#v\n", um)
 	if err := m.collection.FindOne(ctx, &um).Decode(&um); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil

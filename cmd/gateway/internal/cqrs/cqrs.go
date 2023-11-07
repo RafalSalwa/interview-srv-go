@@ -32,7 +32,7 @@ type Queries struct {
 	UserExists       query.UserExistsHandler
 }
 
-func NewCQRSService(cfg config.Grpc) (*Application, error) {
+func NewService(cfg config.Grpc) (*Application, error) {
 	authClient, err := rpc_client.NewAuthClient(cfg.AuthServicePort)
 	if err != nil {
 		return nil, err

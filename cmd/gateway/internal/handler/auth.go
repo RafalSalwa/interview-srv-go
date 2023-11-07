@@ -59,7 +59,7 @@ func (a authHandler) SignInUser() http.HandlerFunc {
 		defer span.End()
 
 		if err := validate.UserInput(r, &reqUser); err != nil {
-			a.logger.Error().Err(err).Msg("SignIn: decode")
+			a.logger.Error().Err(err).Msg("SignInUser: validate")
 
 			responses.RespondBadRequest(w, err.Error())
 			return
@@ -69,7 +69,7 @@ func (a authHandler) SignInUser() http.HandlerFunc {
 		res, errQuery = a.cqrs.SigninCommand(ctx, reqUser)
 
 		if errQuery != nil {
-			a.logger.Error().Err(errQuery).Msg("gRPC:SignIn")
+			a.logger.Error().Err(errQuery).Msg("SignInUser: grpc signIn")
 
 			if e, ok := status.FromError(errQuery); ok {
 				responses.FromGRPCError(e, w)
@@ -125,7 +125,7 @@ func (a authHandler) GetVerificationCode() http.HandlerFunc {
 
 		if err := validate.UserInput(r, &reqSignIn); err != nil {
 			tracing.RecordError(span, err)
-			a.logger.Error().Err(err).Msg("SignUpUser: decode")
+			a.logger.Error().Err(err).Msg("GetVerificationCode: validate")
 
 			responses.RespondBadRequest(w, err.Error())
 			return
@@ -135,7 +135,7 @@ func (a authHandler) GetVerificationCode() http.HandlerFunc {
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("SignUpUser:create")
+			a.logger.Error().Err(err).Msg("GetVerificationCode: fetchUser")
 
 			if e, ok := status.FromError(err); ok {
 				responses.FromGRPCError(e, w)
@@ -149,7 +149,7 @@ func (a authHandler) GetVerificationCode() http.HandlerFunc {
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
-			a.logger.Error().Err(err).Msg("SignUpUser:create")
+			a.logger.Error().Err(err).Msg("GetVerificationCode: GetVerificationCode")
 
 			if e, ok := status.FromError(err); ok {
 				responses.FromGRPCError(e, w)

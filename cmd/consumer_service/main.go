@@ -26,7 +26,6 @@ func main() {
 	if err := con.Connect(); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(ctx, "listening for events")
 	defer con.Close()
 
 	var client rabbitmq.Client = rabbitmq.NewClient(con)

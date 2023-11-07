@@ -1,19 +1,17 @@
 package workers
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
-
-	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
-	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+    "bytes"
+    "context"
+    "encoding/json"
+    "github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
+    "github.com/RafalSalwa/interview-app-srv/pkg/generator"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/credentials/insecure"
+    "log"
+    "net/http"
 )
 
 const (
@@ -23,7 +21,7 @@ const (
 )
 
 var (
-	dcConn, _ = grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	dcConn, _ = grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	authClient = pb.NewAuthServiceClient(dcConn)
 	userClient = pb.NewUserServiceClient(dcConn)
@@ -74,7 +72,7 @@ func dcCreateUser(ctx context.Context, cfg *config.Config) User {
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 	return User{

@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+    "encoding/json"
+    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+    "log"
 
-	"github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
-	"github.com/RafalSalwa/interview-app-srv/pkg/email"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    "github.com/RafalSalwa/interview-app-srv/cmd/consumer_service/config"
+    "github.com/RafalSalwa/interview-app-srv/pkg/email"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
 func WrapHandleCustomerAccountRequestConfirmEmail(event rabbitmq.Event) error {
@@ -20,7 +20,7 @@ func WrapHandleCustomerAccountRequestConfirmEmail(event rabbitmq.Event) error {
 	c, err := config.InitConfig()
 	mailer := email.NewClient(c.Email)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return CustomerAccountRequestConfirmEmail(data, mailer)
 }

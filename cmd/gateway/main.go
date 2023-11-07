@@ -44,7 +44,7 @@ func run() error {
 
 	checkFlags(l)
 
-	service, err := cqrs.NewCQRSService(cfg.Grpc)
+	service, err := cqrs.NewService(cfg.Grpc)
 	if err != nil {
 		return err
 	}

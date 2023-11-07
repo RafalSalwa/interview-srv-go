@@ -43,7 +43,6 @@ func (srv *Server) Run() error {
 	}
 
 	<-shutdown
-	fmt.Println("got signal")
 	rejectContext()
 	return nil
 }
