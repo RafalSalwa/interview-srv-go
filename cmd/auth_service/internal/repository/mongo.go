@@ -3,7 +3,6 @@ package repository
 import (
     "context"
     "errors"
-    "fmt"
     "github.com/RafalSalwa/interview-app-srv/pkg/models"
     apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
     "go.mongodb.org/mongo-driver/bson"
@@ -36,9 +35,7 @@ func (m MongoAdapter) Exists(ctx context.Context, udb *models.UserDBModel) (bool
 	if err := um.FromDBModel(udb); err != nil {
 		return false, err
 	}
-	fmt.Printf("db: %#v\n m: %#v\n", udb, um)
 	if err := m.collection.FindOne(ctx, um).Decode(&um); err != nil {
-		fmt.Println("Err:", err)
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return false, nil
 		}

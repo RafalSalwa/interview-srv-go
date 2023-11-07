@@ -50,7 +50,7 @@ func initAuthHandler(t *testing.T) {
 		cfg, err = config.InitConfig()
 		assert.NoError(t, err)
 
-		service, err = cqrs.NewCQRSService(cfg.Grpc)
+		service, err = cqrs.NewService(cfg.Grpc)
 		assert.NoError(t, err)
 
 		l = logger.NewConsole()

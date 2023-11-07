@@ -40,7 +40,7 @@ func initUserHandler(t *testing.T) *userTest {
 		assert.NoError(t, err)
 		ut.cfg = cfg
 
-		service, err := cqrs.NewCQRSService(cfg.Grpc)
+		service, err := cqrs.NewService(cfg.Grpc)
 		assert.NoError(t, err)
 		ut.service = service
 		l := logger.NewConsole()

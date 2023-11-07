@@ -2,7 +2,7 @@ serviceName: User Service
 app:
   env: dev
   debug: true
-  repository_type: mongo
+  repository_type: mysql
 grpc:
   addr: ":8032"
 probes:

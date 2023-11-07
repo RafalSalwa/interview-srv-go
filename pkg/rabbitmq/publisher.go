@@ -34,7 +34,6 @@ func (p *Publisher) Publish(ctx context.Context, mes amqp.Publishing) error {
 		mes,
 	)
 	if err != nil {
-		fmt.Println("Err:", err)
 		return err
 	}
 

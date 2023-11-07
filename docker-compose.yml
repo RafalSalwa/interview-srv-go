@@ -3,10 +3,14 @@ services:
   gateway:
     container_name: gateway
     build:
-      context: ./
+      context: .
       dockerfile: ./.docker/api_gateway/Dockerfile
+      args:
+        APP_ENV: dev
+        APP_NAME: gateway  
     environment:
       APP_ENV: dev
+      APP_NAME: gateway
     ports:
       - "8011:8011"
       - "8012:8012"
@@ -14,10 +18,10 @@ services:
       - ./:/interview
       - ./build/keys/server.crt:/etc/ssl/certs/server.crt
       - ./build/keys/server.key:/etc/ssl/private/server.key
-    depends_on:
-      - jaeger
-      - auth_service
-      - user_service
+#    depends_on:
+#      - jaeger
+#      - auth_service
+#      - user_service
     networks:
       interview-net:
         aliases:
@@ -84,6 +88,19 @@ services:
       interview-net:
         aliases:
           - iconsumer_service
+  tester_service:
+    container_name: tester_service
+    build:
+      context: ./
+      dockerfile: ./.docker/tester_service/Dockerfile
+    environment:
+      APP_ENV: dev
+    volumes:
+      - ./:/interview
+    networks:
+      interview-net:
+        aliases:
+          - itester_service
   mysql:
     container_name: mysql
     image: mysql

@@ -3,7 +3,7 @@ app:
   env: dev
   debug: true
 http:
-  addr: gateway:8011
+  addr: 0.0.0.0:8011
 auth:
   method: basic
   apiKey: CBusCNJihmsv6fGwyPUJzPwDPhnxsSJLEBGSHOPtSKmiW72IZpMobs4on5NPnoiY

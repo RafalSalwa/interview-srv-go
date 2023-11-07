@@ -1,13 +1,12 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"os"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/http/auth"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var configPath string
@@ -44,11 +43,11 @@ func InitConfig() (*Config, error) {
 	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, errors.Wrap(err, "viper.ReadInConfig")
+		return nil, errors.New("viper.ReadInConfig")
 	}
 
 	if err := viper.Unmarshal(cfg); err != nil {
-		return nil, errors.Wrap(err, "viper.Unmarshal")
+		return nil, errors.New("viper.Unmarshal")
 	}
 	return cfg, nil
 }
@@ -56,7 +55,7 @@ func InitConfig() (*Config, error) {
 func getEnvPath() (string, error) {
 	getwd, err := os.Getwd()
 	if err != nil {
-		return "", errors.Wrap(err, "os.Getwd")
+		return "", errors.New("os.Getwd")
 	}
 	configPath = fmt.Sprintf("%s/cmd/tester_service/config/config.yaml", getwd)
 

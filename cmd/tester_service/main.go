@@ -5,24 +5,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/internal/workers"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"io"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/internal/workers"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-
-	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
 )
 
 const (
-	emailDomain = "@interview.com"
-	password    = "VeryG00dPass!"
-	numUsers    = 50
+	emailDomain               = "@interview.com"
+	password                  = "VeryG00dPass!"
+	numUsers                  = 20
+	maxNbConcurrentGoroutines = 10
 )
 
 type testUser struct {
@@ -33,19 +31,12 @@ type testUser struct {
 }
 
 var (
-	maxNbConcurrentGoroutines = 30
-	concurrentGoroutines      = make(chan struct{}, maxNbConcurrentGoroutines)
+	concurrentGoroutines = make(chan struct{}, maxNbConcurrentGoroutines)
 )
 
 func main() {
-	cfg, err := config.InitConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-	ctx := context.Background()
-	l := logger.NewConsole()
-	workers.NewDaisyChain(ctx, cfg)
-	runWorkersInOrder(ctx, cfg, l)
+	worker := workers.NewWorker("daisy_chain")
+	worker.Run()
 }
 
 func runWorkersInOrder(ctx context.Context, cfg *config.Config, l *logger.Logger) {
@@ -93,23 +84,29 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan te
 	}
 	marshaled, err := json.Marshal(newUser)
 	if err != nil {
-		log.Fatalf("impossible to marshall: %s", err)
+		fmt.Printf("impossible to marshall: %+v\n", err)
 	}
 	client := &http.Client{}
-	URL := "http://" + cfg.HTTP.Addr + "/auth/signup"
-	// pass the values to the request's body
+	URL := fmt.Sprintf("http://%s/auth/signup", cfg.HTTP.Addr)
 	req, err := http.NewRequestWithContext(ctx, "POST", URL, bytes.NewReader(marshaled))
 	if err != nil {
 		log.Fatalf("impossible to read all body of response: %s", err)
 	}
 	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("req do err: ", err)
 		<-concurrentGoroutines
 		return
 	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println("body close err", err)
+		}
+	}(resp.Body)
+
 	created <- testUser{
 		Username: pUsername,
 		Email:    email,
@@ -120,9 +117,9 @@ func createUser(ctx context.Context, cfg *config.Config, created, failed chan te
 
 func activateUser(ctx context.Context, cfg *config.Config, created chan testUser, activated chan testUser, failed chan testUser) {
 	concurrentGoroutines <- struct{}{}
-	// ctx := context.TODO()
 	user := <-created
-	reqUser := &models.VerificationCodeRequest{Email: user.Email}
+	reqUser := &models.SignInUserRequest{Email: user.Email, Password: user.Password}
+
 	marshaled, err := json.Marshal(reqUser)
 	if err != nil {
 		log.Fatalf("impossible to marshall: %s", err)
@@ -138,11 +135,21 @@ func activateUser(ctx context.Context, cfg *config.Config, created chan testUser
 	if err != nil {
 		log.Fatal(err)
 	}
+	if resp.StatusCode != 200 {
+		fmt.Printf("%s req body: %s\n", URL, string(marshaled))
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bodyString := string(bodyBytes)
+		fmt.Printf("%s body: %s", URL, bodyString)
+	}
+
 	type vCode struct {
 		Token string `json:"verification_token"`
 	}
 	type target struct {
-		User vCode `json:"testUser"`
+		User vCode `json:"user"`
 	}
 	tgt := target{}
 	err = json.NewDecoder(resp.Body).Decode(&tgt)
@@ -164,21 +171,37 @@ func activateUser(ctx context.Context, cfg *config.Config, created chan testUser
 		log.Fatalf("impossible to read all body of response: %s", err)
 	}
 	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
+
 	resp, err = client.Do(req)
 	if err != nil {
+		fmt.Println("/auth/verify/", err)
 		<-concurrentGoroutines
 		log.Fatal(err)
 		return
 	}
-
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println("defer close: ", err)
+		}
+	}(resp.Body)
+	if resp.StatusCode != 200 {
+		fmt.Printf("%s req body: %s\n", URL, string(marshaled))
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bodyString := string(bodyBytes)
+		fmt.Printf("%s body: %s", URL, bodyString)
+	}
 	if err != nil {
+		fmt.Println("verify err:", err)
 		<-concurrentGoroutines
 		log.Fatal(err)
 		return
 	}
 	defer resp.Body.Close()
-
-	activated <- testUser{ValidationCode: tgt.User.Token, Username: user.Username, Password: user.Password}
+	activated <- testUser{ValidationCode: tgt.User.Token, Username: user.Username, Email: user.Email, Password: user.Password}
 	<-concurrentGoroutines
 }
 
@@ -187,7 +210,7 @@ func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan t
 
 	user := <-activated
 	credentials := &models.SignInUserRequest{
-		Username: user.Username,
+		Email:    user.Email,
 		Password: user.Password,
 	}
 	marshaled, err := json.Marshal(credentials)
@@ -204,11 +227,25 @@ func tokenUser(ctx context.Context, cfg *config.Config, activated, failed chan t
 	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println("Do err: ", err)
 		log.Fatalf("impossible to read all body of response: %s", err)
 	}
+
+	if resp.StatusCode != 200 {
+		fmt.Printf("req body: %s\n", string(marshaled))
+		fmt.Printf("resp: %#v\n body: %s", resp, resp.Body)
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		bodyString := string(bodyBytes)
+		fmt.Println("body: ", bodyString)
+	}
+
 	defer resp.Body.Close()
 	_, err = io.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Println("ReadAll err: ", err)
 		log.Fatalf("impossible to read all body of response: %s", err)
 	}
 	<-concurrentGoroutines

@@ -1,18 +1,18 @@
 package services
 
 import (
-	"context"
-	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
-	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
-	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-	"go.opentelemetry.io/otel"
+    "context"
+    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+    "github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+    "go.opentelemetry.io/otel"
 
-	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
-	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
-	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
-	"github.com/RafalSalwa/interview-app-srv/pkg/models"
-	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
+    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
+    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
+    "github.com/RafalSalwa/interview-app-srv/pkg/models"
+    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
 type UserServiceImpl struct {
@@ -57,17 +57,13 @@ func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.UserDBModel)
 	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/GetUser")
 	defer span.End()
 
-	userDbModel := &models.UserDBModel{
-		Email: encdec.Encrypt(user.Email),
-	}
-	userDbModel.Email = encdec.Encrypt(user.Email)
+	find := &models.UserDBModel{Email: encdec.Encrypt(user.Email)}
 
-	udb, err := s.repository.FindOne(ctx, userDbModel)
+	udb, err := s.repository.FindOne(ctx, find)
 	if err != nil {
 		tracing.RecordError(span, err)
 		return nil, err
 	}
-
 	_, err = hashing.Argon2IDComparePasswordAndHash(user.Password, udb.Password)
 	if err != nil {
 		tracing.RecordError(span, err)

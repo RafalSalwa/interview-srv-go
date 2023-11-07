@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/config"
 	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/metrics"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 
 type Server struct {
 	srv *http.Server
+	mtr *metrics.RequestCounter
 	log *logger.Logger
 	cfg *config.Config
 }
@@ -31,6 +33,7 @@ func NewServer(cfg *config.Config, r *mux.Router, l *logger.Logger) *Server {
 	return &Server{
 		srv: s,
 		log: l,
+		mtr: metrics.NewRequestCounterMetrics(cfg.ServiceName),
 		cfg: cfg,
 	}
 }
