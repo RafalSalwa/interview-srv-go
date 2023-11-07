@@ -1,89 +1,54 @@
 package workers
 
 import (
-    "bytes"
-    "context"
-    "encoding/json"
-    "github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
-    "github.com/RafalSalwa/interview-app-srv/pkg/generator"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-    "google.golang.org/grpc"
-    "google.golang.org/grpc/credentials/insecure"
-    "log"
-    "net/http"
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/cmd/tester_service/config"
+	"github.com/RafalSalwa/interview-app-srv/pkg/generator"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+	"github.com/fatih/color"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"io"
+	"log"
+	"net/http"
 )
 
-const (
-	emailDomain = "@interview.com"
-	password    = "VeryG00dPass!"
-	numUsers    = 50
-)
+const numChannels = 4
 
-var (
-	dcConn, _ = grpc.Dial("0.0.0.0:8082", grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	authClient = pb.NewAuthServiceClient(dcConn)
-	userClient = pb.NewUserServiceClient(dcConn)
-)
-
-type User struct {
-	ValidationCode string
-	Username       string
-	Email          string
-	Password       string
+type DaisyChain struct {
+	cfg *config.Config
 }
 
-func NewDaisyChain(ctx context.Context, cfg *config.Config) {
-	ch := make(chan User, numUsers+1)
+func NewDaisyChain(cfg *config.Config) WorkerRunner {
+	return &DaisyChain{
+		cfg: cfg,
+	}
 
-	go Generate(ctx, ch, cfg)
-	mid := make(chan User)
-	go worker(ctx, ch, mid, "activate")
-	out := make(chan User)
-	go worker(ctx, mid, out, "token")
 }
 
-func Generate(ctx context.Context, ch chan<- User, cfg *config.Config) {
-	ch <- dcCreateUser(ctx, cfg)
+func (s DaisyChain) Run() {
+	tasks := [numChannels]string{"signUp", "getCode", "activate", "signIn"}
+	ctx := context.Background()
+
+	leftmost := make(chan testUser)
+	right := leftmost
+	left := leftmost
+
+	for i := 0; i < numChannels; i++ {
+		go worker(ctx, left, right, tasks[i])
+	}
+
+	leftmost <- s.dcCreateUser(ctx, s.cfg)
+
 }
-
-func dcCreateUser(ctx context.Context, cfg *config.Config) User {
-	pUsername, _ := generator.RandomString(12)
-	email := pUsername + emailDomain
-
-	newUser := &models.SignUpUserRequest{
-		Email:           email,
-		Password:        password,
-		PasswordConfirm: password,
-	}
-	marshaled, err := json.Marshal(newUser)
-	if err != nil {
-		log.Fatalf("impossible to marshall: %s", err)
-	}
-	client := &http.Client{}
-	URL := "http://" + cfg.HTTP.Addr + "/auth/signup"
-	// pass the values to the request's body
-	req, err := http.NewRequestWithContext(ctx, "POST", URL, bytes.NewReader(marshaled))
-	if err != nil {
-		log.Fatalf("impossible to read all body of response: %s", err)
-	}
-	req.SetBasicAuth(cfg.Auth.BasicAuth.Username, cfg.Auth.BasicAuth.Password)
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return User{
-		ValidationCode: "",
-		Password:       newUser.Password,
-	}
-}
-
-func worker(ctx context.Context, in <-chan User, out chan<- User, task string) {
+func worker(ctx context.Context, in <-chan testUser, out chan<- testUser, task string) {
 	inUser := <-in
-	var outUser User
+
+	var outUser testUser
 	switch task {
 	case "activate":
 		outUser = dcActivateUser(ctx, inUser)
@@ -93,13 +58,68 @@ func worker(ctx context.Context, in <-chan User, out chan<- User, task string) {
 	out <- outUser
 }
 
-func dcActivateUser(ctx context.Context, inUser User) User {
+func (s DaisyChain) dcCreateUser(ctx context.Context, cfg *config.Config) testUser {
+	pUsername, _ := generator.RandomString(12)
+	email := pUsername + emailDomain
+
+	user := testUser{
+		Username: pUsername,
+		Email:    email,
+		Password: password,
+	}
+
+	newUser := &models.SignUpUserRequest{
+		Email:           user.Email,
+		Password:        user.Password,
+		PasswordConfirm: user.Password,
+	}
+	marshaled, err := json.Marshal(newUser)
+	if err != nil {
+		log.Fatalf("impossible to marshall: %s", err)
+	}
+	client := &http.Client{}
+	URL := fmt.Sprintf("http://%s/auth/signup", s.cfg.HTTP.Addr)
+	// pass the values to the request's body
+	req, err := http.NewRequest("POST", URL, bytes.NewReader(marshaled))
+	if err != nil {
+		log.Fatalf("impossible to read all body of response: %s", err)
+	}
+	req.SetBasicAuth(s.cfg.Auth.BasicAuth.Username, s.cfg.Auth.BasicAuth.Password)
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusCreated {
+		fmt.Println("Err.")
+
+		fmt.Printf("    %s req body: %s\n", URL, string(marshaled))
+		bodyBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("impossible to marshall: %s\n", err)
+		}
+		bodyString := string(bodyBytes)
+		fmt.Printf("    %s body: %s", URL, bodyString)
+	} else {
+		fmt.Println(color.GreenString("OK"))
+	}
+	return user
+}
+
+func dcActivateUser(ctx context.Context, inUser testUser) testUser {
 	rVerification := &pb.VerifyUserRequest{Code: inUser.ValidationCode}
+	conn, _ := grpc.Dial("0.0.0.0:8022", grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	userClient := pb.NewUserServiceClient(conn)
+
 	_, _ = userClient.VerifyUser(ctx, rVerification)
 	return inUser
 }
 
-func dcTokenUser(ctx context.Context, inUser User) User {
+func dcTokenUser(ctx context.Context, inUser testUser) testUser {
+	conn, _ := grpc.Dial("0.0.0.0:8032", grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	authClient := pb.NewAuthServiceClient(conn)
+
 	credentials := &pb.SignInUserInput{
 		Username: inUser.Username,
 		Password: inUser.Password,

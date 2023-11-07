@@ -35,14 +35,8 @@ var (
 )
 
 func main() {
-	cfg, err := config.InitConfig()
-	if err != nil {
-		fmt.Println("config", err)
-	}
-	ctx := context.Background()
-	workers.OneAtTime(ctx, cfg)
-	//workers.NewDaisyChain(ctx, cfg)
-	//runWorkersInOrder(ctx, cfg, l)
+	worker := workers.NewWorker("daisy_chain")
+	worker.Run()
 }
 
 func runWorkersInOrder(ctx context.Context, cfg *config.Config, l *logger.Logger) {
