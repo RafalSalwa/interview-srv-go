@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"errors"
-
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/jinzhu/copier"
@@ -29,9 +28,7 @@ func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) 
 func (us *UserServer) GetUserByID(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GetUserByID")
 	defer span.End()
-
-	user := &models.UserDBModel{Id: req.GetUserId()}
-	udb, err := us.userService.GetUser(ctx, user)
+	udb, err := us.userService.GetByID(ctx, req.GetUserId())
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
