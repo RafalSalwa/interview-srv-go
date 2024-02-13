@@ -6,21 +6,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type StringInterfaceMap map[string]interface{}
+
 type UserDBModel struct {
-	Id               int64      `gorm:"id;primaryKey;autoIncrement"`
-	Username         string     `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
-	Password         string     `gorm:"type:varchar(255);not null"`
-	Firstname        string     `gorm:"column:first_name;type:varchar(255)"`
-	Lastname         string     `gorm:"column:last_name;type:varchar(255)"`
-	Email            string     `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
-	Phone            string     `gorm:"column:phone_no;type:varchar(11)"`
-	VerificationCode string     `gorm:"column:verification_code;type:varchar(12)"`
-	CreatedAt        time.Time  `gorm:"column:created_at"`
-	UpdatedAt        *time.Time `gorm:"column:updated_at"`
-	LastLogin        *time.Time `gorm:"column:last_login"`
-	DeletedAt        *time.Time `gorm:"column:deleted_at"`
-	Verified         bool       `gorm:"column:is_verified;default:false"`
-	Active           bool       `gorm:"column:is_active;default:false"`
+	Id               int64              `gorm:"id;primaryKey;autoIncrement"`
+	Username         string             `gorm:"type:varchar(180);not null;uniqueIndex;not null"`
+	Password         string             `gorm:"type:varchar(255);not null"`
+	Firstname        string             `gorm:"column:first_name;type:varchar(255)"`
+	Lastname         string             `gorm:"column:last_name;type:varchar(255)"`
+	Email            string             `gorm:"type:varchar(255);not null;uniqueIndex;not null"`
+	Phone            string             `gorm:"column:phone_no;type:varchar(11)"`
+	VerificationCode string             `gorm:"column:verification_code;type:varchar(12)"`
+	Roles            StringInterfaceMap `gorm:"column:roles;type:json"`
+	CreatedAt        time.Time          `gorm:"column:created_at"`
+	UpdatedAt        *time.Time         `gorm:"column:updated_at"`
+	LastLogin        *time.Time         `gorm:"column:last_login"`
+	DeletedAt        *time.Time         `gorm:"column:deleted_at"`
+	Verified         bool               `gorm:"column:is_verified;default:false"`
+	Active           bool               `gorm:"column:is_active;default:false"`
 }
 
 type UserMongoModel struct {
@@ -33,6 +36,7 @@ type UserMongoModel struct {
 	VerificationCode string     `bson:"verification_code,omitempty"`
 	Verified         bool       `bson:"is_verified,omitempty"`
 	Active           bool       `bson:"is_active,omitempty"`
+	Roles            Roles      `bson:"roles,omitempty"`
 	CreatedAt        time.Time  `bson:"createdAt,omitempty"`
 	UpdatedAt        *time.Time `bson:"updatedAt,omitempty"`
 	LastLogin        *time.Time `bson:"lastLogin,omitempty"`
@@ -60,8 +64,8 @@ type UserRequest struct {
 
 type SignUpUserRequest struct {
 	Email           string `json:"email" validate:"required,email"`
-	Password        string `json:"password" validate:"required,min=8,max=16"`
-	PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,max=16"`
+	Password        string `json:"password" validate:"required,min=8,max=32"`
+	PasswordConfirm string `json:"passwordConfirm" validate:"required,min=8,max=32"`
 }
 
 type SignInUserRequest struct {

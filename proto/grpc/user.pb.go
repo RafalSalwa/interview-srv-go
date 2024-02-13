@@ -168,7 +168,7 @@ type UserDetails struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id        int64                `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Id        int64                `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
 	Username  string               `protobuf:"bytes,2,opt,name=Username,proto3" json:"Username,omitempty"`
 	Firstname string               `protobuf:"bytes,3,opt,name=Firstname,proto3" json:"Firstname,omitempty"`
 	Lastname  string               `protobuf:"bytes,4,opt,name=Lastname,proto3" json:"Lastname,omitempty"`
@@ -617,7 +617,7 @@ type ChangePasswordRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id       int64  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Id       int64  `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
 	Password string `protobuf:"bytes,2,opt,name=Password,proto3" json:"Password,omitempty"`
 }
 
@@ -714,6 +714,53 @@ func (x *ChangePasswordResponse) GetStatus() string {
 	return ""
 }
 
+type VerificationCode struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code string `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+}
+
+func (x *VerificationCode) Reset() {
+	*x = VerificationCode{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_user_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *VerificationCode) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerificationCode) ProtoMessage() {}
+
+func (x *VerificationCode) ProtoReflect() protoreflect.Message {
+	mi := &file_user_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerificationCode.ProtoReflect.Descriptor instead.
+func (*VerificationCode) Descriptor() ([]byte, []int) {
+	return file_user_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *VerificationCode) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
 type VerifyUserRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -725,7 +772,7 @@ type VerifyUserRequest struct {
 func (x *VerifyUserRequest) Reset() {
 	*x = VerifyUserRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_user_proto_msgTypes[11]
+		mi := &file_user_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -738,7 +785,7 @@ func (x *VerifyUserRequest) String() string {
 func (*VerifyUserRequest) ProtoMessage() {}
 
 func (x *VerifyUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[11]
+	mi := &file_user_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -751,7 +798,7 @@ func (x *VerifyUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyUserRequest.ProtoReflect.Descriptor instead.
 func (*VerifyUserRequest) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{11}
+	return file_user_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *VerifyUserRequest) GetCode() string {
@@ -772,7 +819,7 @@ type VerificationResponse struct {
 func (x *VerificationResponse) Reset() {
 	*x = VerificationResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_user_proto_msgTypes[12]
+		mi := &file_user_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -785,7 +832,7 @@ func (x *VerificationResponse) String() string {
 func (*VerificationResponse) ProtoMessage() {}
 
 func (x *VerificationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_proto_msgTypes[12]
+	mi := &file_user_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -798,7 +845,7 @@ func (x *VerificationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerificationResponse.ProtoReflect.Descriptor instead.
 func (*VerificationResponse) Descriptor() ([]byte, []int) {
-	return file_user_proto_rawDescGZIP(), []int{12}
+	return file_user_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *VerificationResponse) GetSuccess() bool {
@@ -888,16 +935,19 @@ var file_user_proto_rawDesc = []byte{
 	0x30, 0x0a, 0x16, 0x43, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72,
 	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61,
 	0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75,
-	0x73, 0x22, 0x27, 0x0a, 0x11, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x55, 0x73, 0x65, 0x72, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0x30, 0x0a, 0x14, 0x56, 0x65,
-	0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x08, 0x52, 0x07, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x42, 0x34, 0x5a, 0x32,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x52, 0x61, 0x66, 0x61, 0x6c,
-	0x53, 0x61, 0x6c, 0x77, 0x61, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x69, 0x65, 0x77, 0x2d,
-	0x61, 0x70, 0x70, 0x2d, 0x73, 0x72, 0x76, 0x2f, 0x69, 0x6e, 0x74, 0x72, 0x76, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x22, 0x26, 0x0a, 0x10, 0x56, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x22, 0x27, 0x0a, 0x11, 0x56, 0x65, 0x72,
+	0x69, 0x66, 0x79, 0x55, 0x73, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12,
+	0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x63, 0x6f,
+	0x64, 0x65, 0x22, 0x30, 0x0a, 0x14, 0x56, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75,
+	0x63, 0x63, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x73, 0x75, 0x63,
+	0x63, 0x65, 0x73, 0x73, 0x42, 0x34, 0x5a, 0x32, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x52, 0x61, 0x66, 0x61, 0x6c, 0x53, 0x61, 0x6c, 0x77, 0x61, 0x2f, 0x69, 0x6e,
+	0x74, 0x65, 0x72, 0x76, 0x69, 0x65, 0x77, 0x2d, 0x61, 0x70, 0x70, 0x2d, 0x73, 0x72, 0x76, 0x2f,
+	0x69, 0x6e, 0x74, 0x72, 0x76, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -912,7 +962,7 @@ func file_user_proto_rawDescGZIP() []byte {
 	return file_user_proto_rawDescData
 }
 
-var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_user_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_user_proto_goTypes = []interface{}{
 	(*User)(nil),                   // 0: intrvproto.User
 	(*GetUserSignInRequest)(nil),   // 1: intrvproto.GetUserSignInRequest
@@ -925,14 +975,15 @@ var file_user_proto_goTypes = []interface{}{
 	(*GetUsersResponse)(nil),       // 8: intrvproto.GetUsersResponse
 	(*ChangePasswordRequest)(nil),  // 9: intrvproto.ChangePasswordRequest
 	(*ChangePasswordResponse)(nil), // 10: intrvproto.ChangePasswordResponse
-	(*VerifyUserRequest)(nil),      // 11: intrvproto.VerifyUserRequest
-	(*VerificationResponse)(nil),   // 12: intrvproto.VerificationResponse
-	(*timestamp.Timestamp)(nil),    // 13: google.protobuf.Timestamp
+	(*VerificationCode)(nil),       // 11: intrvproto.VerificationCode
+	(*VerifyUserRequest)(nil),      // 12: intrvproto.VerifyUserRequest
+	(*VerificationResponse)(nil),   // 13: intrvproto.VerificationResponse
+	(*timestamp.Timestamp)(nil),    // 14: google.protobuf.Timestamp
 }
 var file_user_proto_depIdxs = []int32{
-	13, // 0: intrvproto.User.created_at:type_name -> google.protobuf.Timestamp
-	13, // 1: intrvproto.UserDetails.CreatedAt:type_name -> google.protobuf.Timestamp
-	13, // 2: intrvproto.UserDetails.LastLogin:type_name -> google.protobuf.Timestamp
+	14, // 0: intrvproto.User.created_at:type_name -> google.protobuf.Timestamp
+	14, // 1: intrvproto.UserDetails.CreatedAt:type_name -> google.protobuf.Timestamp
+	14, // 2: intrvproto.UserDetails.LastLogin:type_name -> google.protobuf.Timestamp
 	3,  // 3: intrvproto.GetUsersRequest.users:type_name -> intrvproto.GetUserRequest
 	0,  // 4: intrvproto.UserResponse.user:type_name -> intrvproto.User
 	7,  // 5: intrvproto.GetUsersResponse.users:type_name -> intrvproto.GetUserResponse
@@ -1082,7 +1133,7 @@ func file_user_proto_init() {
 			}
 		}
 		file_user_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*VerifyUserRequest); i {
+			switch v := v.(*VerificationCode); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1094,6 +1145,18 @@ func file_user_proto_init() {
 			}
 		}
 		file_user_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*VerifyUserRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_user_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*VerificationResponse); i {
 			case 0:
 				return &v.state
@@ -1112,7 +1175,7 @@ func file_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_user_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

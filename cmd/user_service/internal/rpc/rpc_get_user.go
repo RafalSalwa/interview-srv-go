@@ -3,7 +3,11 @@ package rpc
 import (
 	"context"
 	"errors"
+<<<<<<< Updated upstream
 
+=======
+	"fmt"
+>>>>>>> Stashed changes
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/jinzhu/copier"
@@ -26,12 +30,18 @@ func (us *UserServer) CheckUserExists(ctx context.Context, req *pb.StringValue) 
 	return &pb.BoolValue{Value: exists}, nil
 }
 
-func (us *UserServer) GetUserByID(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
+func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GetUserByID")
 	defer span.End()
 
+<<<<<<< Updated upstream
 	user := &models.UserDBModel{Id: req.GetUserId()}
 	udb, err := us.userService.GetUser(ctx, user)
+=======
+	fmt.Printf("req: %#v", req)
+
+	udb, err := us.userService.GetByID(ctx, req.GetUserId())
+>>>>>>> Stashed changes
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
@@ -70,6 +80,28 @@ func (us *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest)
 	}
 
 	return &pb.VerificationResponse{Success: true}, nil
+}
+
+func (us *UserServer) GetUserByCode(ctx context.Context, req *pb.VerificationCode) (*pb.UserDetails, error) {
+	reqUser := &models.UserDBModel{
+		VerificationCode: req.GetCode(),
+	}
+
+	user, err := us.userService.Find(ctx, reqUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	if user == nil {
+		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
+	}
+
+	ud := &pb.UserDetails{}
+	err = copier.Copy(ud, user)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	return ud, nil
 }
 
 func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest) (*pb.UserDetails, error) {

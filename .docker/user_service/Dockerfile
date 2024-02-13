@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine3.18
+FROM golang:1.22-alpine3.19
 WORKDIR /interview
 
 RUN apk add --no-cache graphviz && go install github.com/cosmtrek/air@latest

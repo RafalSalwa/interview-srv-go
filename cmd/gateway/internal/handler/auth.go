@@ -44,6 +44,7 @@ func (a authHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
 
 	sr.Methods(http.MethodGet).Path("/verify/{code}").HandlerFunc(authorizer.Middleware(a.Verify()))
 	sr.Methods(http.MethodPost).Path("/code").HandlerFunc(authorizer.Middleware(a.GetVerificationCode()))
+	sr.Methods(http.MethodGet).Path("/code/{code}").HandlerFunc(authorizer.Middleware(a.GetUserByCode()))
 }
 
 func NewAuthHandler(cqrs *cqrs.Application, l *logger.Logger) AuthHandler {
@@ -88,6 +89,9 @@ func (a authHandler) SignUpUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("Handler").Start(r.Context(), "Handler/SignUpUser")
 		defer span.End()
+
+		//bytedata, _ := ioutil.ReadAll(r.Body)
+		//fmt.Println(string(bytedata))
 
 		if err := validate.UserInput(r, &reqUser); err != nil {
 			tracing.RecordError(span, err)
@@ -159,6 +163,47 @@ func (a authHandler) GetVerificationCode() http.HandlerFunc {
 			return
 		}
 		responses.User(w, resp)
+	}
+}
+
+func (a authHandler) GetUserByCode() http.HandlerFunc {
+	var vCode string
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserByCode")
+		defer span.End()
+
+		vCode = mux.Vars(r)["code"]
+		if vCode == "" {
+			vCode = r.URL.Query().Get("code")
+			if vCode == "" {
+				responses.RespondBadRequest(w, "code param is missing")
+				return
+			}
+		}
+
+		user, err := a.cqrs.GetUserByCode(ctx, vCode)
+		if err != nil {
+			span.RecordError(err, trace.WithStackTrace(true))
+			span.SetStatus(codes.Error, err.Error())
+			a.logger.Error().Err(err).Msg("GetUserByID:header:getId")
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+
+		if err != nil {
+			span.RecordError(err, trace.WithStackTrace(true))
+			span.SetStatus(codes.Error, err.Error())
+			a.logger.Error().Err(err).Msg("GetUserByID:grpc:getUser")
+
+			if e, ok := status.FromError(err); ok {
+				responses.FromGRPCError(e, w)
+				return
+			}
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+		responses.User(w, user)
 	}
 }
 

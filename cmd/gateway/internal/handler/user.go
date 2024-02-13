@@ -50,6 +50,10 @@ func (uh userHandler) GetUserByID() HandlerFunc {
 		defer span.End()
 
 		userID, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())

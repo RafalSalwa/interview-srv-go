@@ -30,6 +30,7 @@ type Queries struct {
 	VerificationCode query.VerificationCodeHandler
 	FetchUser        query.FetchUserHandler
 	UserExists       query.UserExistsHandler
+	GetUserByCode    query.GetUserByCodeHandler
 }
 
 func NewService(cfg config.Grpc) (*Application, error) {
@@ -60,6 +61,7 @@ func newApplication(authClient intrvproto.AuthServiceClient, userClient intrvpro
 			GetUser:          query.NewGetUserHandler(userClient),
 			VerificationCode: query.NewVerificationCodeHandler(authClient),
 			FetchUser:        query.NewFetchUserHandler(userClient),
+			GetUserByCode:    query.NewGetUserByCodeHandler(userClient),
 		},
 	}
 }
@@ -100,4 +102,7 @@ func (app *Application) ChangePassword(ctx context.Context, req *models.ChangePa
 
 func (app *Application) GetUser(ctx context.Context, id int64) (models.UserResponse, error) {
 	return app.Queries.GetUser.Handle(ctx, id)
+}
+func (app *Application) GetUserByCode(ctx context.Context, vCode string) (models.UserResponse, error) {
+	return app.Queries.GetUserByCode.Handle(ctx, vCode)
 }
