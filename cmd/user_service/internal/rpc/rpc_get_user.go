@@ -3,11 +3,7 @@ package rpc
 import (
 	"context"
 	"errors"
-<<<<<<< Updated upstream
-
-=======
 	"fmt"
->>>>>>> Stashed changes
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 	"github.com/jinzhu/copier"
@@ -34,14 +30,7 @@ func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (
 	ctx, span := otel.GetTracerProvider().Tracer("user_service-rpc").Start(ctx, "GetUserByID")
 	defer span.End()
 
-<<<<<<< Updated upstream
-	user := &models.UserDBModel{Id: req.GetUserId()}
-	udb, err := us.userService.GetUser(ctx, user)
-=======
-	fmt.Printf("req: %#v", req)
-
-	udb, err := us.userService.GetByID(ctx, req.GetUserId())
->>>>>>> Stashed changes
+	udb, err := us.userService.GetByID(ctx, req.GetId())
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
@@ -52,17 +41,18 @@ func (us *UserServer) GetUserById(ctx context.Context, req *pb.GetUserRequest) (
 		span.SetStatus(otelcodes.Error, err.Error())
 		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
 	}
-	res := &pb.UserDetails{
-		Id:        udb.Id,
-		Username:  udb.Username,
-		Firstname: udb.Firstname,
-		Lastname:  udb.Lastname,
-		Email:     udb.Email,
-		Verified:  udb.Verified,
-		Active:    udb.Active,
-		CreatedAt: timestamppb.New(udb.CreatedAt),
-	}
 
+	res := &pb.UserDetails{
+		Id:               udb.Id,
+		Username:         udb.Username,
+		Firstname:        udb.Firstname,
+		Lastname:         udb.Lastname,
+		Email:            udb.Email,
+		VerificationCode: udb.VerificationCode,
+		Verified:         udb.Verified,
+		Active:           udb.Active,
+		CreatedAt:        timestamppb.New(udb.CreatedAt.Local()),
+	}
 	return res, nil
 }
 
@@ -75,7 +65,7 @@ func (us *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest)
 		if err.Error() == "AlreadyActivated" {
 			return nil, status.Errorf(codes.AlreadyExists, "User with such code has already active account")
 		}
-
+		fmt.Println("UsersApi:", err.Error())
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
@@ -95,7 +85,7 @@ func (us *UserServer) GetUserByCode(ctx context.Context, req *pb.VerificationCod
 	if user == nil {
 		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
 	}
-
+	fmt.Println("user", user)
 	ud := &pb.UserDetails{}
 	err = copier.Copy(ud, user)
 	if err != nil {
@@ -128,7 +118,7 @@ func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest)
 }
 
 func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
-	user, err := us.userService.GetByID(ctx, req.GetUserId())
+	user, err := us.userService.GetByID(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

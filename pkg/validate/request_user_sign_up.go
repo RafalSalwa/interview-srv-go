@@ -14,7 +14,7 @@ func UserInput(r *http.Request, req interface{}) error {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return fmt.Errorf("cannot decode request data")
 	}
-	fmt.Printf("%#v", req)
+
 	if err := reqValidator.Struct(req); err != nil {
 		return fmt.Errorf("data validation failed with reason: %s", err.Error())
 	}

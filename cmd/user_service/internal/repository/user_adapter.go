@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go.opentelemetry.io/otel"
 	"time"
 
@@ -39,6 +40,11 @@ func (r *UserAdapter) FindOne(ctx context.Context, user *models.UserDBModel) (*m
 
 	if err := r.DB.Where(&user).Limit(1).Find(&user).Error; err != nil {
 		return nil, err
+	}
+	fmt.Printf("FindOne: %+v\n", user)
+	fmt.Println("id", user.Id, "email", user.Email, "validation", user.Email == "" || user.Id == 0)
+	if user.Email == "" || user.Id == 0 {
+		return nil, nil
 	}
 	return user, nil
 }

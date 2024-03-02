@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
@@ -116,6 +118,13 @@ func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode strin
 	if err != nil {
 		tracing.RecordError(span, err)
 		return err
+	}
+	fmt.Printf("User: %#v\n", udb)
+	fmt.Println("validation udb == nil", udb == nil)
+	if udb == nil {
+		errUser := errors.New(fmt.Sprintf("user not found. user with verification code %s was not found", vCode))
+		tracing.RecordError(span, errUser)
+		return errUser
 	}
 	udb.Active = true
 	udb.Verified = true

@@ -42,6 +42,7 @@ func (r *UserResponse) FromProtoUserDetails(pbu *intrvproto.UserDetails) {
 	r.Firstname = pbu.GetFirstname()
 	r.Lastname = pbu.GetLastname()
 	r.Verified = pbu.GetVerified()
+	r.VerificationCode = pbu.GetVerificationCode()
 	r.Active = pbu.GetActive()
 	r.CreatedAt = pbu.GetCreatedAt().AsTime()
 

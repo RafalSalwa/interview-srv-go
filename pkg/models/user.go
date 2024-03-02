@@ -57,9 +57,11 @@ type Users struct {
 }
 
 type UserRequest struct {
-	Id       int64  `json:"id" govalidator:"int"`
-	Username string `json:"username"`
-	Email    string `json:"email" `
+	Id               int64  `json:"id" govalidator:"int"`
+	Email            string `json:"email,omitempty"`
+	VerificationCode string `json:"verification_code,omitempty"`
+	AccessToken      string `json:"token,omitempty"`
+	RefreshToken     string `json:"refresh_token,omitempty"`
 }
 
 type SignUpUserRequest struct {
@@ -135,5 +137,5 @@ type Roles struct {
 }
 
 type VerificationCodeRequest struct {
-	Email string `json:"code"`
+	Email string `json:"email" validate:"required,email"`
 }

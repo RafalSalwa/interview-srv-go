@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"errors"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"gorm.io/gorm"
 
@@ -26,6 +27,30 @@ func (a *Auth) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.Sig
 	}
 
 	ur, err := a.authService.SignInUser(ctx, loginUser)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("rpc:service:signin")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		}
+
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+	res := &pb.SignInUserResponse{
+		AccessToken:  ur.AccessToken,
+		RefreshToken: ur.RefreshToken,
+	}
+	return res, nil
+}
+func (a *Auth) SignInByCode(ctx context.Context, req *pb.SignInByCodeUserInput) (*pb.SignInUserResponse, error) {
+	ctx, span := tracing.InitSpan(ctx, "auth_service-rpc", "GRPC SignInByCode")
+	defer span.End()
+
+	loginUser := &models.UserDBModel{
+		Email:            encdec.Encrypt(req.GetEmail()),
+		VerificationCode: req.GetAuthCode(),
+	}
+
+	ur, err := a.authService.Load(ctx, loginUser)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("rpc:service:signin")
 		if errors.Is(err, gorm.ErrRecordNotFound) {

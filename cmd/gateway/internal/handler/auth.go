@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
@@ -40,6 +41,7 @@ func (a authHandler) RegisterRoutes(r *mux.Router, cfg interface{}) {
 	sr := r.PathPrefix("/auth/").Subrouter()
 
 	sr.Methods(http.MethodPost).Path("/signup").HandlerFunc(authorizer.Middleware(a.SignUpUser()))
+	sr.Methods(http.MethodPost).Path("/signin/{auth_code}").HandlerFunc(authorizer.Middleware(a.SignInUserByCode()))
 	sr.Methods(http.MethodPost).Path("/signin").HandlerFunc(authorizer.Middleware(a.SignInUser()))
 
 	sr.Methods(http.MethodGet).Path("/verify/{code}").HandlerFunc(authorizer.Middleware(a.Verify()))
@@ -68,6 +70,48 @@ func (a authHandler) SignInUser() http.HandlerFunc {
 
 		var errQuery error
 		res, errQuery = a.cqrs.SigninCommand(ctx, reqUser)
+
+		if errQuery != nil {
+			a.logger.Error().Err(errQuery).Msg("SignInUser: grpc signIn")
+
+			if e, ok := status.FromError(errQuery); ok {
+				responses.FromGRPCError(e, w)
+				return
+			}
+			responses.InternalServerError(w)
+			return
+		}
+		responses.NewUserResponse(res, w)
+	}
+}
+
+func (a authHandler) SignInUserByCode() http.HandlerFunc {
+	var authCode string
+	reqSignIn := models.VerificationCodeRequest{}
+	res := &models.UserResponse{}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := otel.GetTracerProvider().Tracer("SignInUser").Start(r.Context(), "SignInUser Handler")
+		defer span.End()
+		fmt.Println("auth", authCode)
+		authCode = mux.Vars(r)["auth_code"]
+		if authCode == "" {
+			authCode = r.URL.Query().Get("auth_code")
+			if authCode == "" {
+				responses.RespondBadRequest(w, "code param is missing")
+				return
+			}
+		}
+		if err := validate.UserInput(r, &reqSignIn); err != nil {
+			tracing.RecordError(span, err)
+			a.logger.Error().Err(err).Msg("SignInUserByCode: decode")
+
+			responses.RespondBadRequest(w, err.Error())
+			return
+		}
+
+		var errQuery error
+		res, errQuery = a.cqrs.SigninByCodeCommand(ctx, reqSignIn.Email, authCode)
 
 		if errQuery != nil {
 			a.logger.Error().Err(errQuery).Msg("SignInUser: grpc signIn")
@@ -120,7 +164,7 @@ func (a authHandler) SignUpUser() http.HandlerFunc {
 }
 
 func (a authHandler) GetVerificationCode() http.HandlerFunc {
-	reqSignIn := models.SignInUserRequest{}
+	reqSignIn := models.VerificationCodeRequest{}
 	resp := models.UserResponse{}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +179,7 @@ func (a authHandler) GetVerificationCode() http.HandlerFunc {
 			return
 		}
 
-		_, err := a.cqrs.FetchUser(ctx, reqSignIn.Email, reqSignIn.Password)
+		_, err := a.cqrs.GetUser(ctx, models.UserRequest{Email: reqSignIn.Email})
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
