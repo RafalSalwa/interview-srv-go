@@ -3,9 +3,11 @@ package rpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"gorm.io/gorm"
+	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
@@ -49,7 +51,7 @@ func (a *Auth) SignInByCode(ctx context.Context, req *pb.SignInByCodeUserInput) 
 		Email:            encdec.Encrypt(req.GetEmail()),
 		VerificationCode: req.GetAuthCode(),
 	}
-
+	fmt.Println("time: ", time.Now())
 	ur, err := a.authService.Load(ctx, loginUser)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("rpc:service:signin")

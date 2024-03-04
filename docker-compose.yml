@@ -236,7 +236,7 @@ services:
     image: redis:7-alpine
     ports:
       - '6379:6379'
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --save 60 1 --loglevel warning --appendonly yes --requirepass GCAHwF0kz59p9FpP
     volumes:
       - cache:/data
     networks:

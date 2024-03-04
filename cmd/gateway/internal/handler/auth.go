@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs"
 	"github.com/RafalSalwa/interview-app-srv/cmd/gateway/internal/cqrs/command"
@@ -216,7 +217,8 @@ func (a authHandler) GetUserByCode() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("user-handler").Start(r.Context(), "GetUserByCode")
 		defer span.End()
-
+		dt := time.Now()
+		fmt.Println("Current date and time is: ", dt.String())
 		vCode = mux.Vars(r)["code"]
 		if vCode == "" {
 			vCode = r.URL.Query().Get("code")
