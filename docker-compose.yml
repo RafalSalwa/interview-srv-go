@@ -248,8 +248,8 @@ services:
     image: mailhog/mailhog
     container_name: mailhog
     ports:
-      - "1025:1025" # smtp server
-      - "8025:8025" # web ui
+      - "21025:1025" # smtp server
+      - "28025:8025" # web ui
     networks:
       interview-net:
         aliases:

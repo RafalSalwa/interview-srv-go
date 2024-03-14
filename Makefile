@@ -7,6 +7,9 @@ up:
 compose-down:
 	docker compose down --remove-orphans
 
+logs_follow:
+	docker compose logs -f gateway auth_service user_service consumer_service
+
 .PHONY: tester
 tester:
 	docker compose up -f docker-compose.tester.yml -d

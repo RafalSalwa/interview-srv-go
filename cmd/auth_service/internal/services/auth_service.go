@@ -60,7 +60,6 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 	if ok {
 		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
 	}
-
 	if err = hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -84,7 +83,6 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 			Role string
 		}{"ROLE_USER"},
 	}
-
 	if errDB := a.repository.Save(ctx, udb); errDB != nil {
 		return nil, errDB
 	}

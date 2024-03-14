@@ -94,7 +94,6 @@ func (a authHandler) SignInUserByCode() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := otel.GetTracerProvider().Tracer("SignInUser").Start(r.Context(), "SignInUser Handler")
 		defer span.End()
-		fmt.Println("auth", authCode)
 		authCode = mux.Vars(r)["auth_code"]
 		if authCode == "" {
 			authCode = r.URL.Query().Get("auth_code")

@@ -119,8 +119,6 @@ func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode strin
 		tracing.RecordError(span, err)
 		return err
 	}
-	fmt.Printf("User: %#v\n", udb)
-	fmt.Println("validation udb == nil", udb == nil)
 	if udb == nil {
 		errUser := errors.New(fmt.Sprintf("user not found. user with verification code %s was not found", vCode))
 		tracing.RecordError(span, errUser)
