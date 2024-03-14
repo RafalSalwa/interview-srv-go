@@ -50,6 +50,7 @@ func (uh userHandler) GetUserByID() HandlerFunc {
 		defer span.End()
 
 		userID, err := strconv.ParseInt(r.Header.Get("x-user-id"), 10, 64)
+
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
@@ -58,7 +59,7 @@ func (uh userHandler) GetUserByID() HandlerFunc {
 			return
 		}
 
-		user, err := uh.cqrs.GetUser(ctx, userID)
+		user, err := uh.cqrs.GetUser(ctx, models.UserRequest{Id: userID})
 		if err != nil {
 			span.RecordError(err, trace.WithStackTrace(true))
 			span.SetStatus(codes.Error, err.Error())
@@ -104,10 +105,10 @@ func (uh userHandler) PasswordChange() HandlerFunc {
 			return
 		}
 
-		_, err = uh.cqrs.GetUser(ctx, userID)
+		_, err = uh.cqrs.GetUser(ctx, models.UserRequest{Id: userID})
 		if err != nil {
 			tracing.RecordError(span, err)
-			uh.logger.Error().Err(err).Msg("PasswordChange:grpc:GetUser")
+			uh.logger.Error().Err(err).Msg("PasswordChange:grpc:GetUserByID")
 			responses.RespondBadRequest(w, err.Error())
 			return
 		}

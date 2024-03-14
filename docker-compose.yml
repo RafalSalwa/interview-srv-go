@@ -88,19 +88,19 @@ services:
       interview-net:
         aliases:
           - iconsumer_service
-  tester_service:
-    container_name: tester_service
-    build:
-      context: ./
-      dockerfile: ./.docker/tester_service/Dockerfile
-    environment:
-      APP_ENV: dev
-    volumes:
-      - ./:/interview
-    networks:
-      interview-net:
-        aliases:
-          - itester_service
+#  tester_service:
+#    container_name: tester_service
+#    build:
+#      context: ./
+#      dockerfile: ./.docker/tester_service/Dockerfile
+#    environment:
+#      APP_ENV: dev
+#    volumes:
+#      - ./:/interview
+#    networks:
+#      interview-net:
+#        aliases:
+#          - itester_service
   mysql:
     container_name: mysql
     image: mysql
@@ -236,7 +236,7 @@ services:
     image: redis:7-alpine
     ports:
       - '6379:6379'
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --save 60 1 --loglevel warning --appendonly yes --requirepass GCAHwF0kz59p9FpP
     volumes:
       - cache:/data
     networks:
@@ -248,8 +248,8 @@ services:
     image: mailhog/mailhog
     container_name: mailhog
     ports:
-      - "1025:1025" # smtp server
-      - "8025:8025" # web ui
+      - "21025:1025" # smtp server
+      - "28025:8025" # web ui
     networks:
       interview-net:
         aliases:

@@ -11,6 +11,11 @@ message SignInUserInput {
     string password = 3;
 }
 
+message SignInByCodeUserInput {
+    string email = 1;
+    string authCode = 2;
+}
+
 message SignInUserResponse {
     string access_token = 1;
     string refresh_token = 2;

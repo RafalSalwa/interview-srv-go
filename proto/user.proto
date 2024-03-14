@@ -9,7 +9,6 @@ message User {
     int64 id = 1;
     string username = 2;
     string email = 3;
-
     google.protobuf.Timestamp created_at = 4;
 }
 message GetUserSignInRequest {
@@ -25,17 +24,23 @@ message UserDetails {
     string Firstname = 3;
     string Lastname = 4;
     string Email = 5;
-    string Password = 6;
+    string VerificationCode = 6;
     string RolesJson = 7;
     string Roles = 8;
     string Role = 9;
-    bool Verified = 10;
-    bool Active = 11;
-    google.protobuf.Timestamp CreatedAt = 12;
-    google.protobuf.Timestamp LastLogin = 13;
+    string AccessToken = 10;
+    string RefreshToken = 11;
+    bool Verified = 12;
+    bool Active = 13;
+    google.protobuf.Timestamp CreatedAt = 14;
+    google.protobuf.Timestamp LastLogin = 15;
 }
 message GetUserRequest {
-    int64 user_id = 1;
+    int64 id = 1;
+    string email = 2;
+    string verificationCode = 3;
+    string token = 4;
+    string refreshToken = 5;
 }
 
 message GetUsersRequest {
@@ -68,5 +73,6 @@ message ChangePasswordResponse{
     string status = 1;
 }
 
+message VerificationCode{string code = 1;}
 message VerifyUserRequest {string code = 1;}
 message VerificationResponse {bool success = 1;}

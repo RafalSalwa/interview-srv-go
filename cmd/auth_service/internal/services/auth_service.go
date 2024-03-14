@@ -60,7 +60,6 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 	if ok {
 		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
 	}
-
 	if err = hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
 		return nil, err
 	}
@@ -73,12 +72,17 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 		return nil, err
 	}
 	udb.Password = hash
-	vcode, err := generator.RandomString(12)
+	vcode, err := generator.RandomString(64)
 	if err != nil {
 		return nil, err
 	}
 	udb.VerificationCode = vcode
-
+	//var roles = [1]string
+	udb.Roles = map[string]interface{}{
+		"Roles": struct {
+			Role string
+		}{"ROLE_USER"},
+	}
 	if errDB := a.repository.Save(ctx, udb); errDB != nil {
 		return nil, errDB
 	}

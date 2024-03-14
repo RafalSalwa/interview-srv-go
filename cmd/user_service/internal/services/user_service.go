@@ -1,18 +1,20 @@
 package services
 
 import (
-    "context"
-    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
-    "github.com/RafalSalwa/interview-app-srv/pkg/hashing"
-    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-    "go.opentelemetry.io/otel"
+	"context"
+	"errors"
+	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	"go.opentelemetry.io/otel"
 
-    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
-    "github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
-    "github.com/RafalSalwa/interview-app-srv/pkg/jwt"
-    "github.com/RafalSalwa/interview-app-srv/pkg/logger"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    "github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
+	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
+	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
+	"github.com/RafalSalwa/interview-app-srv/pkg/jwt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/logger"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/rabbitmq"
 )
 
 type UserServiceImpl struct {
@@ -23,6 +25,7 @@ type UserServiceImpl struct {
 }
 
 type UserService interface {
+	Find(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error)
 	GetUser(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error)
 	GetByID(ctx context.Context, id int64) (*models.UserDBModel, error)
 	UsernameInUse(ctx context.Context, user *models.UserDBModel) (bool, error)
@@ -53,6 +56,18 @@ func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	}
 }
 
+func (s *UserServiceImpl) Find(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/GetUser")
+	defer span.End()
+
+	udb, err := s.repository.FindOne(ctx, user)
+	if err != nil {
+		tracing.RecordError(span, err)
+		return nil, err
+	}
+
+	return udb, nil
+}
 func (s *UserServiceImpl) GetUser(ctx context.Context, user *models.UserDBModel) (*models.UserDBModel, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/GetUser")
 	defer span.End()
@@ -103,6 +118,11 @@ func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode strin
 	if err != nil {
 		tracing.RecordError(span, err)
 		return err
+	}
+	if udb == nil {
+		errUser := errors.New(fmt.Sprintf("user not found. user with verification code %s was not found", vCode))
+		tracing.RecordError(span, errUser)
+		return errUser
 	}
 	udb.Active = true
 	udb.Verified = true

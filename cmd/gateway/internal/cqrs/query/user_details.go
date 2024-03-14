@@ -20,7 +20,7 @@ func NewUserDetailsHandler(userClient intrvproto.UserServiceClient) UserDetailsH
 }
 
 func (h UserDetailsHandler) Handle(ctx context.Context, query UserRequest) (*models.UserDBResponse, error) {
-	req := &intrvproto.GetUserRequest{UserId: query.UserID}
+	req := &intrvproto.GetUserRequest{Id: query.UserID}
 	pu, err := h.grpcUser.GetUserDetails(ctx, req)
 	if err != nil {
 		return nil, err

@@ -42,9 +42,9 @@ func Validate(password string, PasswordConfirm string) error {
 		}
 	}
 
-	if len(password) < 8 || len(password) > 16 {
+	if len(password) < 8 || len(password) > 32 {
 		return &ValidationError{
-			Message: "Password should be between 8 and 16 characters in length",
+			Message: "Password should be between 8 and 32 characters in length",
 			Field:   "password",
 		}
 	}

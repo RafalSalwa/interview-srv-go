@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthServiceClient interface {
 	SignUpUser(ctx context.Context, in *SignUpUserInput, opts ...grpc.CallOption) (*SignUpUserResponse, error)
 	SignInUser(ctx context.Context, in *SignInUserInput, opts ...grpc.CallOption) (*SignInUserResponse, error)
+	SignInByCode(ctx context.Context, in *SignInByCodeUserInput, opts ...grpc.CallOption) (*SignInUserResponse, error)
 	GetVerificationKey(ctx context.Context, in *VerificationCodeRequest, opts ...grpc.CallOption) (*VerificationCodeResponse, error)
 }
 
@@ -53,6 +54,15 @@ func (c *authServiceClient) SignInUser(ctx context.Context, in *SignInUserInput,
 	return out, nil
 }
 
+func (c *authServiceClient) SignInByCode(ctx context.Context, in *SignInByCodeUserInput, opts ...grpc.CallOption) (*SignInUserResponse, error) {
+	out := new(SignInUserResponse)
+	err := c.cc.Invoke(ctx, "/intrvproto.AuthService/SignInByCode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authServiceClient) GetVerificationKey(ctx context.Context, in *VerificationCodeRequest, opts ...grpc.CallOption) (*VerificationCodeResponse, error) {
 	out := new(VerificationCodeResponse)
 	err := c.cc.Invoke(ctx, "/intrvproto.AuthService/GetVerificationKey", in, out, opts...)
@@ -68,6 +78,7 @@ func (c *authServiceClient) GetVerificationKey(ctx context.Context, in *Verifica
 type AuthServiceServer interface {
 	SignUpUser(context.Context, *SignUpUserInput) (*SignUpUserResponse, error)
 	SignInUser(context.Context, *SignInUserInput) (*SignInUserResponse, error)
+	SignInByCode(context.Context, *SignInByCodeUserInput) (*SignInUserResponse, error)
 	GetVerificationKey(context.Context, *VerificationCodeRequest) (*VerificationCodeResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -81,6 +92,9 @@ func (UnimplementedAuthServiceServer) SignUpUser(context.Context, *SignUpUserInp
 }
 func (UnimplementedAuthServiceServer) SignInUser(context.Context, *SignInUserInput) (*SignInUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignInUser not implemented")
+}
+func (UnimplementedAuthServiceServer) SignInByCode(context.Context, *SignInByCodeUserInput) (*SignInUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignInByCode not implemented")
 }
 func (UnimplementedAuthServiceServer) GetVerificationKey(context.Context, *VerificationCodeRequest) (*VerificationCodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVerificationKey not implemented")
@@ -134,6 +148,24 @@ func _AuthService_SignInUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_SignInByCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignInByCodeUserInput)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).SignInByCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intrvproto.AuthService/SignInByCode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).SignInByCode(ctx, req.(*SignInByCodeUserInput))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AuthService_GetVerificationKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerificationCodeRequest)
 	if err := dec(in); err != nil {
@@ -166,6 +198,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SignInUser",
 			Handler:    _AuthService_SignInUser_Handler,
+		},
+		{
+			MethodName: "SignInByCode",
+			Handler:    _AuthService_SignInByCode_Handler,
 		},
 		{
 			MethodName: "GetVerificationKey",

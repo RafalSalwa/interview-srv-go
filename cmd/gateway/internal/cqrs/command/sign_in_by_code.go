@@ -9,24 +9,24 @@ import (
 	intrvproto "github.com/RafalSalwa/interview-app-srv/proto/grpc"
 )
 
-type SignInHandler struct {
+type SignInByCodeHandler struct {
 	authClient intrvproto.AuthServiceClient
 }
 
-func NewSignInHandler(authClient intrvproto.AuthServiceClient) SignInHandler {
-	return SignInHandler{authClient: authClient}
+func NewSignInByCodeHandler(authClient intrvproto.AuthServiceClient) SignInByCodeHandler {
+	return SignInByCodeHandler{authClient: authClient}
 }
 
-func (h SignInHandler) Handle(ctx context.Context, req models.SignInUserRequest) (*models.UserResponse, error) {
+func (h SignInByCodeHandler) Handle(ctx context.Context, email, authCode string) (*models.UserResponse, error) {
 	ctx, span := otel.GetTracerProvider().Tracer("SignInUser").Start(ctx, "CQRS")
 	defer span.End()
 
-	credentials := &intrvproto.SignInUserInput{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.Password,
+	credentials := &intrvproto.SignInByCodeUserInput{
+		Email:    email,
+		AuthCode: authCode,
 	}
-	resp, err := h.authClient.SignInUser(ctx, credentials)
+
+	resp, err := h.authClient.SignInByCode(ctx, credentials)
 	if err != nil {
 		return nil, err
 	}
