@@ -29,6 +29,7 @@ type UserServiceClient interface {
 	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
 	GetUser(ctx context.Context, in *GetUserSignInRequest, opts ...grpc.CallOption) (*UserDetails, error)
 	GetUserByCode(ctx context.Context, in *VerificationCode, opts ...grpc.CallOption) (*UserDetails, error)
+	GetUserByToken(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserDetails, error)
 }
 
 type userServiceClient struct {
@@ -102,6 +103,15 @@ func (c *userServiceClient) GetUserByCode(ctx context.Context, in *VerificationC
 	return out, nil
 }
 
+func (c *userServiceClient) GetUserByToken(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*UserDetails, error) {
+	out := new(UserDetails)
+	err := c.cc.Invoke(ctx, "/intrvproto.UserService/GetUserByToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -113,6 +123,7 @@ type UserServiceServer interface {
 	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
 	GetUser(context.Context, *GetUserSignInRequest) (*UserDetails, error)
 	GetUserByCode(context.Context, *VerificationCode) (*UserDetails, error)
+	GetUserByToken(context.Context, *GetUserRequest) (*UserDetails, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -140,6 +151,9 @@ func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserSignInReq
 }
 func (UnimplementedUserServiceServer) GetUserByCode(context.Context, *VerificationCode) (*UserDetails, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByCode not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserByToken(context.Context, *GetUserRequest) (*UserDetails, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByToken not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -280,6 +294,24 @@ func _UserService_GetUserByCode_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetUserByToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserByToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intrvproto.UserService/GetUserByToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserByToken(ctx, req.(*GetUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +346,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserByCode",
 			Handler:    _UserService_GetUserByCode_Handler,
+		},
+		{
+			MethodName: "GetUserByToken",
+			Handler:    _UserService_GetUserByToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
 	"github.com/RafalSalwa/interview-app-srv/pkg/models"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
@@ -80,8 +79,7 @@ func (a *Auth) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.Sig
 		span.SetStatus(otelcodes.Error, err.Error())
 		a.logger.Error().Err(err).Msg("rpc:signup")
 		if s, ok := status.FromError(err); ok {
-			fmt.Printf("status: %#v\n", s)
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Errorf(s.Code(), s.Message())
 		}
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}

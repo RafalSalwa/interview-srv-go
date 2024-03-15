@@ -1,10 +1,10 @@
 FROM golang:1.22-alpine3.19
-WORKDIR /interview
 
+WORKDIR /interview
 ENV TZ=Europe/Warsaw
 
-RUN apk add --no-cache graphviz && go install github.com/cosmtrek/air@latest && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apk add --no-cache graphviz icu-libs tzdata && go install github.com/cosmtrek/air@latest \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY go.mod go.sum ./
 RUN go mod download

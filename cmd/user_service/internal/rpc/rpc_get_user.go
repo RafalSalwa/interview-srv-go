@@ -65,7 +65,6 @@ func (us *UserServer) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest)
 		if err.Error() == "AlreadyActivated" {
 			return nil, status.Errorf(codes.AlreadyExists, "User with such code has already active account")
 		}
-		fmt.Println("UsersApi:", err.Error())
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
@@ -118,21 +117,57 @@ func (us *UserServer) GetUser(ctx context.Context, req *pb.GetUserSignInRequest)
 }
 
 func (us *UserServer) GetUserDetails(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
-	user, err := us.userService.GetByID(ctx, req.GetId())
+	udb, err := us.userService.GetByID(ctx, req.GetId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	if user == nil {
+	if udb == nil {
 		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
 	}
 
-	ud := &pb.UserDetails{}
-	err = copier.Copy(ud, user)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+	res := &pb.UserDetails{
+		Id:               udb.Id,
+		Username:         udb.Username,
+		Firstname:        udb.Firstname,
+		Lastname:         udb.Lastname,
+		Email:            udb.Email,
+		VerificationCode: udb.VerificationCode,
+		Verified:         udb.Verified,
+		Active:           udb.Active,
+		CreatedAt:        timestamppb.New(udb.CreatedAt),
 	}
-	return ud, nil
+	return res, nil
+}
+
+func (us *UserServer) GetUserByToken(ctx context.Context, req *pb.GetUserRequest) (*pb.UserDetails, error) {
+	udb, err := us.userService.GetByToken(ctx, req.GetToken())
+	if err != nil {
+		return nil, prepareError(err)
+	}
+
+	if udb == nil {
+		return nil, status.Errorf(codes.NotFound, errors.New("user not found or activated").Error())
+	}
+	res := &pb.UserDetails{
+		Id:               udb.Id,
+		Username:         udb.Username,
+		Firstname:        udb.Firstname,
+		Lastname:         udb.Lastname,
+		Email:            udb.Email,
+		VerificationCode: udb.VerificationCode,
+		Verified:         udb.Verified,
+		Active:           udb.Active,
+		CreatedAt:        timestamppb.New(udb.CreatedAt.Local()),
+	}
+	return res, nil
+}
+
+func prepareError(err error) error {
+	if s, ok := status.FromError(err); ok {
+		return status.Errorf(s.Code(), s.Message())
+	}
+	return status.Errorf(codes.Internal, err.Error())
 }
 
 func (us *UserServer) ChangePassword(
