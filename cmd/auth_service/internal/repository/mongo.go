@@ -1,16 +1,16 @@
 package repository
 
 import (
-    "context"
-    "errors"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
-    "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
-    "go.opentelemetry.io/otel"
-    "go.opentelemetry.io/otel/codes"
-    "time"
+	"context"
+	"errors"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	apiMongo "github.com/RafalSalwa/interview-app-srv/pkg/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"time"
 )
 
 type MongoAdapter struct {
@@ -27,22 +27,22 @@ func newMongoDBUserRepository(db *mongo.Client, cfg apiMongo.Config) UserReposit
 	}
 }
 
-func (m MongoAdapter) Exists(ctx context.Context, udb *models.UserDBModel) (bool, error) {
+func (m MongoAdapter) Exists(ctx context.Context, udb *models.UserDBModel) bool {
 	ctx, span := otel.GetTracerProvider().Tracer("mongodb").Start(ctx, "Repository/Exists")
 	defer span.End()
 
 	var um models.UserMongoModel
 	if err := um.FromDBModel(udb); err != nil {
-		return false, err
+		return false
 	}
 	if err := m.collection.FindOne(ctx, um).Decode(&um); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return false, nil
+			return false
 		}
-		return false, err
+		return false
 	}
 
-	return true, nil
+	return true
 }
 
 func (m MongoAdapter) Update(ctx context.Context, user models.UserDBModel) error {

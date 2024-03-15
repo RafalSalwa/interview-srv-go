@@ -21,17 +21,11 @@ func RandomString(length int) (string, error) {
 	}
 
 	b := make([]byte, length)
-	_, err := crand.Read(b)
-	_, err = io.ReadFull(crand.Reader, b)
-	if err != nil {
-		return "", err
-	}
+	_, _ = crand.Read(b)
+	_, _ = io.ReadFull(crand.Reader, b)
 
 	for i := 0; i < length; i++ {
-		num, err := crand.Int(crand.Reader, big.NewInt(int64(len(letterBytes))))
-		if err != nil {
-			return "", err
-		}
+		num, _ := crand.Int(crand.Reader, big.NewInt(int64(len(letterBytes))))
 		b[i] = letterBytes[num.Int64()]
 	}
 

@@ -30,11 +30,13 @@ func NewAuthService(ctx context.Context, cfg *config.Config, log *logger.Logger)
 	publisher, errP := rabbitmq.NewPublisher(cfg.Rabbit)
 	if errP != nil {
 		log.Error().Err(errP).Msg("auth:service:publisher")
+		return nil
 	}
 
 	userRepository, errR := repository.NewUserRepository(ctx, cfg.App.RepositoryType, cfg)
 	if errR != nil {
 		log.Error().Err(errR).Msg("auth:service:repository")
+		return nil
 	}
 
 	return &AuthServiceImpl{
@@ -52,49 +54,35 @@ func (a *AuthServiceImpl) SignUpUser(ctx context.Context, cur models.SignUpUserR
 	udb := &models.UserDBModel{
 		Email: encdec.Encrypt(cur.Email),
 	}
-	ok, err := a.repository.Exists(ctx, udb)
-	if err != nil {
-		return nil, fmt.Errorf("service:repo:exists %w", err)
-	}
 
+	ok := a.repository.Exists(ctx, udb)
 	if ok {
 		return nil, status.Errorf(codes.AlreadyExists, "User with such credentials already exists")
 	}
-	if err = hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
-		return nil, err
+	if err := hashing.Validate(cur.Password, cur.PasswordConfirm); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-	if err = udb.FromCreateUserReq(cur, true); err != nil {
-		return nil, err
+	if err := udb.FromCreateUserReq(cur, true); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
-
-	hash, err := hashing.Argon2ID(udb.Password)
-	if err != nil {
-		return nil, err
-	}
-	udb.Password = hash
-	vcode, err := generator.RandomString(64)
-	if err != nil {
-		return nil, err
-	}
+	udb.Password = hashing.Argon2ID(udb.Password)
+	vcode, _ := generator.RandomString(64)
 	udb.VerificationCode = vcode
-	//var roles = [1]string
 	udb.Roles = map[string]interface{}{
 		"Roles": struct {
 			Role string
 		}{"ROLE_USER"},
 	}
 	if errDB := a.repository.Save(ctx, udb); errDB != nil {
-		return nil, errDB
+		return nil, status.Errorf(codes.Internal, errDB.Error())
 	}
-
-	if err = a.rabbitPublisher.Publish(ctx, udb.AMQP()); err != nil {
-		return nil, err
+	if err := a.rabbitPublisher.Publish(ctx, udb.AMQP()); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
-
 	ur := &models.UserResponse{}
-	err = ur.FromDBModel(udb)
+	err := ur.FromDBModel(udb)
 	if err != nil {
-		return nil, fmt.Errorf("service:repo:mapper:fromDBModel %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
 	}
 	return ur, nil
 }
@@ -108,6 +96,7 @@ func (a *AuthServiceImpl) SignInUser(ctx context.Context, reqUser *models.SignIn
 		Verified: true,
 		Active:   true,
 	}
+	fmt.Printf("SignInUser: %+v\n %s\n", udb, reqUser.Email)
 	udb, err := a.repository.FindOne(ctx, udb)
 	if err != nil {
 		tracing.RecordError(span, err)

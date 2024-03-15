@@ -1,13 +1,18 @@
 package rabbitmq
 
 import (
+	"context"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"log"
+	"sync"
+	"time"
 )
 
 type Connection struct {
 	Connection  *amqp.Connection
 	Channel     *amqp.Channel
 	credentials Credentials
+	wg          *sync.WaitGroup
 }
 
 func NewConnection(cfg Config) *Connection {
@@ -21,48 +26,69 @@ func NewConnection(cfg Config) *Connection {
 
 	return &Connection{
 		credentials: cred,
+		wg:          &sync.WaitGroup{},
 	}
 }
 
-func (l *Connection) Connect() error {
-	c, err := amqp.Dial(l.credentials.GetURL())
-	if err != nil {
-		return err
+func (l *Connection) Connect(ctx context.Context) {
+	for {
+		notifyClose, err := l.connect()
+		if err != nil {
+			log.Printf("error connecting to rabbitmq: [%s]\n", err)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		log.Printf("[RabbitMQ] Connection established\n")
+		// create queues, exchanges, consume from queue, etc
+		select {
+		case <-notifyClose:
+			continue
+		case <-ctx.Done():
+			return
+		}
 	}
-	ch, err := c.Channel()
-	if err != nil {
-		return err
-	}
-	l.Connection = c
-	l.Channel = ch
-	// if l.credentials.Exchange != nil {
-	//	if err := ch.ExchangeDeclare(
-	//		l.credentials.Exchange.Name,
-	//		l.credentials.Exchange.Type,
-	//		l.credentials.Exchange.Durable,
-	//		false,
-	//		false,
-	//		false,
-	//		nil,
-	//	); err != nil {
-	//		return err
-	//	}
-	//	if l.credentials.Exchange.Queue != "" {
-	//		if _, err := ch.QueueDeclare(
-	//			l.credentials.Exchange.Queue,
-	//			true,
-	//			false,
-	//			false,
-	//			false,
-	//			nil,
-	//		); err != nil {
-	//			return err
-	//		}
-	//	}
-	//}
-	return nil
 }
 
-func (l *Connection) Close() error {
-	return l.Connection.Close()
+func (l *Connection) connect() (notify chan *amqp.Error, err error) {
+	l.Connection, err = amqp.Dial(l.credentials.GetURL())
+	if err != nil {
+		return
+	}
+	l.Channel, err = l.Connection.Channel()
+	if err != nil {
+		return
+	}
+	notify = make(chan *amqp.Error)
+	l.Connection.NotifyClose(notify)
+	return
+}
+
+func (l *Connection) Close(ctx context.Context) (done chan struct{}) {
+	done = make(chan struct{})
+
+	go func() {
+		defer close(done)
+		select { // either waits for the messages to process or timeout from context
+		case <-ctx.Done():
+		}
+		l.closeConnections()
+	}()
+	return
+}
+
+func (l *Connection) closeConnections() {
+	var err error
+	if l.Channel != nil {
+		err = l.Channel.Close()
+		if err != nil {
+			log.Printf("Error closing consumer channel: [%s]\n", err)
+		}
+	}
+
+	if l.Connection != nil {
+		err = l.Connection.Close()
+		if err != nil {
+			log.Printf("Error closing connection: [%s]\n", err)
+		}
+	}
 }

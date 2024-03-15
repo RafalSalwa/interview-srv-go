@@ -32,11 +32,8 @@ type Params struct {
 	KeyLength   uint32
 }
 
-func Argon2ID(password string) (hash string, err error) {
-	salt, err := generateRandomBytes(DefaultParams.SaltLength)
-	if err != nil {
-		return "", err
-	}
+func Argon2ID(password string) (hash string) {
+	salt := generateRandomBytes(DefaultParams.SaltLength)
 
 	key := argon2.IDKey([]byte(password), salt, DefaultParams.Iterations, DefaultParams.Memory, DefaultParams.Parallelism, DefaultParams.KeyLength)
 
@@ -44,7 +41,7 @@ func Argon2ID(password string) (hash string, err error) {
 	b64Key := base64.RawStdEncoding.EncodeToString(key)
 
 	hash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, DefaultParams.Memory, DefaultParams.Iterations, DefaultParams.Parallelism, b64Salt, b64Key)
-	return hash, nil
+	return hash
 }
 
 func Argon2IDComparePasswordAndHash(password, hash string) (match bool, err error) {
@@ -72,14 +69,11 @@ func CheckHash(password, hash string) (match bool, params *Params, err error) {
 	return false, params, nil
 }
 
-func generateRandomBytes(n uint32) ([]byte, error) {
+func generateRandomBytes(n uint32) []byte {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
+	_, _ = rand.Read(b)
 
-	return b, nil
+	return b
 }
 
 func DecodeHash(hash string) (params *Params, salt, key []byte, err error) {

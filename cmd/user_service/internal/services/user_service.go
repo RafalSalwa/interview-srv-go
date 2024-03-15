@@ -8,6 +8,9 @@ import (
 	"github.com/RafalSalwa/interview-app-srv/pkg/hashing"
 	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
 	"go.opentelemetry.io/otel"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"strconv"
 
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/config"
 	"github.com/RafalSalwa/interview-app-srv/cmd/user_service/internal/repository"
@@ -34,6 +37,7 @@ type UserService interface {
 	LoginUser(user *models.SignInUserRequest) (*models.UserResponse, error)
 	UpdateUserPassword(ctx context.Context, userid int64, password string) error
 	CreateUser(user *models.SignUpUserRequest) (*models.UserResponse, error)
+	GetByToken(ctx context.Context, token string) (*models.UserDBModel, error)
 }
 
 func NewUserService(ctx context.Context, cfg *config.Config, log *logger.Logger) UserServiceImpl {
@@ -126,13 +130,35 @@ func (s *UserServiceImpl) StoreVerificationData(ctx context.Context, vCode strin
 	}
 	udb.Active = true
 	udb.Verified = true
-
 	err = s.repository.Update(ctx, udb)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *UserServiceImpl) GetByToken(ctx context.Context, token string) (*models.UserDBModel, error) {
+	ctx, span := otel.GetTracerProvider().Tracer("service").Start(ctx, "Service/StoreVerificationData")
+	defer span.End()
+
+	decodedToken, err := jwt.ValidateToken(token, s.config.Access.PublicKey)
+	if err != nil {
+		decodedToken, err = jwt.ValidateToken(token, s.config.Refresh.PublicKey)
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, err.Error())
+	}
+	uid, err := strconv.ParseInt(decodedToken, 10, 0)
+	if err != nil {
+		return nil, err
+	}
+	udb, err := s.GetByID(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+	udb.Email, _ = encdec.Decrypt(udb.Email)
+	return udb, nil
 }
 
 func (s *UserServiceImpl) UpdateUser(user *models.UpdateUserRequest) (err error) {

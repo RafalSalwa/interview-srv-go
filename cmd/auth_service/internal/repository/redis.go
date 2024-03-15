@@ -16,7 +16,7 @@ type RedisAdapter struct {
 	DB *redis.UniversalClient
 }
 
-func (r RedisAdapter) Exists(ctx context.Context, udb *models.UserDBModel) (bool, error) {
+func (r RedisAdapter) Exists(ctx context.Context, udb *models.UserDBModel) bool {
 	//TODO implement me
 	panic("implement me")
 }

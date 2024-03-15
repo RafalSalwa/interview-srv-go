@@ -2,9 +2,9 @@ package rabbitmq
 
 import (
 	"context"
-	"fmt"
-
+	"errors"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"time"
 )
 
 type Publisher struct {
@@ -14,14 +14,22 @@ type Publisher struct {
 
 func NewPublisher(cfg Config) (*Publisher, error) {
 	con := NewConnection(cfg)
-	if err := con.Connect(); err != nil {
-		return nil, fmt.Errorf("rabbitmq connect failed: %w", err)
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+	con.Connect(ctx)
 	return &Publisher{Connection: con, Exchange: cfg.Exchange}, nil
 }
 
 func (p *Publisher) Disconnect() error {
-	return p.Connection.Close()
+	ctxDone, cancelDone := context.WithTimeout(context.Background(), time.Second*10)
+	notifDone := p.Connection.Close(ctxDone)
+	select {
+	case <-notifDone:
+	case <-ctxDone.Done():
+		return errors.New("failed to close rabbitmq connection")
+	}
+	cancelDone()
+	return nil
 }
 
 func (p *Publisher) Publish(ctx context.Context, mes amqp.Publishing) error {

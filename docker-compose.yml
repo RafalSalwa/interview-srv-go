@@ -68,6 +68,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       interview-net:
         aliases:
@@ -137,9 +139,9 @@ services:
       - "15692:15692"
     healthcheck:
       test: rabbitmq-diagnostics -q ping
-      interval: 1s
-      timeout: 3s
-      retries: 30
+      interval: 20s
+      timeout: 10s
+      retries: 5
     volumes:
       - ./.docker/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.config:ro
       - ./.docker/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
