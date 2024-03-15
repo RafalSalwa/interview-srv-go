@@ -1,18 +1,19 @@
 package rpc
 
 import (
-    "context"
-    "errors"
-    "github.com/RafalSalwa/interview-app-srv/pkg/encdec"
-    "github.com/RafalSalwa/interview-app-srv/pkg/models"
-    "github.com/RafalSalwa/interview-app-srv/pkg/tracing"
-    pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
-    "go.opentelemetry.io/otel"
-    otelcodes "go.opentelemetry.io/otel/codes"
-    "google.golang.org/grpc/codes"
-    "google.golang.org/grpc/status"
-    "google.golang.org/protobuf/types/known/timestamppb"
-    "gorm.io/gorm"
+	"context"
+	"errors"
+	"fmt"
+	"github.com/RafalSalwa/interview-app-srv/pkg/encdec"
+	"github.com/RafalSalwa/interview-app-srv/pkg/models"
+	"github.com/RafalSalwa/interview-app-srv/pkg/tracing"
+	pb "github.com/RafalSalwa/interview-app-srv/proto/grpc"
+	"go.opentelemetry.io/otel"
+	otelcodes "go.opentelemetry.io/otel/codes"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm"
 )
 
 func (a *Auth) SignInUser(ctx context.Context, req *pb.SignInUserInput) (*pb.SignInUserResponse, error) {
@@ -78,6 +79,10 @@ func (a *Auth) SignUpUser(ctx context.Context, req *pb.SignUpUserInput) (*pb.Sig
 		span.RecordError(err)
 		span.SetStatus(otelcodes.Error, err.Error())
 		a.logger.Error().Err(err).Msg("rpc:signup")
+		if s, ok := status.FromError(err); ok {
+			fmt.Printf("status: %#v\n", s)
+			return nil, status.Errorf(codes.Internal, err.Error())
+		}
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	res := &pb.SignUpUserResponse{

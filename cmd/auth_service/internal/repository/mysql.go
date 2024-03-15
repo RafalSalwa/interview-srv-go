@@ -17,21 +17,21 @@ type UserAdapter struct {
     DB *gorm.DB
 }
 
-func (r *UserAdapter) Exists(ctx context.Context, udb *models.UserDBModel) (bool, error) {
+func (r *UserAdapter) Exists(ctx context.Context, udb *models.UserDBModel) bool {
     _, span := otel.GetTracerProvider().Tracer("MySQL").Start(ctx, "Repository/Exists")
     defer span.End()
 
     err := r.DB.Where(udb).First(udb).Error
     if err != nil {
         if errors.Is(err, gorm.ErrRecordNotFound) {
-            return false, nil
+            return false
         }
     }
     if udb.Id != 0 {
-        return true, nil
+        return true
     }
     
-    return false, nil
+    return false
 }
 
 func newMySQLUserRepository(db *gorm.DB) UserRepository {
